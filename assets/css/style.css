@@ -1,0 +1,144 @@
+/* Custom styles for Lead Management System */
+
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    margin-bottom: 20px;
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    font-weight: 600;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.required:after {
+    content: " *";
+    color: red;
+}
+
+/* Dashboard stats */
+.stats-card {
+    transition: transform 0.3s;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+
+.stats-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Comments section */
+.comment-box {
+    border-left: 3px solid #0d6efd;
+    padding-left: 15px;
+    margin-bottom: 15px;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.comment-user {
+    font-weight: bold;
+}
+
+.comment-date {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+/* Filter section */
+.filter-section {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+/* Status badges */
+.badge-new {
+    background-color: #0d6efd;
+}
+
+.badge-in-progress {
+    background-color: #ffc107;
+}
+
+.badge-converted {
+    background-color: #198754;
+}
+
+.badge-closed {
+    background-color: #6c757d;
+}
+
+.badge-lost {
+    background-color: #dc3545;
+}
+
+/* Modal styles */
+.modal-header {
+    background-color: #f8f9fa;
+}
+
+/* Login page */
+.login-container {
+    max-width: 400px;
+    margin: 100px auto;
+}
+
+.login-logo {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* Custom file input */
+.custom-file-input::-webkit-file-upload-button {
+    visibility: hidden;
+}
+
+.custom-file-input::before {
+    content: 'Select file';
+    display: inline-block;
+    background: linear-gradient(top, #f9f9f9, #e3e3e3);
+    border: 1px solid #999;
+    border-radius: 3px;
+    padding: 5px 8px;
+    outline: none;
+    white-space: nowrap;
+    cursor: pointer;
+    text-shadow: 1px 1px #fff;
+    font-weight: 700;
+    font-size: 10pt;
+}
+
+.custom-file-input:hover::before {
+    border-color: black;
+}
+
+.custom-file-input:active::before {
+    background: -webkit-linear-gradient(top, #e3e3e3, #f9f9f9);
+}

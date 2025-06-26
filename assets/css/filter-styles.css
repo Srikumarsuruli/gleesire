@@ -1,0 +1,43 @@
+.filter-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    margin-bottom: 15px;
+}
+
+.filter-row .form-group {
+    margin-bottom: 0;
+    padding-right: 10px;
+    flex: 1;
+}
+
+.filter-row .filter-buttons {
+    display: flex;
+    align-items: flex-end;
+    margin-bottom: 0;
+}
+
+.filter-row .filter-buttons button,
+.filter-row .filter-buttons a {
+    margin-right: 5px;
+}
+
+.custom-date-range {
+    display: flex;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.custom-date-range .form-group {
+    margin-right: 10px;
+}
+
+@media (max-width: 992px) {
+    .filter-row {
+        flex-wrap: wrap;
+    }
+    
+    .filter-row .form-group {
+        margin-bottom: 10px;
+    }
+}

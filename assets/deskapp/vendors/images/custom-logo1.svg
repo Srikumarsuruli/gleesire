@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="50" viewBox="0 0 200 50" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" fill-rule="evenodd">
+    <path d="M20,10 L40,10 C45.5228,10 50,14.4772 50,20 L50,30 C50,35.5228 45.5228,40 40,40 L20,40 C14.4772,40 10,35.5228 10,30 L10,20 C10,14.4772 14.4772,10 20,10 Z" fill="#2C6ECB"/>
+    <path d="M20,15 L20,35 L25,35 L25,25 L35,25 L35,20 L25,20 L25,15 L20,15 Z M30,25 L30,35 L35,35 L35,25 L30,25 Z" fill="#FFFFFF"/>
+    <text x="60" y="30" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#333333">Lead Management</text>
+  </g>
+</svg>
