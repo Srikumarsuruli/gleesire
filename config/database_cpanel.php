@@ -3,10 +3,9 @@
 // Update these values with your actual cPanel database credentials
 
 define('DB_SERVER', 'localhost');
-define('DB_USERNAME', 'your_cpanel_db_username');  // Usually format: cpanel_username_dbuser
-define('DB_PASSWORD', 'your_cpanel_db_password');
-define('DB_NAME', 'your_cpanel_db_name');          // Usually format: cpanel_username_dbname
-
+define('DB_USERNAME', 'root');
+define('DB_PASSWORD', 'M45t3rM!nd');
+define('DB_NAME', 'lead_management');
 // Attempt to connect to MySQL database
 $conn = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
