@@ -70,7 +70,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["enquiry_id"]) && isset(
                 'message' => 'Comment added successfully',
                 'user_name' => $user_name,
                 'comment' => htmlspecialchars($comment),
-                'created_at' => date('d-m-Y H:i')
+                'created_at' => date('d-m-Y H:i') // Already in IST due to timezone config
             );
             echo json_encode($response);
         } else {

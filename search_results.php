@@ -61,6 +61,7 @@ if(isset($_GET['query']) && !empty($_GET['query'])) {
                 e.customer_name,
                 e.mobile_number,
                 e.email,
+                e.referral_code,
                 e.received_datetime,
                 'view_enquiries.php' as redirect_url
                 FROM enquiries e
@@ -68,11 +69,12 @@ if(isset($_GET['query']) && !empty($_GET['query'])) {
                 OR e.customer_name LIKE ? 
                 OR e.mobile_number LIKE ? 
                 OR e.email LIKE ?
+                OR e.referral_code LIKE ?
                 LIMIT 5";
                 
         if($stmt = mysqli_prepare($conn, $sql)) {
             $search_param = "%" . $search_query . "%";
-            mysqli_stmt_bind_param($stmt, "ssss", $search_param, $search_param, $search_param, $search_param);
+            mysqli_stmt_bind_param($stmt, "sssss", $search_param, $search_param, $search_param, $search_param, $search_param);
             
             if(mysqli_stmt_execute($stmt)) {
                 $enquiry_result = mysqli_stmt_get_result($stmt);
@@ -95,6 +97,7 @@ if(isset($_GET['query']) && !empty($_GET['query'])) {
                 e.customer_name,
                 e.mobile_number,
                 e.email,
+                e.referral_code,
                 e.received_datetime,
                 'view_leads.php' as redirect_url
                 FROM converted_leads cl
@@ -104,11 +107,12 @@ if(isset($_GET['query']) && !empty($_GET['query'])) {
                 OR e.customer_name LIKE ? 
                 OR e.mobile_number LIKE ? 
                 OR e.email LIKE ?
+                OR e.referral_code LIKE ?
                 LIMIT 5";
                 
         if($stmt = mysqli_prepare($conn, $sql)) {
             $search_param = "%" . $search_query . "%";
-            mysqli_stmt_bind_param($stmt, "sssss", $search_param, $search_param, $search_param, $search_param, $search_param);
+            mysqli_stmt_bind_param($stmt, "ssssss", $search_param, $search_param, $search_param, $search_param, $search_param, $search_param);
             
             if(mysqli_stmt_execute($stmt)) {
                 $lead_result = mysqli_stmt_get_result($stmt);
@@ -131,6 +135,7 @@ if(isset($_GET['query']) && !empty($_GET['query'])) {
                 e.customer_name,
                 e.mobile_number,
                 e.email,
+                e.referral_code,
                 e.received_datetime,
                 'booking_confirmed.php' as redirect_url
                 FROM converted_leads cl
@@ -140,12 +145,13 @@ if(isset($_GET['query']) && !empty($_GET['query'])) {
                 OR e.lead_number LIKE ? 
                 OR e.customer_name LIKE ? 
                 OR e.mobile_number LIKE ? 
-                OR e.email LIKE ?)
+                OR e.email LIKE ?
+                OR e.referral_code LIKE ?)
                 LIMIT 5";
                 
         if($stmt = mysqli_prepare($conn, $sql)) {
             $search_param = "%" . $search_query . "%";
-            mysqli_stmt_bind_param($stmt, "sssss", $search_param, $search_param, $search_param, $search_param, $search_param);
+            mysqli_stmt_bind_param($stmt, "ssssss", $search_param, $search_param, $search_param, $search_param, $search_param, $search_param);
             
             if(mysqli_stmt_execute($stmt)) {
                 $booking_result = mysqli_stmt_get_result($stmt);
@@ -156,6 +162,47 @@ if(isset($_GET['query']) && !empty($_GET['query'])) {
             }
             mysqli_stmt_close($stmt);
         }
+    }
+    
+    // Search in comments table
+    $sql = "SELECT 
+            'comment' as type,
+            e.id,
+            e.lead_number,
+            cl.enquiry_number,
+            e.customer_name,
+            e.mobile_number,
+            e.email,
+            e.referral_code,
+            c.comment,
+            c.created_at as comment_date,
+            u.full_name as comment_user,
+            e.received_datetime,
+            CASE 
+                WHEN cl.booking_confirmed = 1 THEN 'booking_confirmed.php'
+                WHEN e.status_id = 3 THEN 'view_leads.php'
+                ELSE 'view_enquiries.php'
+            END as redirect_url
+            FROM comments c
+            JOIN enquiries e ON c.enquiry_id = e.id
+            JOIN users u ON c.user_id = u.id
+            LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id
+            WHERE c.comment LIKE ?
+            ORDER BY c.created_at DESC
+            LIMIT 5";
+            
+    if($stmt = mysqli_prepare($conn, $sql)) {
+        $search_param = "%" . $search_query . "%";
+        mysqli_stmt_bind_param($stmt, "s", $search_param);
+        
+        if(mysqli_stmt_execute($stmt)) {
+            $comment_result = mysqli_stmt_get_result($stmt);
+            
+            while($row = mysqli_fetch_assoc($comment_result)) {
+                $results[] = $row;
+            }
+        }
+        mysqli_stmt_close($stmt);
     }
     
     // Return results as JSON

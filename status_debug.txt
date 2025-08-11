@@ -1,0 +1,48 @@
+2025-07-29 10:57:12 - Update status called
+2025-07-29 10:57:12 - POST data: Array
+(
+    [id] => 66
+    [status_id] => 12
+)
+
+2025-07-29 10:57:12 - Enquiry ID: 66, Status ID: 12
+2025-07-29 10:57:12 - SQL: UPDATE enquiries SET status_id = 12, last_updated = NOW() WHERE id = 66
+2025-07-29 10:57:12 - Affected rows: 1
+2025-07-29 10:57:12 - Update successful
+2025-07-29 10:57:12 - Redirecting to view_enquiries.php
+2025-07-29 10:58:40 - Update status called
+2025-07-29 10:58:40 - POST data: Array
+(
+    [id] => 66
+    [status_id] => 12
+)
+
+2025-07-29 10:58:40 - Enquiry ID: 66, Status ID: 12
+2025-07-29 10:58:40 - SQL: UPDATE enquiries SET status_id = 12, last_updated = NOW() WHERE id = 66
+2025-07-29 10:58:40 - Affected rows: 1
+2025-07-29 10:58:40 - Update successful
+2025-07-29 10:58:40 - Redirecting to view_enquiries.php
+2025-07-29 11:00:04 - Update status called
+2025-07-29 11:00:04 - POST data: Array
+(
+    [id] => 66
+    [status_id] => 12
+)
+
+2025-07-29 11:00:04 - Enquiry ID: 66, Status ID: 12
+2025-07-29 11:00:04 - SQL: UPDATE enquiries SET status_id = 12, last_updated = NOW() WHERE id = 66
+2025-07-29 11:00:04 - Affected rows: 1
+2025-07-29 11:00:04 - Update successful
+2025-07-29 11:00:04 - Redirecting to view_enquiries.php
+2025-07-29 11:01:34 - Update status called
+2025-07-29 11:01:34 - POST data: Array
+(
+    [id] => 66
+    [status_id] => 12
+)
+
+2025-07-29 11:01:34 - Enquiry ID: 66, Status ID: 12
+2025-07-29 11:01:34 - SQL: UPDATE enquiries SET status_id = 12, last_updated = NOW() WHERE id = 66
+2025-07-29 11:01:34 - Affected rows: 1
+2025-07-29 11:01:34 - Update successful
+2025-07-29 11:01:34 - Redirecting to view_enquiries.php

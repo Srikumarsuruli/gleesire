@@ -12,44 +12,88 @@ if($_SESSION["role_id"] != 1) {
 $role_id = "";
 $success = $error = "";
 
+// Add HR Manager role if it doesn't exist
+$check_hr_role = "SELECT id FROM roles WHERE role_name = 'HR Manager'";
+$hr_role_result = mysqli_query($conn, $check_hr_role);
+if(mysqli_num_rows($hr_role_result) == 0) {
+    $insert_hr_role = "INSERT INTO roles (role_name) VALUES ('HR Manager')";
+    mysqli_query($conn, $insert_hr_role);
+}
+
 // Get roles for dropdown
 $sql = "SELECT * FROM roles WHERE id > 1 ORDER BY id";  // Exclude admin role
 $roles = mysqli_query($conn, $sql);
 
-// Define available menus
-$menus = array(
-    'dashboard' => 'Dashboard',
-    'upload_enquiries' => 'Upload Enquiries',
-    'view_enquiries' => 'View Enquiries',
-    'job_enquiries' => 'Job Enquiries',
-    'ticket_enquiries' => 'Ticket Enquiries',
-    'influencer_enquiries' => 'Influencer Enquiries',
-    'dmc_agent_enquiries' => 'DMC/Agent Enquiries',
-    'cruise_enquiries' => 'Cruise Enquiries',
-    'lost_to_competitors' => 'Lost to Competitors',
-    'view_leads' => 'View Leads',
-    'fixed_package_lead' => 'Fixed Package Lead',
-    'custom_package_leads' => 'Custom Package Leads',
-    'medical_tourism_leads' => 'Medical Tourism Leads',
-    'pipeline' => 'Pipeline',
-    'booking_confirmed' => 'Booking Confirmed',
-    'travel_completed' => 'Travel Completed',
-    'view_cost_sheets' => 'View Cost Sheets',
-    'hotel_resorts' => 'Hotel/Resorts Reservation',
-    'cruise_reservation' => 'Cruise Reservation',
-    'visa_air_ticket' => 'Visa & Air Ticket',
-    'transportation_reservation' => 'Transportation Reservation',
-    'feedbacks' => 'Feedbacks',
-    'upload_marketing_data' => 'Upload Marketing Data',
-    'ad_campaign' => 'Ad Campaigns',
-    'upload_daily_campaign_data' => 'Upload Daily Campaign Data',
-    'manage_users' => 'Manage Users',
-    'user_privileges' => 'User Privileges',
-    'transportation_details' => 'Transportation Details',
-    'accommodation_details' => 'Accommodation Details',
-    'cruise_details' => 'CRUISE Details',
-    'extras_miscellaneous_details' => 'Extras/Miscellaneous Details'
+// Define available menus organized by categories
+$menu_categories = array(
+    'Core Functions' => array(
+        'dashboard' => 'Dashboard',
+        'upload_enquiries' => 'Upload Enquiries'
+    ),
+    'Enquiries Management' => array(
+        'view_enquiries' => 'All Enquiries',
+        'job_enquiries' => 'Job Enquiries',
+        'ticket_enquiries' => 'Ticket Enquiries',
+        'influencer_enquiries' => 'Influencer Enquiries',
+        'dmc_agent_enquiries' => 'DMC/Agent Enquiries',
+        'cruise_enquiries' => 'Cruise Enquiries',
+        'no_response_enquiries' => 'No Response Enquiries',
+        'follow_up_enquiries' => 'Follow up Enquiries'
+    ),
+    'Leads Management' => array(
+        'view_leads' => 'All Leads',
+        'fixed_package_lead' => 'Fixed Package Lead',
+        'custom_package_leads' => 'Custom Package Leads',
+        'medical_tourism_leads' => 'Medical Tourism Leads',
+        'lost_to_competitors' => 'Lost to Competitors',
+        'no_response_leads' => 'No Response/Rejected Leads',
+        'follow_up_leads' => 'Follow up Leads'
+    ),
+    'Sales & Booking' => array(
+        'pipeline' => 'Pipeline',
+        'booking_confirmed' => 'Booking Confirmed',
+        'travel_completed' => 'Travel Completed',
+        'view_cost_sheets' => 'View Cost Sheets',
+        'view_payment_receipts' => 'View Payment Receipts',
+        'feedbacks' => 'Feedbacks'
+    ),
+    'Reservation/Booking' => array(
+        'hotel_resorts' => 'Hotel/Resorts',
+        'cruise_reservation' => 'Cruise',
+        'visa_air_ticket' => 'Visa & Air Ticket',
+        'transportation_reservation' => 'Transportation'
+    ),
+    'Marketing' => array(
+        'upload_marketing_data' => 'Upload Daily Campaign Data',
+        'ad_campaign' => 'Ad Campaigns'
+    ),
+    'Reports' => array(
+        'summary_report' => 'Summary',
+        'daily_movement_register' => 'Daily Movement Register',
+        'user_activity_report' => 'User Activity Report',
+        'department_report' => 'Department Wise Report',
+        'source_report' => 'Source Wise Report',
+        'user_performance_report' => 'User Performance Report',
+        'package_performance_report' => 'Package Performance Report',
+        'marketing_performance_report' => 'Marketing Performance Report'
+    ),
+    'Data Module' => array(
+        'transportation_details' => 'Transportation Details',
+        'accommodation_details' => 'Accommodation Details',
+        'cruise_details' => 'Cruise Details',
+        'extras_miscellaneous_details' => 'Extras/Miscellaneous Details'
+    ),
+    'Administration' => array(
+        'add_user' => 'Manage Users',
+        'user_privileges' => 'User Privileges'
+    )
 );
+
+// Flatten the menu structure for processing
+$menus = array();
+foreach($menu_categories as $category => $category_menus) {
+    $menus = array_merge($menus, $category_menus);
+}
 
 // Process form submission
 if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["save_privileges"])) {
@@ -143,6 +187,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["select_role"]) && !isse
                         </div>
                         <div class="col-md-6 d-flex align-items-end">
                             <button type="submit" name="select_role" class="btn btn-secondary">Select Role</button>
+                            <?php if(!empty($role_id)): ?>
+                                <a href="edit_user_privileges.php?role_id=<?php echo $role_id; ?>" class="btn btn-primary ms-2">Edit Privileges</a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </form>
@@ -161,48 +208,53 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["select_role"]) && !isse
                         </div>
                         
                         <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Menu</th>
-                                        <th class="text-center">View</th>
-                                        <th class="text-center">Add</th>
-                                        <th class="text-center">Edit</th>
-                                        <th class="text-center">Delete</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach($menus as $menu_key => $menu_label): ?>
-                                        <tr>
-                                            <td><?php echo $menu_label; ?></td>
-                                            <td class="text-center">
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input privilege-checkbox view-checkbox" type="checkbox" id="view_<?php echo $menu_key; ?>" name="view_<?php echo $menu_key; ?>" value="1" 
-                                                        <?php echo (isset($privileges[$menu_key]) && $privileges[$menu_key]['can_view']) ? 'checked' : ''; ?>>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input privilege-checkbox add-checkbox" type="checkbox" id="add_<?php echo $menu_key; ?>" name="add_<?php echo $menu_key; ?>" value="1" 
-                                                        <?php echo (isset($privileges[$menu_key]) && $privileges[$menu_key]['can_add']) ? 'checked' : ''; ?>>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input privilege-checkbox edit-checkbox" type="checkbox" id="edit_<?php echo $menu_key; ?>" name="edit_<?php echo $menu_key; ?>" value="1" 
-                                                        <?php echo (isset($privileges[$menu_key]) && $privileges[$menu_key]['can_edit']) ? 'checked' : ''; ?>>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="form-check form-check-inline">
-                                                    <input class="form-check-input privilege-checkbox delete-checkbox" type="checkbox" id="delete_<?php echo $menu_key; ?>" name="delete_<?php echo $menu_key; ?>" value="1" 
-                                                        <?php echo (isset($privileges[$menu_key]) && $privileges[$menu_key]['can_delete']) ? 'checked' : ''; ?>>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                            <?php foreach($menu_categories as $category => $category_menus): ?>
+                                <div class="mb-4">
+                                    <h6 class="text-primary mb-3">
+                                        <i class="fa fa-folder-open"></i> <?php echo $category; ?>
+                                        <div class="float-right">
+                                            <small>
+                                                <input type="checkbox" class="category-select-all" data-category="<?php echo str_replace(' ', '_', strtolower($category)); ?>" onclick="toggleCategoryPrivileges(this, '<?php echo str_replace(' ', '_', strtolower($category)); ?>')">
+                                                <label>Select All</label>
+                                            </small>
+                                        </div>
+                                    </h6>
+                                    <table class="table table-bordered table-sm">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 40%;">Menu</th>
+                                                <th class="text-center" style="width: 15%;">View</th>
+                                                <th class="text-center" style="width: 15%;">Add</th>
+                                                <th class="text-center" style="width: 15%;">Edit</th>
+                                                <th class="text-center" style="width: 15%;">Delete</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach($category_menus as $menu_key => $menu_label): ?>
+                                                <tr class="category-<?php echo str_replace(' ', '_', strtolower($category)); ?>">
+                                                    <td><?php echo $menu_label; ?></td>
+                                                    <td class="text-center">
+                                                        <input class="form-check-input privilege-checkbox view-checkbox category-<?php echo str_replace(' ', '_', strtolower($category)); ?>-checkbox" type="checkbox" id="view_<?php echo $menu_key; ?>" name="view_<?php echo $menu_key; ?>" value="1" 
+                                                            <?php echo (isset($privileges[$menu_key]) && $privileges[$menu_key]['can_view']) ? 'checked' : ''; ?>>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <input class="form-check-input privilege-checkbox add-checkbox category-<?php echo str_replace(' ', '_', strtolower($category)); ?>-checkbox" type="checkbox" id="add_<?php echo $menu_key; ?>" name="add_<?php echo $menu_key; ?>" value="1" 
+                                                            <?php echo (isset($privileges[$menu_key]) && $privileges[$menu_key]['can_add']) ? 'checked' : ''; ?>>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <input class="form-check-input privilege-checkbox edit-checkbox category-<?php echo str_replace(' ', '_', strtolower($category)); ?>-checkbox" type="checkbox" id="edit_<?php echo $menu_key; ?>" name="edit_<?php echo $menu_key; ?>" value="1" 
+                                                            <?php echo (isset($privileges[$menu_key]) && $privileges[$menu_key]['can_edit']) ? 'checked' : ''; ?>>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <input class="form-check-input privilege-checkbox delete-checkbox category-<?php echo str_replace(' ', '_', strtolower($category)); ?>-checkbox" type="checkbox" id="delete_<?php echo $menu_key; ?>" name="delete_<?php echo $menu_key; ?>" value="1" 
+                                                            <?php echo (isset($privileges[$menu_key]) && $privileges[$menu_key]['can_delete']) ? 'checked' : ''; ?>>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
                         
                         <div class="row mt-3">
@@ -212,6 +264,34 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["select_role"]) && !isse
                         </div>
                     </form>
                 <?php endif; ?>
+                
+                <!-- User Roles List -->
+                <div class="mt-5">
+                    <h5>All User Roles</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Role ID</th>
+                                    <th>Role Name</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php mysqli_data_seek($roles, 0); ?>
+                                <?php while($role = mysqli_fetch_assoc($roles)): ?>
+                                    <tr>
+                                        <td><?php echo $role['id']; ?></td>
+                                        <td><?php echo htmlspecialchars($role['role_name']); ?></td>
+                                        <td>
+                                            <a href="edit_user_privileges.php?role_id=<?php echo $role['id']; ?>" class="btn btn-sm btn-primary">Edit Privileges</a>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -223,6 +303,20 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["select_role"]) && !isse
         const checkboxes = document.querySelectorAll('.privilege-checkbox');
         checkboxes.forEach(function(checkbox) {
             checkbox.checked = checked;
+        });
+        // Update category checkboxes
+        const categoryCheckboxes = document.querySelectorAll('.category-select-all');
+        categoryCheckboxes.forEach(function(checkbox) {
+            checkbox.checked = checked;
+        });
+    }
+    
+    // Function to toggle category privileges
+    function toggleCategoryPrivileges(checkbox, category) {
+        const checked = checkbox.checked;
+        const categoryCheckboxes = document.querySelectorAll('.category-' + category + '-checkbox');
+        categoryCheckboxes.forEach(function(cb) {
+            cb.checked = checked;
         });
     }
 </script>

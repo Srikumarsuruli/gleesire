@@ -207,6 +207,7 @@ $campaigns = mysqli_query($conn, $sql);
                                 <th>End Date</th>
                                 <th>Days Left</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -245,11 +246,14 @@ $campaigns = mysqli_query($conn, $sql);
                                                 <?php echo ucfirst($campaign['status']); ?>
                                             </span>
                                         </td>
+                                        <td>
+                                            <a href="edit_ad_campaign.php?id=<?php echo $campaign['id']; ?>" class="btn btn-sm btn-primary">Edit</a>
+                                        </td>
                                     </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="8" class="text-center">No campaigns found</td>
+                                    <td colspan="9" class="text-center">No campaigns found</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>

@@ -68,7 +68,7 @@ function generateLeadNumber() {
         // Generate a random 4-digit number for the sequence
         const sequence = Math.floor(1000 + Math.random() * 9000);
         
-        const leadNumber = `LGH-${year}/${month}/${day}/${sequence}`;
+        const leadNumber = `GHL/${year}/${month}/${day}/${sequence}`;
         leadNumberField.value = leadNumber;
     }
 }

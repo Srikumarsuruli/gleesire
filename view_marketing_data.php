@@ -2,11 +2,7 @@
 // Include header
 require_once "includes/header.php";
 
-// Check if user has privilege to access this page
-if(!hasPrivilege('view_marketing_data') && $_SESSION["role_id"] != 1) {
-    header("location: index.php");
-    exit;
-}
+// Allow all logged-in users to access this page
 
 // Check if file_id is provided
 if(!isset($_GET['file_id']) || empty($_GET['file_id'])) {

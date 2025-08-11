@@ -1,0 +1,34 @@
+.notification-list ul li a {
+    padding: 0 !important;
+}
+
+.user-notification {
+    position: relative !important;
+}
+
+.header .user-notification .dropdown-toggle .badge.notification-active {
+    z-index: 99999 !important;
+    position: absolute !important;
+    right: 8px !important;
+    top: 10px !important;
+    pointer-events: none !important;
+    display: block !important;
+    width: 25px !important;
+    height: 16px !important;
+    background: #f5678a !important;
+    border-radius: 50% !important;
+    text-align: center !important;
+    line-height: 16px !important;
+    font-size: 10px !important;
+}
+
+.user-notification .dropdown-toggle i {
+    z-index: 1 !important;
+    position: relative !important;
+}
+
+
+.user-notification .dropdown-toggle .badge {
+    width: 24px !important;
+    height: 19px !important;
+}

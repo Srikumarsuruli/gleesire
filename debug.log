@@ -1,0 +1,954 @@
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 15
+)
+
+SQL: UPDATE enquiries SET status_id = 15, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 15
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 15
+)
+
+SQL: UPDATE enquiries SET status_id = 15, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 15
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 15
+)
+
+SQL: UPDATE enquiries SET status_id = 15, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 15
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 15
+)
+
+SQL: UPDATE enquiries SET status_id = 15, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 15
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 15
+)
+
+SQL: UPDATE enquiries SET status_id = 15, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 15
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 1
+)
+
+SQL: UPDATE enquiries SET status_id = 1, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 1
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 9
+)
+
+SQL: UPDATE enquiries SET status_id = 9, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 9
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 9
+)
+
+SQL: UPDATE enquiries SET status_id = 9, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 9
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 9
+)
+
+SQL: UPDATE enquiries SET status_id = 9, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 9
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 9
+)
+
+SQL: UPDATE enquiries SET status_id = 9, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 9
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 9
+)
+
+SQL: UPDATE enquiries SET status_id = 9, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 9
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 9
+)
+
+SQL: UPDATE enquiries SET status_id = 9, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 9
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 9
+)
+
+SQL: UPDATE enquiries SET status_id = 9, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 9
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Available statuses:
+ID: 1, Name: Data Mismatch
+ID: 2, Name: Disappearing Messages on
+ID: 3, Name: Converted
+ID: 4, Name: Discussion Ongoing
+ID: 5, Name: Invalid
+ID: 6, Name: Last-Minute Booking
+ID: 7, Name: Lost to Competitors
+ID: 8, Name: No Incoming Calls
+ID: 9, Name: No Response
+ID: 10, Name: Not Interested
+ID: 11, Name: Package Shared
+ID: 12, Name: Plan Dropped
+ID: 13, Name: Postponed
+ID: 14, Name: Reschedule Request
+ID: 15, Name: Switched Off
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 9
+)
+
+SQL: UPDATE enquiries SET status_id = 9, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 9
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 5
+)
+
+SQL: UPDATE enquiries SET status_id = 5, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 5
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 5
+)
+
+SQL: UPDATE enquiries SET status_id = 5, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 5
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 5
+)
+
+SQL: UPDATE enquiries SET status_id = 5, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 5
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 4
+)
+
+SQL: UPDATE enquiries SET status_id = 4, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 4
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 3
+)
+
+SQL: UPDATE enquiries SET status_id = 3, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 3
+Received POST: Array
+(
+    [id] => 56
+    [status_id] => 3
+)
+
+SQL: UPDATE enquiries SET status_id = 3, last_updated = NOW() WHERE id = 56
+Affected rows: 1
+Verified status in DB: 3
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 3
+)
+
+SQL: UPDATE enquiries SET status_id = 3, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 3
+Received POST: Array
+(
+    [id] => 65
+    [status_id] => 3
+)
+
+SQL: UPDATE enquiries SET status_id = 3, last_updated = NOW() WHERE id = 65
+Affected rows: 1
+Verified status in DB: 3
+Received POST: Array
+(
+    [id] => 66
+    [status_id] => 12
+)
+
+SQL: UPDATE enquiries SET status_id = 12, last_updated = NOW() WHERE id = 66
+Affected rows: 1
+Verified status in DB: 12
+Received POST: Array
+(
+    [id] => 66
+    [status_id] => 12
+)
+
+SQL: UPDATE enquiries SET status_id = 12, last_updated = NOW() WHERE id = 66
+Affected rows: 1
+Verified status in DB: 12
+Received POST: Array
+(
+    [id] => 66
+    [status_id] => 12
+)
+
+SQL: UPDATE enquiries SET status_id = 12, last_updated = NOW() WHERE id = 66
+Affected rows: 1
+Verified status in DB: 12
+Received POST: Array
+(
+    [id] => 66
+    [status_id] => 12
+)
+
+SQL: UPDATE enquiries SET status_id = 12, last_updated = NOW() WHERE id = 66
+Affected rows: 1
+Verified status in DB: 12

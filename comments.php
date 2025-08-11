@@ -112,6 +112,23 @@ $comments_stmt = mysqli_prepare($conn, $comments_sql);
 mysqli_stmt_bind_param($comments_stmt, "i", $id);
 mysqli_stmt_execute($comments_stmt);
 $comments_result = mysqli_stmt_get_result($comments_stmt);
+
+// Check if comment_attachments table exists and get attachments
+$table_check = mysqli_query($conn, "SHOW TABLES LIKE 'comment_attachments'");
+if(mysqli_num_rows($table_check) > 0) {
+    $attachments_sql = "SELECT ca.*, u.full_name as user_name 
+                       FROM comment_attachments ca 
+                       JOIN users u ON ca.user_id = u.id 
+                       WHERE ca.enquiry_id = ? 
+                       ORDER BY ca.created_at DESC";
+    
+    $attachments_stmt = mysqli_prepare($conn, $attachments_sql);
+    mysqli_stmt_bind_param($attachments_stmt, "i", $id);
+    mysqli_stmt_execute($attachments_stmt);
+    $attachments_result = mysqli_stmt_get_result($attachments_stmt);
+} else {
+    $attachments_result = false;
+}
 ?>
 
 
@@ -130,52 +147,166 @@ $comments_result = mysqli_stmt_get_result($comments_stmt);
             </div>
             
             <div class="pd-20">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5>Add Comment</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="post" action="add_comment.php">
-                            <input type="hidden" name="enquiry_id" value="<?php echo $id; ?>">
-                            <input type="hidden" name="redirect" value="comments.php?id=<?php echo $id; ?>&type=<?php echo $type; ?>">
-                            
-                            <div class="form-group">
-                                <label for="comment">Comment</label>
-                                <textarea class="form-control" id="comment" name="comment" rows="4" required></textarea>
+                <div class="row">
+                    <!-- Comments Section -->
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5>Add Comment</h5>
                             </div>
-                            
-                            <button type="submit" class="btn btn-primary">Submit Comment</button>
-                            <a href="<?php echo $redirect_url; ?>" class="btn btn-secondary">Back</a>
-                        </form>
+                            <div class="card-body">
+                                <form method="post" action="add_comment.php" onsubmit="return submitComment(this);">
+                                    <input type="hidden" name="enquiry_id" value="<?php echo $id; ?>">
+                                    <input type="hidden" name="redirect" value="comments.php?id=<?php echo $id; ?>&type=<?php echo $type; ?>">
+                                    
+                                    <div class="form-group">
+                                        <label for="comment">Comment</label>
+                                        <textarea class="form-control" id="comment" name="comment" rows="4" required></textarea>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">Submit Comment</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Attachments Section -->
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5>Add Attachment</h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="post" action="add_attachment.php" enctype="multipart/form-data">
+                                    <input type="hidden" name="enquiry_id" value="<?php echo $id; ?>">
+                                    <input type="hidden" name="redirect" value="comments.php?id=<?php echo $id; ?>&type=<?php echo $type; ?>">
+                                    
+                                    <div class="form-group">
+                                        <label for="attachment">Upload File (Image/PDF)</label>
+                                        <input type="file" class="form-control" id="attachment" name="attachment" accept=".jpg,.jpeg,.png,.pdf" required>
+                                        <small class="text-muted">Allowed formats: JPG, JPEG, PNG, PDF</small>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">Upload</button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Comment History</h5>
+                <div class="text-center mb-3">
+                    <a href="<?php echo $redirect_url; ?>" class="btn btn-secondary">Back</a>
+                </div>
+                
+                <div class="row">
+                    <!-- Comments History -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Comment History</h5>
+                            </div>
+                            <div class="card-body">
+                                <?php if(mysqli_num_rows($comments_result) > 0): ?>
+                                    <?php while($comment = mysqli_fetch_assoc($comments_result)): ?>
+                                        <div class="comment-box mb-3 p-3 border rounded">
+                                            <div class="comment-header d-flex justify-content-between mb-2">
+                                                <span class="comment-user font-weight-bold"><?php echo htmlspecialchars($comment['user_name']); ?></span>
+                                                <span class="comment-date text-muted"><?php echo date('d-m-Y H:i', strtotime($comment['created_at'])); ?></span>
+                                            </div>
+                                            <div class="comment-body">
+                                                <?php echo nl2br(htmlspecialchars($comment['comment'])); ?>
+                                            </div>
+                                        </div>
+                                    <?php endwhile; ?>
+                                <?php else: ?>
+                                    <p class="text-muted">No comments yet.</p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <?php if(mysqli_num_rows($comments_result) > 0): ?>
-                            <?php while($comment = mysqli_fetch_assoc($comments_result)): ?>
-                                <div class="comment-box mb-3 p-3 border rounded">
-                                    <div class="comment-header d-flex justify-content-between mb-2">
-                                        <span class="comment-user font-weight-bold"><?php echo htmlspecialchars($comment['user_name']); ?></span>
-                                        <span class="comment-date text-muted"><?php echo date('d-m-Y H:i', strtotime($comment['created_at'])); ?></span>
-                                    </div>
-                                    <div class="comment-body">
-                                        <?php echo nl2br(htmlspecialchars($comment['comment'])); ?>
-                                    </div>
-                                </div>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <p class="text-muted">No comments yet.</p>
-                        <?php endif; ?>
+                    
+                    <!-- Attachments History -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Attachment History</h5>
+                            </div>
+                            <div class="card-body">
+                                <?php if($attachments_result && mysqli_num_rows($attachments_result) > 0): ?>
+                                    <?php while($attachment = mysqli_fetch_assoc($attachments_result)): ?>
+                                        <div class="attachment-box mb-3 p-3 border rounded">
+                                            <div class="attachment-header d-flex justify-content-between mb-2">
+                                                <span class="attachment-user font-weight-bold"><?php echo htmlspecialchars($attachment['user_name']); ?></span>
+                                                <span class="attachment-date text-muted"><?php echo date('d-m-Y H:i', strtotime($attachment['created_at'])); ?></span>
+                                            </div>
+                                            <div class="attachment-body d-flex justify-content-between align-items-center">
+                                                <span><?php echo htmlspecialchars($attachment['original_name']); ?></span>
+                                                <button class="btn btn-sm btn-primary" onclick="viewAttachment('<?php echo $attachment['file_path']; ?>', '<?php echo $attachment['file_type']; ?>')">View</button>
+                                            </div>
+                                        </div>
+                                    <?php endwhile; ?>
+                                <?php else: ?>
+                                    <p class="text-muted">No attachments yet.</p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Attachment View Modal -->
+<div class="modal fade" id="attachmentModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">View Attachment</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="attachmentContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let isSubmitting = false;
+
+function submitComment(form) {
+    if (isSubmitting) {
+        return false;
+    }
+    
+    const comment = form.comment.value.trim();
+    if (comment === '') {
+        alert('Please enter a comment');
+        return false;
+    }
+    
+    isSubmitting = true;
+    form.querySelector('button[type="submit"]').disabled = true;
+    form.querySelector('button[type="submit"]').textContent = 'Submitting...';
+    
+    return true;
+}
+
+function viewAttachment(filePath, fileType) {
+    const content = document.getElementById('attachmentContent');
+    
+    if (fileType === 'pdf') {
+        content.innerHTML = `<embed src="${filePath}" type="application/pdf" width="100%" height="600px" />`;
+    } else {
+        content.innerHTML = `<img src="${filePath}" class="img-fluid" alt="Attachment" />`;
+    }
+    
+    $('#attachmentModal').modal('show');
+}
+</script>
 
 <?php
 // Include footer

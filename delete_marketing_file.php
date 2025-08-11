@@ -1,6 +1,7 @@
 <?php
-// Include database connection
-require_once "includes/header.php";
+session_start();
+require_once "config/database.php";
+require_once "includes/functions.php";
 
 // Check if user is logged in
 if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
@@ -38,19 +39,19 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["file_id"]) && !empty($_
         mysqli_commit($conn);
         
         // Redirect with success message
-        header("location: upload_marketing_data.php?deleted=1");
+        header("Location: upload_marketing_data.php?deleted=1");
         exit;
     } catch (Exception $e) {
         // Rollback transaction on error
         mysqli_rollback($conn);
         
         // Redirect with error message
-        header("location: upload_marketing_data.php?error=1");
+        header("Location: upload_marketing_data.php?error=1");
         exit;
     }
 } else {
     // Invalid request
-    header("location: upload_marketing_data.php?error=2");
+    header("Location: upload_marketing_data.php?error=2");
     exit;
 }
 ?>

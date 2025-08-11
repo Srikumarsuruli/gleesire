@@ -1,13 +1,7 @@
         </div>
     </div>
     
-    <!-- Core js -->
-    <script src="assets/deskapp/vendors/scripts/core.js"></script>
-    <script src="assets/deskapp/vendors/scripts/script.min.js"></script>
-    
-    <!-- Deferred js -->
-    <script src="assets/deskapp/vendors/scripts/process.js" defer></script>
-    <script src="assets/deskapp/vendors/scripts/layout-settings.js" defer></script>
+    <!-- DataTables js -->
     <script src="assets/deskapp/src/plugins/datatables/js/jquery.dataTables.min.js" defer></script>
     <script src="assets/deskapp/src/plugins/datatables/js/dataTables.bootstrap4.min.js" defer></script>
     <script src="assets/deskapp/src/plugins/datatables/js/dataTables.responsive.min.js" defer></script>
@@ -16,13 +10,37 @@
     <!-- Fast load optimization -->
     <script src="assets/js/fast-load.js"></script>
     
+    <!-- Sidebar toggle functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Menu toggle functionality
+            const menuIcon = document.querySelector('.menu-icon');
+            const body = document.body;
+            
+            if (menuIcon) {
+                menuIcon.addEventListener('click', function() {
+                    body.classList.toggle('sidebar-shrink');
+                });
+            }
+            
+            // Close sidebar on mobile overlay click
+            const overlay = document.querySelector('.mobile-menu-overlay');
+            if (overlay) {
+                overlay.addEventListener('click', function() {
+                    body.classList.remove('sidebar-shrink');
+                });
+            }
+        });
+    </script>
+    
     <!-- Add custom script for datatable initialization -->
     <script>
         // Initialize datatables after all scripts are loaded
         window.addEventListener('load', function() {
             setTimeout(function() {
                 if ($.fn.DataTable) {
-                    $('.data-table').DataTable({
+                    // Only initialize tables that haven't been initialized yet
+                    $('.data-table:not(.dataTable)').DataTable({
                         scrollCollapse: true,
                         autoWidth: false,
                         responsive: true,

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Database Update</title>
+</head>
+<body>
+    <h2>Database Update</h2>
+    <p>To add the children_age_details column to the database, please:</p>
+    <ol>
+        <li>Open your web browser</li>
+        <li>Navigate to: <strong>http://localhost/git/gleesire/update_database.php</strong></li>
+        <li>This will add the required column to the converted_leads table</li>
+    </ol>
+    
+    <p>Alternatively, you can run this SQL command directly in phpMyAdmin:</p>
+    <code>ALTER TABLE `converted_leads` ADD COLUMN `children_age_details` VARCHAR(255) NULL AFTER `infants_count`;</code>
+</body>
+</html>

@@ -35,6 +35,30 @@ if($result) {
     $total_confirmed = $row['count'];
 }
 
+// Total canceled bookings count
+$sql = "SELECT COUNT(*) as count FROM converted_leads WHERE booking_confirmed = 0";
+$result = mysqli_query($conn, $sql);
+$total_canceled = 0;
+if($result) {
+    $row = mysqli_fetch_assoc($result);
+    $total_canceled = $row['count'];
+}
+
+// Profit value (set to 0 for now)
+$profit_value = 0;
+
+// Canceled booking amount (set to 0 for now)
+$canceled_booking_amount = 0;
+
+// Total travel completed (using travel end date in the past)
+$sql = "SELECT COUNT(*) as count FROM converted_leads WHERE travel_end_date IS NOT NULL AND travel_end_date < CURDATE()";
+$result = mysqli_query($conn, $sql);
+$total_travel_completed = 0;
+if($result) {
+    $row = mysqli_fetch_assoc($result);
+    $total_travel_completed = $row['count'];
+}
+
 // Total pipeline leads
 $sql = "SELECT COUNT(*) as count FROM enquiries e 
         JOIN lead_status_map lsm ON e.id = lsm.enquiry_id
@@ -120,7 +144,7 @@ $recent_enquiries_sql = "SELECT e.*, u.full_name as attended_by_name, s.name as 
                         ORDER BY e.received_datetime DESC LIMIT 5";
 $recent_enquiries = mysqli_query($conn, $recent_enquiries_sql);
 
-// Recent leads
+// Recent leads with file manager filtering
 $recent_leads_sql = "SELECT e.*, u.full_name as attended_by_name, s.name as source_name, 
                     ls.name as status_name, cl.enquiry_number
                     FROM enquiries e 
@@ -128,8 +152,20 @@ $recent_leads_sql = "SELECT e.*, u.full_name as attended_by_name, s.name as sour
                     JOIN sources s ON e.source_id = s.id 
                     JOIN lead_status ls ON e.status_id = ls.id 
                     JOIN converted_leads cl ON e.id = cl.enquiry_id
-                    WHERE e.status_id = 3 AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL)
-                    ORDER BY e.received_datetime DESC LIMIT 5";
+                    WHERE e.status_id = 3 AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL)";
+
+// Check if current user is assigned as file manager to any leads
+$file_manager_check_sql = "SELECT COUNT(*) as count FROM converted_leads WHERE file_manager_id = " . $_SESSION["id"];
+$fm_check_result = mysqli_query($conn, $file_manager_check_sql);
+$fm_check = mysqli_fetch_assoc($fm_check_result);
+$is_file_manager = $fm_check['count'] > 0;
+
+// If user is not admin and is assigned as file manager to leads, show only their assigned leads
+if($_SESSION["role_id"] != 1 && $is_file_manager) {
+    $recent_leads_sql .= " AND cl.file_manager_id = " . $_SESSION["id"];
+}
+
+$recent_leads_sql .= " ORDER BY e.received_datetime DESC LIMIT 5";
 $recent_leads = mysqli_query($conn, $recent_leads_sql);
 
 // Recent confirmed bookings
@@ -246,12 +282,15 @@ if($total_marketing_revenue_result) {
     $row = mysqli_fetch_assoc($total_marketing_revenue_result);
     $total_marketing_revenue = $row['total_revenue'] ? floatval($row['total_revenue']) : 0;
 }
+
+// Total sale amount - set to 0 as sale_amount column doesn't exist yet
+$total_sale_amount = 0;
 ?>
 
 
 
 <div class="row pb-10">
-    <div class="col-xl-3 col-lg-3 col-md-6 mb-20">
+    <div class="col-xl-2 col-lg-4 col-md-6 mb-20">
         <div class="card-box height-100-p widget-style3">
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
@@ -266,12 +305,12 @@ if($total_marketing_revenue_result) {
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-lg-3 col-md-6 mb-20">
+    <div class="col-xl-2 col-lg-4 col-md-6 mb-20">
         <div class="card-box height-100-p widget-style3">
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
                     <div class="weight-700 font-24 text-dark"><?php echo $total_leads; ?></div>
-                    <div class="font-14 text-secondary weight-500">Total Leads</div>
+                    <div class="font-14 text-secondary weight-500">Total Leads &nbsp;&nbsp;&nbsp;</div>
                 </div>
                 <div class="widget-icon">
                     <div class="icon" data-color="#ff5b5b">
@@ -281,12 +320,12 @@ if($total_marketing_revenue_result) {
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-lg-3 col-md-6 mb-20">
+    <div class="col-xl-2 col-lg-4 col-md-6 mb-20">
         <div class="card-box height-100-p widget-style3">
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
                     <div class="weight-700 font-24 text-dark"><?php echo $total_pipeline; ?></div>
-                    <div class="font-14 text-secondary weight-500">Pipeline</div>
+                    <div class="font-14 text-secondary weight-500">Total Pipeline &nbsp;&nbsp;&nbsp;</div>
                 </div>
                 <div class="widget-icon">
                     <div class="icon" data-color="#09cc06">
@@ -296,7 +335,7 @@ if($total_marketing_revenue_result) {
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-lg-3 col-md-6 mb-20">
+    <div class="col-xl-2 col-lg-4 col-md-6 mb-20">
         <div class="card-box height-100-p widget-style3">
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
@@ -304,8 +343,38 @@ if($total_marketing_revenue_result) {
                     <div class="font-14 text-secondary weight-500">Confirmed Bookings</div>
                 </div>
                 <div class="widget-icon">
-                    <div class="icon">
+                    <div class="icon" data-color="#1b00ff">
                         <i class="icon-copy dw dw-checked"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-6 mb-20">
+        <div class="card-box height-100-p widget-style3">
+            <div class="d-flex flex-wrap">
+                <div class="widget-data">
+                    <div class="weight-700 font-24 text-dark">0</div>
+                    <div class="font-14 text-secondary weight-500">Travel Completed</div>
+                </div>
+                <div class="widget-icon">
+                    <div class="icon" data-color="#28a745">
+                        <i class="icon-copy dw dw-car"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-6 mb-20">
+        <div class="card-box height-100-p widget-style3">
+            <div class="d-flex flex-wrap">
+                <div class="widget-data">
+                    <div class="weight-700 font-24 text-dark"><?php echo $total_canceled; ?></div>
+                    <div class="font-14 text-secondary weight-500">Booking Canceled</div>
+                </div>
+                <div class="widget-icon">
+                    <div class="icon" data-color="#dc3545">
+                        <i class="icon-copy dw dw-cancel"></i>
                     </div>
                 </div>
             </div>
@@ -314,12 +383,12 @@ if($total_marketing_revenue_result) {
 </div>
 
 <div class="row pb-10">
-    <div class="col-xl-6 col-lg-6 col-md-6 mb-20">
+    <div class="col-xl-2 col-lg-4 col-md-6 mb-20">
         <div class="card-box height-100-p widget-style3">
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
                     <div class="weight-700 font-24 text-dark">₹<?php echo number_format($total_marketing_cost, 2); ?></div>
-                    <div class="font-14 text-secondary weight-500">Total Marketing Cost</div>
+                    <div class="font-14 text-secondary weight-500">Marketing Cost</div>
                 </div>
                 <div class="widget-icon">
                     <div class="icon" data-color="#ff9800">
@@ -329,7 +398,22 @@ if($total_marketing_revenue_result) {
             </div>
         </div>
     </div>
-    <div class="col-xl-6 col-lg-6 col-md-6 mb-20">
+    <div class="col-xl-2 col-lg-4 col-md-6 mb-20">
+        <div class="card-box height-100-p widget-style3">
+            <div class="d-flex flex-wrap">
+                <div class="widget-data">
+                    <div class="weight-700 font-24 text-dark">₹<?php echo number_format($total_sale_amount, 2); ?></div>
+                    <div class="font-14 text-secondary weight-500">Total Sale Amount</div>
+                </div>
+                <div class="widget-icon">
+                    <div class="icon" data-color="#17a2b8">
+                        <i class="icon-copy dw dw-invoice"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-6 mb-20">
         <div class="card-box height-100-p widget-style3">
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
@@ -339,6 +423,51 @@ if($total_marketing_revenue_result) {
                 <div class="widget-icon">
                     <div class="icon" data-color="#4caf50">
                         <i class="icon-copy dw dw-analytics-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-6 mb-20">
+        <div class="card-box height-100-p widget-style3">
+            <div class="d-flex flex-wrap">
+                <div class="widget-data">
+                    <div class="weight-700 font-24 text-dark"><?php echo $total_pipeline; ?></div>
+                    <div class="font-14 text-secondary weight-500">Pipeline Amount</div>
+                </div>
+                <div class="widget-icon">
+                    <div class="icon" data-color="#09cc06">
+                        <i class="icon-copy dw dw-analytics-21"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-6 mb-20">
+        <div class="card-box height-100-p widget-style3">
+            <div class="d-flex flex-wrap">
+                <div class="widget-data">
+                    <div class="weight-700 font-24 text-dark">₹<?php echo number_format($profit_value, 2); ?></div>
+                    <div class="font-14 text-secondary weight-500">Profit Value</div>
+                </div>
+                <div class="widget-icon">
+                    <div class="icon" data-color="#28a745">
+                        <i class="icon-copy dw dw-money-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-6 mb-20">
+        <div class="card-box height-100-p widget-style3">
+            <div class="d-flex flex-wrap">
+                <div class="widget-data">
+                    <div class="weight-700 font-24 text-dark">₹<?php echo number_format($canceled_booking_amount, 2); ?></div>
+                    <div class="font-14 text-secondary weight-500">Canceled Booking</div>
+                </div>
+                <div class="widget-icon">
+                    <div class="icon" data-color="#6c757d">
+                        <i class="icon-copy dw dw-money-1"></i>
                     </div>
                 </div>
             </div>
@@ -362,7 +491,7 @@ if($total_marketing_revenue_result) {
     </div>
 </div>
 
-<div class="row mb-30">
+<div class="row mb-30" style="display: none;">
     <div class="col-12">
         <div class="card-box height-100-p pd-20">
             <h4 class="h4 text-blue mb-20">Marketing Cost vs Revenue</h4>
@@ -604,8 +733,8 @@ if($total_marketing_revenue_result) {
     // Overview statistics chart
     var overviewOptions = {
         series: [{
-            name: 'Count',
-            data: [<?php echo $total_enquiries; ?>, <?php echo $total_leads; ?>, <?php echo $total_pipeline; ?>, <?php echo $total_confirmed; ?>]
+            name: 'Count/Amount',
+            data: [<?php echo $total_enquiries; ?>, <?php echo $total_leads; ?>, <?php echo $total_pipeline; ?>, <?php echo $total_confirmed; ?>, <?php echo $total_travel_completed; ?>, <?php echo $total_sale_amount; ?>, <?php echo $total_marketing_revenue; ?>, <?php echo $total_marketing_cost; ?>]
         }],
         chart: {
             type: 'bar',
@@ -624,31 +753,40 @@ if($total_marketing_revenue_result) {
                 }
             }
         },
-        colors: ['#00eccf', '#ff5b5b', '#09cc06', '#1b00ff'],
+        colors: ['#00eccf', '#ff5b5b', '#09cc06', '#1b00ff', '#28a745', '#17a2b8', '#4caf50', '#ff9800'],
         dataLabels: {
             enabled: true,
-            formatter: function(val) {
+            formatter: function(val, opts) {
+                var index = opts.dataPointIndex;
+                if (index >= 5) {
+                    return '₹' + val.toFixed(0);
+                }
                 return val;
             },
             offsetY: -20,
             style: {
-                fontSize: '12px',
+                fontSize: '10px',
                 colors: ["#304758"]
             }
         },
         xaxis: {
-            categories: ['Total Enquiries', 'Total Leads', 'Pipeline', 'Confirmed Bookings'],
+            categories: ['Enquiries', 'Leads', 'Pipeline', 'Confirmed', 'Travel Done', 'Sale Amount', 'Revenue', 'Marketing Cost'],
             position: 'bottom',
             axisBorder: {
                 show: false
             },
             axisTicks: {
                 show: false
+            },
+            labels: {
+                style: {
+                    fontSize: '10px'
+                }
             }
         },
         yaxis: {
             title: {
-                text: 'Count'
+                text: 'Count/Amount'
             }
         },
         fill: {
@@ -656,7 +794,11 @@ if($total_marketing_revenue_result) {
         },
         tooltip: {
             y: {
-                formatter: function(val) {
+                formatter: function(val, opts) {
+                    var index = opts.dataPointIndex;
+                    if (index >= 5) {
+                        return '₹' + val.toFixed(2);
+                    }
                     return val;
                 }
             }

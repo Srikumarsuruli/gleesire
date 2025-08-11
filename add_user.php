@@ -13,6 +13,14 @@ $username = $password = $confirm_password = $full_name = $email = $role_id = "";
 $username_err = $password_err = $confirm_password_err = $full_name_err = $email_err = $role_id_err = "";
 $success = "";
 
+// Add HR Manager role if it doesn't exist
+$check_hr_role = "SELECT id FROM roles WHERE role_name = 'HR Manager'";
+$hr_role_result = mysqli_query($conn, $check_hr_role);
+if(mysqli_num_rows($hr_role_result) == 0) {
+    $insert_hr_role = "INSERT INTO roles (role_name) VALUES ('HR Manager')";
+    mysqli_query($conn, $insert_hr_role);
+}
+
 // Get roles for dropdown
 $sql = "SELECT * FROM roles ORDER BY id";
 $roles = mysqli_query($conn, $sql);
@@ -233,6 +241,7 @@ $users = mysqli_query($conn, $sql);
                                 <th>Email</th>
                                 <th>Role</th>
                                 <th>Created At</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -245,11 +254,14 @@ $users = mysqli_query($conn, $sql);
                                         <td><?php echo htmlspecialchars($user['email']); ?></td>
                                         <td><?php echo htmlspecialchars($user['role_name']); ?></td>
                                         <td><?php echo date('d-m-Y H:i', strtotime($user['created_at'])); ?></td>
+                                        <td>
+                                            <a href="edit_user.php?id=<?php echo $user['id']; ?>" class="btn btn-sm btn-primary">Edit</a>
+                                        </td>
                                     </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="6" class="text-center">No users found</td>
+                                    <td colspan="7" class="text-center">No users found</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>

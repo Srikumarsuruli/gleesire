@@ -198,7 +198,6 @@ $files_result = mysqli_query($conn, $files_sql);
                             </a>
                             <div class="dropdown-menu dropdown-menu-right dropdown-menu-icon-list">
                                 <a class="dropdown-item" href="view_marketing_data.php?file_id=<?php echo $file['id']; ?>"><i class="dw dw-eye"></i> View</a>
-                                <a class="dropdown-item" href="download_marketing_data.php?file_id=<?php echo $file['id']; ?>"><i class="dw dw-download"></i> Download</a>
                                 <a class="dropdown-item delete-file" href="#" data-id="<?php echo $file['id']; ?>" data-toggle="modal" data-target="#confirmation-modal"><i class="dw dw-delete-3"></i> Delete</a>
                             </div>
                         </div>
@@ -243,10 +242,15 @@ $(document).ready(function() {
         $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
     });
     
+    // Initialize Bootstrap dropdowns
+    $('.dropdown-toggle').dropdown();
+    
     // Set file ID for delete confirmation
-    $(".delete-file").click(function() {
+    $(".delete-file").click(function(e) {
+        e.preventDefault();
         var fileId = $(this).data('id');
         $("#delete_file_id").val(fileId);
+        $('#confirmation-modal').modal('show');
     });
 });
 </script>

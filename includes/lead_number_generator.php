@@ -33,13 +33,13 @@ function generateLeadNumber($conn) {
         // Format with leading zeros
         $seq_formatted = sprintf('%04d', $next_seq);
         
-        return "LGH-$year/$month/$day/$seq_formatted";
+        return "GHL/$year/$month/$day/$seq_formatted";
     } catch (Exception $e) {
         // Rollback on error
         mysqli_rollback($conn);
         
         // Fallback to a timestamp-based number if there's an error
-        return "LGH-$year/$month/$day/" . sprintf('%04d', 1);
+        return "GHL/$year/$month/$day/" . sprintf('%04d', 1);
     }
 }
 ?>

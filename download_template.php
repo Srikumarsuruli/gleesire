@@ -19,23 +19,26 @@ fputcsv($output, [
     'Ad Campaign ID (optional)', 
     'Referral Code (optional)', 
     'Social Media Link (optional)',
-    'Status ID (1=New, 3=Converted)',
-    'Lead Type (Hot/Warm/Cold)',
+    'Status (New/Converted)',
+    'Enquiry Type',
     'Customer Location',
     'Secondary Contact',
     'Destination ID',
+    'Other Details',
     'Travel Month',
-    'Travel Start Date (YYYY-MM-DD)',
-    'Travel End Date (YYYY-MM-DD)',
+    'Night/Day',
+    'Travel Start Date',
+    'Travel End Date',
     'Adults Count',
     'Children Count',
     'Infants Count',
+    'Children Age Details',
     'Customer Available Timing',
     'File Manager ID',
-    'Other Details'
+    'Lead Priority'
 ]);
 
-// Add a sample row
+// Add a sample row with all fields (Converted lead)
 fputcsv($output, [
     'John Doe',
     '1234567890',
@@ -45,23 +48,26 @@ fputcsv($output, [
     '1', // Ad Campaign ID
     'REF123', // Referral Code
     'https://facebook.com/johndoe', // Social Media Link
-    '3', // Status ID (3 = Converted)
-    'Hot', // Lead Type
-    'New York', // Customer Location
+    'Converted', // Status
+    'Family Tour Package', // Enquiry Type
+    'Mumbai', // Customer Location
     '9876543210', // Secondary Contact
-    '2', // Destination ID
-    'January', // Travel Month
-    '2023-01-15', // Travel Start Date
-    '2023-01-25', // Travel End Date
+    '3', // Destination ID
+    'Honeymoon package', // Other Details
+    'December', // Travel Month
+    '5N/6D', // Night/Day
+    '2023-12-15', // Travel Start Date
+    '2023-12-20', // Travel End Date
     '2', // Adults Count
     '1', // Children Count
     '0', // Infants Count
-    'Evening', // Customer Available Timing
-    '3', // File Manager ID
-    'VIP Customer' // Other Details
+    '8 years', // Children Age Details
+    'Evening after 6 PM', // Customer Available Timing
+    '5', // File Manager ID
+    'Hot' // Lead Priority
 ]);
 
-// Add another sample row with minimal required fields
+// Add another sample row with minimal required fields (New lead)
 fputcsv($output, [
     'Jane Smith',
     '9876543210',
@@ -71,7 +77,23 @@ fputcsv($output, [
     '', // Ad Campaign ID (optional)
     '', // Referral Code (optional)
     '', // Social Media Link (optional)
-    '1' // Status ID (1 = New)
+    'New', // Status
+    'Budget Travel Request', // Enquiry Type
+    '', // Customer Location
+    '', // Secondary Contact
+    '', // Destination ID
+    '', // Other Details
+    '', // Travel Month
+    '', // Night/Day
+    '', // Travel Start Date
+    '', // Travel End Date
+    '', // Adults Count
+    '', // Children Count
+    '', // Infants Count
+    '', // Children Age Details
+    '', // Customer Available Timing
+    '', // File Manager ID
+    '' // Lead Priority
 ]);
 
 // Close the file pointer

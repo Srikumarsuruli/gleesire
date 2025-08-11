@@ -1,6 +1,22 @@
 <?php
-// Include header
-require_once "includes/header.php";
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Include database connection
+require_once "config/database.php";
+require_once "includes/functions.php";
+
+// Define dummy notification function
+function createLeadAssignmentNotification($enquiry_id, $file_manager_id, $conn) {
+    return true;
+}
+
+// Start session if not already started
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Check if user has privilege to access this page
 if(!hasPrivilege('view_enquiries', 'edit')) {
@@ -17,31 +33,7 @@ if(!isset($_GET["id"]) || empty(trim($_GET["id"]))) {
 $id = trim($_GET["id"]);
 $error = $success = "";
 
-// Get departments for dropdown
-$sql = "SELECT * FROM departments ORDER BY name";
-$departments = mysqli_query($conn, $sql);
-
-// Get sources for dropdown
-$sql = "SELECT * FROM sources ORDER BY name";
-$sources = mysqli_query($conn, $sql);
-
-// Get ad campaigns for dropdown
-$sql = "SELECT * FROM ad_campaigns WHERE status = 'active' ORDER BY name";
-$ad_campaigns = mysqli_query($conn, $sql);
-
-// Get lead statuses for dropdown
-$sql = "SELECT * FROM lead_status ORDER BY id";
-$lead_statuses = mysqli_query($conn, $sql);
-
-// Get users for dropdown
-$sql = "SELECT * FROM users ORDER BY full_name";
-$users = mysqli_query($conn, $sql);
-
-// Get destinations for dropdown
-$sql = "SELECT * FROM destinations ORDER BY name";
-$destinations = mysqli_query($conn, $sql);
-
-// Fetch enquiry data
+// Fetch enquiry data first
 $sql = "SELECT * FROM enquiries WHERE id = ?";
 if($stmt = mysqli_prepare($conn, $sql)) {
     mysqli_stmt_bind_param($stmt, "i", $id);
@@ -56,34 +48,22 @@ if($stmt = mysqli_prepare($conn, $sql)) {
             exit;
         }
     } else {
-        echo "Oops! Something went wrong. Please try again later.";
+        header("location: view_enquiries.php");
         exit;
     }
     
     mysqli_stmt_close($stmt);
 }
 
-// Fetch converted lead data if status is "Converted"
-$converted_lead = null;
-if($enquiry['status_id'] == 3) {
-    $sql = "SELECT * FROM converted_leads WHERE enquiry_id = ?";
-    if($stmt = mysqli_prepare($conn, $sql)) {
-        mysqli_stmt_bind_param($stmt, "i", $id);
-        
-        if(mysqli_stmt_execute($stmt)) {
-            $result = mysqli_stmt_get_result($stmt);
-            
-            if(mysqli_num_rows($result) == 1) {
-                $converted_lead = mysqli_fetch_assoc($result);
-            }
-        }
-        
-        mysqli_stmt_close($stmt);
-    }
-}
-
 // Process form submission
 if($_SERVER["REQUEST_METHOD"] == "POST") {
+    
+    // Debug travel_month
+    if(isset($_POST['travel_month'])) {
+        error_log('POST travel_month: ' . $_POST['travel_month']);
+    }
+
+    error_log("Form submitted - starting processing");
     // Validate input
     if(empty(trim($_POST["customer_name"]))) {
         $error = "Please enter customer name.";
@@ -114,7 +94,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         $status_id = trim($_POST["status_id"]);
         
-        // Check if status is being changed to "Converted"
+        // Check if status is being changed to "Converted" (ID 3)
         $old_status_id = $enquiry['status_id'];
         if($status_id == 3 && $old_status_id != 3) {
             // Will need to move to leads automatically
@@ -133,7 +113,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
     $social_media_link = !empty($_POST["social_media_link"]) ? trim($_POST["social_media_link"]) : NULL;
     $referral_code = !empty($_POST["referral_code"]) ? trim($_POST["referral_code"]) : NULL;
     $ad_campaign_id = !empty($_POST["ad_campaign_id"]) ? trim($_POST["ad_campaign_id"]) : NULL;
-    $night_day = !empty($_POST["night_day"]) ? trim($_POST["night_day"]) : NULL;
+    $enquiry_type = !empty($_POST["enquiry_type"]) ? trim($_POST["enquiry_type"]) : NULL;
     
     if(empty($error)) {
         // Update enquiry
@@ -148,18 +128,20 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                 ad_campaign_id = ?, 
                 attended_by = ?, 
                 status_id = ?,
-                night_day = ?
+                enquiry_type = ?
                 WHERE id = ?";
         
         if($stmt = mysqli_prepare($conn, $sql)) {
             mysqli_stmt_bind_param($stmt, "sssssiiiissi", $customer_name, $mobile_number, $email, $social_media_link, 
-                                  $referral_code, $department_id, $source_id, $ad_campaign_id, $attended_by, $status_id, $night_day, $id);
+                                  $referral_code, $department_id, $source_id, $ad_campaign_id, $attended_by, $status_id, $enquiry_type, $id);
             
             if(mysqli_stmt_execute($stmt)) {
-                // Check if status changed to "Converted"
+                // Check if status changed to "Converted" (ID 3)
                 if($status_id == 3 && $enquiry['status_id'] != 3) {
-                    // Generate enquiry number
-                    $enquiry_number = 'GH ' . sprintf('%04d', rand(1, 9999));
+                    // Include number generator
+                    require_once "includes/number_generator.php";
+                    // Generate enquiry number using the same system as upload_enquiries.php
+                    $enquiry_number = generateNumber('lead', $conn);
                     
                     // Get converted lead details
                     $lead_type = !empty($_POST["lead_type"]) ? trim($_POST["lead_type"]) : NULL;
@@ -170,32 +152,40 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     $travel_month = !empty($_POST["travel_month"]) ? trim($_POST["travel_month"]) : NULL;
                     $travel_start_date = !empty($_POST["travel_start_date"]) ? trim($_POST["travel_start_date"]) : NULL;
                     $travel_end_date = !empty($_POST["travel_end_date"]) ? trim($_POST["travel_end_date"]) : NULL;
+                    
                     $adults_count = !empty($_POST["adults_count"]) ? trim($_POST["adults_count"]) : 0;
                     $children_count = !empty($_POST["children_count"]) ? trim($_POST["children_count"]) : 0;
                     $infants_count = !empty($_POST["infants_count"]) ? trim($_POST["infants_count"]) : 0;
+                    $children_age_details = !empty($_POST["children_age_details"]) ? trim($_POST["children_age_details"]) : NULL;
                     $customer_available_timing = !empty($_POST["customer_available_timing"]) ? trim($_POST["customer_available_timing"]) : NULL;
                     $file_manager_id = !empty($_POST["file_manager_id"]) ? trim($_POST["file_manager_id"]) : NULL;
+                    $night_day = !empty($_POST["night_day"]) ? trim($_POST["night_day"]) : NULL;
                     
                     // Insert into converted_leads
                     $sql = "INSERT INTO converted_leads (enquiry_id, enquiry_number, lead_type, customer_location, secondary_contact, 
-                            destination_id, other_details, travel_month, travel_start_date, travel_end_date, 
-                            adults_count, children_count, infants_count, customer_available_timing, file_manager_id) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                            destination_id, other_details, travel_month, travel_start_date, travel_end_date, night_day, 
+                            adults_count, children_count, infants_count, children_age_details, customer_available_timing, file_manager_id) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     
                     if($stmt2 = mysqli_prepare($conn, $sql)) {
-                        mysqli_stmt_bind_param($stmt2, "issssississiiis", $id, $enquiry_number, $lead_type, $customer_location, 
+                        mysqli_stmt_bind_param($stmt2, "issssissssiiiissi", $id, $enquiry_number, $lead_type, $customer_location, 
                                               $secondary_contact, $destination_id, $other_details, $travel_month, 
-                                              $travel_start_date, $travel_end_date, $adults_count, $children_count, 
-                                              $infants_count, $customer_available_timing, $file_manager_id);
+                                              $travel_start_date, $travel_end_date, $night_day, $adults_count, $children_count, 
+                                              $infants_count, $children_age_details, $customer_available_timing, $file_manager_id);
                         
-                        if(!mysqli_stmt_execute($stmt2)) {
+                        if(mysqli_stmt_execute($stmt2)) {
+                            // Create notification if file manager is assigned
+                            if(!empty($file_manager_id)) {
+                                // createLeadAssignmentNotification($id, $file_manager_id, $conn);
+                            }
+                        } else {
                             $error = "Error saving converted lead details: " . mysqli_error($conn);
                         }
                         mysqli_stmt_close($stmt2);
                     }
                 } 
-                // Check if status is still "Converted" and we need to update converted_lead details
-                else if($status_id == 3 && $enquiry['status_id'] == 3 && $converted_lead) {
+                // Check if status is still "Converted" (ID 3) and we need to update converted_lead details
+                else if($status_id == 3 && $enquiry['status_id'] == 3) {
                     // Get converted lead details
                     $lead_type = !empty($_POST["lead_type"]) ? trim($_POST["lead_type"]) : NULL;
                     $customer_location = !empty($_POST["customer_location"]) ? trim($_POST["customer_location"]) : NULL;
@@ -205,11 +195,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     $travel_month = !empty($_POST["travel_month"]) ? trim($_POST["travel_month"]) : NULL;
                     $travel_start_date = !empty($_POST["travel_start_date"]) ? trim($_POST["travel_start_date"]) : NULL;
                     $travel_end_date = !empty($_POST["travel_end_date"]) ? trim($_POST["travel_end_date"]) : NULL;
+                    
                     $adults_count = !empty($_POST["adults_count"]) ? trim($_POST["adults_count"]) : 0;
                     $children_count = !empty($_POST["children_count"]) ? trim($_POST["children_count"]) : 0;
                     $infants_count = !empty($_POST["infants_count"]) ? trim($_POST["infants_count"]) : 0;
+                    $children_age_details = !empty($_POST["children_age_details"]) ? trim($_POST["children_age_details"]) : NULL;
                     $customer_available_timing = !empty($_POST["customer_available_timing"]) ? trim($_POST["customer_available_timing"]) : NULL;
                     $file_manager_id = !empty($_POST["file_manager_id"]) ? trim($_POST["file_manager_id"]) : NULL;
+                    $night_day = !empty($_POST["night_day"]) ? trim($_POST["night_day"]) : NULL;
                     
                     // Update converted_leads
                     $sql = "UPDATE converted_leads SET 
@@ -221,69 +214,148 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                             travel_month = ?, 
                             travel_start_date = ?, 
                             travel_end_date = ?, 
+                            night_day = ?,
                             adults_count = ?, 
                             children_count = ?, 
                             infants_count = ?, 
+                            children_age_details = ?, 
                             customer_available_timing = ?, 
                             file_manager_id = ? 
                             WHERE enquiry_id = ?";
                     
                     if($stmt2 = mysqli_prepare($conn, $sql)) {
-                        mysqli_stmt_bind_param($stmt2, "ssssissiiisii", $lead_type, $customer_location, $secondary_contact, 
+                        mysqli_stmt_bind_param($stmt2, "ssssissssiiiissi", $lead_type, $customer_location, $secondary_contact, 
                                               $destination_id, $other_details, $travel_month, $travel_start_date, 
-                                              $travel_end_date, $adults_count, $children_count, $infants_count, 
-                                              $customer_available_timing, $file_manager_id, $id);
+                                              $travel_end_date, $night_day, $adults_count, $children_count, $infants_count, 
+                                              $children_age_details, $customer_available_timing, $file_manager_id, $id);
                         
-                        if(!mysqli_stmt_execute($stmt2)) {
+                        if(mysqli_stmt_execute($stmt2)) {
+                            // Check if file manager was changed and create notification
+                            $old_file_manager = $converted_lead['file_manager_id'] ?? null;
+                            if(!empty($file_manager_id) && $file_manager_id != $old_file_manager) {
+                                // createLeadAssignmentNotification($id, $file_manager_id, $conn);
+                            }
+                        } else {
                             $error = "Error updating converted lead details: " . mysqli_error($conn);
                         }
                         mysqli_stmt_close($stmt2);
                     }
                 }
                 
-                $success = "Enquiry updated successfully.";
-                
-                // Refresh enquiry data
-                $sql = "SELECT * FROM enquiries WHERE id = ?";
-                if($stmt3 = mysqli_prepare($conn, $sql)) {
-                    mysqli_stmt_bind_param($stmt3, "i", $id);
+                if(empty($error)) {
+                    error_log("Enquiry updated successfully for ID: $id");
                     
-                    if(mysqli_stmt_execute($stmt3)) {
-                        $result = mysqli_stmt_get_result($stmt3);
-                        
-                        if(mysqli_num_rows($result) == 1) {
-                            $enquiry = mysqli_fetch_assoc($result);
-                        }
-                    }
-                    
-                    mysqli_stmt_close($stmt3);
-                }
-                
-                // Refresh converted lead data if status is "Converted"
-                if($enquiry['status_id'] == 3) {
-                    $sql = "SELECT * FROM converted_leads WHERE enquiry_id = ?";
-                    if($stmt4 = mysqli_prepare($conn, $sql)) {
-                        mysqli_stmt_bind_param($stmt4, "i", $id);
-                        
-                        if(mysqli_stmt_execute($stmt4)) {
-                            $result = mysqli_stmt_get_result($stmt4);
-                            
-                            if(mysqli_num_rows($result) == 1) {
-                                $converted_lead = mysqli_fetch_assoc($result);
-                            }
-                        }
-                        
-                        mysqli_stmt_close($stmt4);
-                    }
+                    // Redirect to upload_enquiries.php after successful update
+                    header("location: upload_enquiries.php");
+                    exit;
                 }
             } else {
-                $error = "Something went wrong. Please try again later.";
+                $error = "Database error: " . mysqli_error($conn) . " - Statement error: " . mysqli_stmt_error($stmt);
+                error_log("Edit enquiry error: " . mysqli_error($conn));
             }
             
             mysqli_stmt_close($stmt);
         }
     }
 }
+
+// Include header after POST processing
+require_once "includes/header.php";
+
+// Get departments for dropdown
+$sql = "SELECT * FROM departments ORDER BY name";
+$departments = mysqli_query($conn, $sql);
+
+// Get sources for dropdown
+$sql = "SELECT * FROM sources ORDER BY name";
+$sources = mysqli_query($conn, $sql);
+
+// Get ad campaigns for dropdown
+$sql = "SELECT * FROM ad_campaigns WHERE status = 'active' ORDER BY name";
+$ad_campaigns = mysqli_query($conn, $sql);
+
+// Get lead statuses for dropdown
+$sql = "SELECT * FROM lead_status ORDER BY id";
+$lead_statuses = mysqli_query($conn, $sql);
+
+// Get users for dropdown - allow all users to assign file managers
+$can_assign_file_manager = true; // Allow all users to assign file managers
+$sql = "SELECT u.* FROM users u JOIN roles r ON u.role_id = r.id 
+WHERE r.role_name IN ('Sales Team', 'Sales Manager') 
+ORDER BY u.full_name";
+$users = mysqli_query($conn, $sql);
+
+// Get destinations for dropdown
+$sql = "SELECT * FROM destinations ORDER BY name";
+$destinations = mysqli_query($conn, $sql);
+
+// Fetch converted lead data (if exists) or create if status is Converted but no record exists
+$converted_lead = null;
+$sql = "SELECT * FROM converted_leads WHERE enquiry_id = ?";
+if($stmt = mysqli_prepare($conn, $sql)) {
+    mysqli_stmt_bind_param($stmt, "i", $id);
+    
+    if(mysqli_stmt_execute($stmt)) {
+        $result = mysqli_stmt_get_result($stmt);
+        
+        if(mysqli_num_rows($result) >= 1) {
+            $converted_lead = mysqli_fetch_assoc($result);
+        } else if($enquiry['status_id'] == 3) {
+            // Status is Converted but no converted_lead record exists, create one
+            require_once "includes/number_generator.php";
+            $enquiry_number = generateNumber('lead', $conn);
+            $insert_sql = "INSERT INTO converted_leads (enquiry_id, enquiry_number) VALUES (?, ?)";
+            if($insert_stmt = mysqli_prepare($conn, $insert_sql)) {
+                mysqli_stmt_bind_param($insert_stmt, "is", $id, $enquiry_number);
+                if(mysqli_stmt_execute($insert_stmt)) {
+                    // Re-fetch the newly created record
+                    $fetch_sql = "SELECT * FROM converted_leads WHERE enquiry_id = ?";
+                    if($fetch_stmt = mysqli_prepare($conn, $fetch_sql)) {
+                        mysqli_stmt_bind_param($fetch_stmt, "i", $id);
+                        mysqli_stmt_execute($fetch_stmt);
+                        $fetch_result = mysqli_stmt_get_result($fetch_stmt);
+                        if(mysqli_num_rows($fetch_result) >= 1) {
+                            $converted_lead = mysqli_fetch_assoc($fetch_result);
+                        }
+                        mysqli_stmt_close($fetch_stmt);
+                    }
+                }
+                mysqli_stmt_close($insert_stmt);
+            }
+        }
+    }
+    
+    mysqli_stmt_close($stmt);
+}
+
+// Ensure $converted_lead is properly set if record exists
+if(!$converted_lead && ($enquiry['status_id'] == 3 || $enquiry['status_id'] == 'Converted')) {
+    $final_fetch_sql = "SELECT * FROM converted_leads WHERE enquiry_id = ?";
+    if($final_stmt = mysqli_prepare($conn, $final_fetch_sql)) {
+        mysqli_stmt_bind_param($final_stmt, "i", $id);
+        mysqli_stmt_execute($final_stmt);
+        $final_result = mysqli_stmt_get_result($final_stmt);
+        if(mysqli_num_rows($final_result) >= 1) {
+            $converted_lead = mysqli_fetch_assoc($final_result);
+        }
+        mysqli_stmt_close($final_stmt);
+    }
+}
+
+// Update old format enquiry numbers to new format for any converted lead
+if($converted_lead && $converted_lead['enquiry_number'] && (strpos($converted_lead['enquiry_number'], 'LGH-') !== false || strpos($converted_lead['enquiry_number'], 'GHL/') === false)) {
+    require_once "includes/number_generator.php";
+    $new_enquiry_number = generateNumber('lead', $conn);
+    $update_sql = "UPDATE converted_leads SET enquiry_number = ? WHERE enquiry_id = ?";
+    if($update_stmt = mysqli_prepare($conn, $update_sql)) {
+        mysqli_stmt_bind_param($update_stmt, "si", $new_enquiry_number, $id);
+        if(mysqli_stmt_execute($update_stmt)) {
+            $converted_lead['enquiry_number'] = $new_enquiry_number;
+        }
+        mysqli_stmt_close($update_stmt);
+    }
+}
+
 ?>
 
 <div class="row">
@@ -298,6 +370,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="alert alert-success"><?php echo $success; ?></div>
         <?php endif; ?>
         
+
+        
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">Edit Enquiry Details</h5>
@@ -306,7 +380,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                 <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]) . '?id=' . $id; ?>" method="post">
                     <div class="row">
                         <div class="col-md-12">
-                            <h5>Lead Information</h5>
+                            <h5>Enquiry Information</h5>
                             <hr>
                         </div>
                     </div>
@@ -416,16 +490,53 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                     
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email</label>
                                 <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($enquiry['email'] ?? ''); ?>">
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="lead-status" class="form-label required">Lead Status</label>
+                                <label for="enquiry-type" class="form-label">Enquiry Type</label>
+                                <select class="custom-select col-12" id="enquiry-type" name="enquiry_type">
+                                    <option value="">Select Enquiry Type</option>
+                                    <option value="Advertisement Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Advertisement Enquiry') ? 'selected' : ''; ?>>Advertisement Enquiry</option>
+                                    <option value="Budget Travel Request" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Budget Travel Request') ? 'selected' : ''; ?>>Budget Travel Request</option>
+                                    <option value="Collaboration" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Collaboration') ? 'selected' : ''; ?>>Collaboration</option>
+                                    <option value="Corporate Tour Request" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Corporate Tour Request') ? 'selected' : ''; ?>>Corporate Tour Request</option>
+                                    <option value="Cruise Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Cruise Enquiry') ? 'selected' : ''; ?>>Cruise Enquiry</option>
+                                    <option value="Cruise Plan (Lakshadweep)" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Cruise Plan (Lakshadweep)') ? 'selected' : ''; ?>>Cruise Plan (Lakshadweep)</option>
+                                    <option value="DMCs" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'DMCs') ? 'selected' : ''; ?>>DMCs</option>
+                                    <option value="Early Bird Offer Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Early Bird Offer Enquiry') ? 'selected' : ''; ?>>Early Bird Offer Enquiry</option>
+                                    <option value="Family Tour Package" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Family Tour Package') ? 'selected' : ''; ?>>Family Tour Package</option>
+                                    <option value="Flight + Hotel Combo Request" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Flight + Hotel Combo Request') ? 'selected' : ''; ?>>Flight + Hotel Combo Request</option>
+                                    <option value="Group Tour Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Group Tour Enquiry') ? 'selected' : ''; ?>>Group Tour Enquiry</option>
+                                    <option value="Honeymoon Package Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Honeymoon Package Enquiry') ? 'selected' : ''; ?>>Honeymoon Package Enquiry</option>
+                                    <option value="Job Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Job Enquiry') ? 'selected' : ''; ?>>Job Enquiry</option>
+                                    <option value="Just Hotel Booking Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Just Hotel Booking Enquiry') ? 'selected' : ''; ?>>Just Hotel Booking Enquiry</option>
+                                    <option value="Luxury Travel Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Luxury Travel Enquiry') ? 'selected' : ''; ?>>Luxury Travel Enquiry</option>
+                                    <option value="Medical Tourism Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Medical Tourism Enquiry') ? 'selected' : ''; ?>>Medical Tourism Enquiry</option>
+                                    <option value="Need Train + Bus Tickets" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Need Train + Bus Tickets') ? 'selected' : ''; ?>>Need Train + Bus Tickets</option>
+                                    <option value="Only Tickets" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Only Tickets') ? 'selected' : ''; ?>>Only Tickets</option>
+                                    <option value="Religious Tour Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Religious Tour Enquiry') ? 'selected' : ''; ?>>Religious Tour Enquiry</option>
+                                    <option value="School / College Tour Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'School / College Tour Enquiry') ? 'selected' : ''; ?>>School / College Tour Enquiry</option>
+                                    <option value="Sightseeing Only Request" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Sightseeing Only Request') ? 'selected' : ''; ?>>Sightseeing Only Request</option>
+                                    <option value="Solo Travel Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Solo Travel Enquiry') ? 'selected' : ''; ?>>Solo Travel Enquiry</option>
+                                    <option value="Sponsorship" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Sponsorship') ? 'selected' : ''; ?>>Sponsorship</option>
+                                    <option value="Ticket Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Ticket Enquiry') ? 'selected' : ''; ?>>Ticket Enquiry</option>
+                                    <option value="Travel Insurance Required" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Travel Insurance Required') ? 'selected' : ''; ?>>Travel Insurance Required</option>
+                                    <option value="Visa Assistance Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Visa Assistance Enquiry') ? 'selected' : ''; ?>>Visa Assistance Enquiry</option>
+                                    <option value="Vloggers / Influencers" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Vloggers / Influencers') ? 'selected' : ''; ?>>Vloggers / Influencers</option>
+                                    <option value="Weekend Getaway Enquiry" <?php echo (isset($enquiry['enquiry_type']) && $enquiry['enquiry_type'] == 'Weekend Getaway Enquiry') ? 'selected' : ''; ?>>Weekend Getaway Enquiry</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="lead-status" class="form-label required">Enquiry Status</label>
                                 <select class="custom-select col-12" id="lead-status" name="status_id" required>
+                                    <option value="">Select Status</option>
                                     <?php mysqli_data_seek($lead_statuses, 0); ?>
                                     <?php while($status = mysqli_fetch_assoc($lead_statuses)): ?>
                                         <option value="<?php echo $status['id']; ?>" <?php echo ($status['id'] == $enquiry['status_id']) ? 'selected' : ''; ?>>
@@ -438,7 +549,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                     
                     <!-- Converted Lead Details (initially hidden if not converted) -->
-                    <div id="converted-lead-details" class="<?php echo ($enquiry['status_id'] != 3) ? 'd-none' : ''; ?>">
+                    <div id="converted-lead-details" class="<?php echo ($enquiry['status_id'] != 3 && $enquiry['status_id'] != 'Converted') ? 'd-none' : ''; ?>">
                         <div class="row">
                             <div class="col-md-12">
                                 <h5 class="mt-4">Converted Lead Details</h5>
@@ -511,21 +622,21 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <label for="night-day" class="form-label">Night/Day</label>
                                     <select class="custom-select col-12" id="night-day" name="night_day">
                                         <option value="">Select Night/Day</option>
-                                        <option value="1N/2D" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == '1N/2D') ? 'selected' : ''; ?>>1N/2D</option>
-                                        <option value="2N/3D" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == '2N/3D') ? 'selected' : ''; ?>>2N/3D</option>
-                                        <option value="3N/4D" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == '3N/4D') ? 'selected' : ''; ?>>3N/4D</option>
-                                        <option value="4N/5D" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == '4N/5D') ? 'selected' : ''; ?>>4N/5D</option>
-                                        <option value="5N/6D" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == '5N/6D') ? 'selected' : ''; ?>>5N/6D</option>
-                                        <option value="6N/7D" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == '6N/7D') ? 'selected' : ''; ?>>6N/7D</option>
-                                        <option value="7N/8D" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == '7N/8D') ? 'selected' : ''; ?>>7N/8D</option>
-                                        <option value="8N/9D" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == '8N/9D') ? 'selected' : ''; ?>>8N/9D</option>
-                                        <option value="9N/10D" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == '9N/10D') ? 'selected' : ''; ?>>9N/10D</option>
-                                        <option value="10N/11D" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == '10N/11D') ? 'selected' : ''; ?>>10N/11D</option>
-                                        <option value="11N/12D" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == '11N/12D') ? 'selected' : ''; ?>>11N/12D</option>
-                                        <option value="12N/13D" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == '12N/13D') ? 'selected' : ''; ?>>12N/13D</option>
-                                        <option value="13N/14D" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == '13N/14D') ? 'selected' : ''; ?>>13N/14D</option>
-                                        <option value="14N/15D" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == '14N/15D') ? 'selected' : ''; ?>>14N/15D</option>
-                                        <option value="Custom" <?php echo (isset($enquiry['night_day']) && $enquiry['night_day'] == 'Custom') ? 'selected' : ''; ?>>Custom</option>
+                                        <option value="1N/2D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '1N/2D') ? 'selected' : ''; ?>>1N/2D</option>
+                                        <option value="2N/3D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '2N/3D') ? 'selected' : ''; ?>>2N/3D</option>
+                                        <option value="3N/4D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '3N/4D') ? 'selected' : ''; ?>>3N/4D</option>
+                                        <option value="4N/5D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '4N/5D') ? 'selected' : ''; ?>>4N/5D</option>
+                                        <option value="5N/6D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '5N/6D') ? 'selected' : ''; ?>>5N/6D</option>
+                                        <option value="6N/7D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '6N/7D') ? 'selected' : ''; ?>>6N/7D</option>
+                                        <option value="7N/8D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '7N/8D') ? 'selected' : ''; ?>>7N/8D</option>
+                                        <option value="8N/9D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '8N/9D') ? 'selected' : ''; ?>>8N/9D</option>
+                                        <option value="9N/10D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '9N/10D') ? 'selected' : ''; ?>>9N/10D</option>
+                                        <option value="10N/11D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '10N/11D') ? 'selected' : ''; ?>>10N/11D</option>
+                                        <option value="11N/12D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '11N/12D') ? 'selected' : ''; ?>>11N/12D</option>
+                                        <option value="12N/13D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '12N/13D') ? 'selected' : ''; ?>>12N/13D</option>
+                                        <option value="13N/14D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '13N/14D') ? 'selected' : ''; ?>>13N/14D</option>
+                                        <option value="14N/15D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '14N/15D') ? 'selected' : ''; ?>>14N/15D</option>
+                                        <option value="Custom" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == 'Custom') ? 'selected' : ''; ?>>Custom</option>
                                     </select>
                                 </div>
                             </div>
@@ -542,22 +653,28 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
                         
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="mb-3">
                                     <label for="adults-count" class="form-label">Adults Count</label>
                                     <input type="number" class="form-control passenger-count" id="adults-count" name="adults_count" value="<?php echo htmlspecialchars($converted_lead['adults_count'] ?? '0'); ?>" min="0">
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="mb-3">
                                     <label for="children-count" class="form-label">Children Count</label>
                                     <input type="number" class="form-control passenger-count" id="children-count" name="children_count" value="<?php echo htmlspecialchars($converted_lead['children_count'] ?? '0'); ?>" min="0">
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <div class="mb-3">
                                     <label for="infants-count" class="form-label">Infants Count</label>
                                     <input type="number" class="form-control passenger-count" id="infants-count" name="infants_count" value="<?php echo htmlspecialchars($converted_lead['infants_count'] ?? '0'); ?>" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="children-age-details" class="form-label">Children Age Details</label>
+                                    <input type="text" class="form-control" id="children-age-details" name="children_age_details" value="<?php echo htmlspecialchars($converted_lead['children_age_details'] ?? ''); ?>" placeholder="e.g., 5, 8, 12 years">
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -578,6 +695,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="file-manager-id" class="form-label">File Manager</label>
+                                    <?php if($can_assign_file_manager): ?>
                                     <select class="custom-select col-12" id="file-manager-id" name="file_manager_id">
                                         <option value="">Select File Manager</option>
                                         <?php mysqli_data_seek($users, 0); ?>
@@ -587,6 +705,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                                             </option>
                                         <?php endwhile; ?>
                                     </select>
+                                    <?php else: ?>
+                                    <input type="text" class="form-control" value="Not Assigned" readonly>
+                                    <small class="text-muted">Only Admins/Managers can assign file managers</small>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -605,7 +727,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="enquiry-number" class="form-label">Enquiry Number</label>
+                                    <label for="enquiry-number" class="form-label">Lead Number</label>
                                     <input type="text" class="form-control" id="enquiry-number" name="enquiry_number" value="<?php echo htmlspecialchars($converted_lead['enquiry_number'] ?? ''); ?>" readonly>
                                 </div>
                             </div>
@@ -615,7 +737,53 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     <div class="row mt-4">
                         <div class="col-md-12">
                             <button type="submit" class="btn btn-primary">Update</button>
-                            <a href="view_enquiries.php" class="btn btn-secondary">Cancel</a>
+                            <?php
+                            // Determine the correct return page based on the referrer or enquiry type
+                            $return_page = "view_enquiries.php";
+                            
+                            // Define pages to check in the referrer URL
+                            $pages = [
+                                'view_job_enquiries.php',
+                                'view_ticket_enquiry.php',
+                                'view_influencer_enquiries.php',
+                                'view_dmc.php',
+                                'view_cruise.php',
+                                'view_noresponserejectedenquiries.php',
+                                'view_flowup.php',
+                                'view_leads.php'
+                            ];
+                            
+                            // Check if referrer contains any of the pages
+                            if(isset($_SERVER['HTTP_REFERER'])) {
+                                foreach($pages as $page) {
+                                    if(strpos($_SERVER['HTTP_REFERER'], $page) !== false) {
+                                        $return_page = $page;
+                                        break;
+                                    }
+                                }
+                            } 
+                            // If no referrer, try to determine from enquiry type
+                            else if(isset($enquiry['enquiry_type'])) {
+                                switch($enquiry['enquiry_type']) {
+                                    case 'Job Enquiry':
+                                        $return_page = "view_job_enquiries.php";
+                                        break;
+                                    case 'Ticket Enquiry':
+                                        $return_page = "view_ticket_enquiry.php";
+                                        break;
+                                    case 'Influencer Enquiry':
+                                        $return_page = "view_influencer_enquiries.php";
+                                        break;
+                                    case 'DMCs':
+                                        $return_page = "view_dmc.php";
+                                        break;
+                                    case 'Cruise Enquiry':
+                                        $return_page = "view_cruise.php";
+                                        break;
+                                }
+                            }
+                            ?>
+                            <a href="<?php echo $return_page; ?>" class="btn btn-secondary">Cancel</a>
                         </div>
                     </div>
                 </form>

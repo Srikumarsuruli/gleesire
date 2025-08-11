@@ -1,85 +1,63 @@
 <?php
-// Initialize the session
 session_start();
+require_once "config/database.php";
 
-// Check if the user is logged in
-if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
-    header("location: login.php");
+// Enable error logging
+error_log("Status update attempt - POST data: " . print_r($_POST, true));
+
+if(!isset($_SESSION["id"])) {
+    error_log("Session not set, redirecting to view_enquiries.php");
+    header("location: view_enquiries.php");
     exit;
 }
 
-// Include database connection
-require_once "config/database.php";
-
-// Check if enquiry ID and status are provided
-if(isset($_POST["id"]) && isset($_POST["status_id"])) {
-    $enquiry_id = $_POST["id"];
-    $status_id = $_POST["status_id"];
+if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id']) && isset($_POST['status_id'])) {
+    $enquiry_id = intval($_POST['id']);
+    $status_id = intval($_POST['status_id']);
     
-    // Update the status
-    $update_sql = "UPDATE enquiries SET status_id = ?, last_updated = NOW() WHERE id = ?";
-    $update_stmt = mysqli_prepare($conn, $update_sql);
-    mysqli_stmt_bind_param($update_stmt, "ii", $status_id, $enquiry_id);
+    error_log("Processing update - Enquiry ID: $enquiry_id, Status ID: $status_id");
     
-    if(mysqli_stmt_execute($update_stmt)) {
-        // If status is converted (3), add to converted_leads table
-        if($status_id == 3) {
-            // Check if already in converted_leads
-            $check_sql = "SELECT * FROM converted_leads WHERE enquiry_id = ?";
-            $check_stmt = mysqli_prepare($conn, $check_sql);
-            mysqli_stmt_bind_param($check_stmt, "i", $enquiry_id);
-            mysqli_stmt_execute($check_stmt);
-            $check_result = mysqli_stmt_get_result($check_stmt);
-            
-            if(mysqli_num_rows($check_result) == 0) {
-                // Get enquiry details
-                $enquiry_sql = "SELECT lead_number FROM enquiries WHERE id = ?";
-                $enquiry_stmt = mysqli_prepare($conn, $enquiry_sql);
-                mysqli_stmt_bind_param($enquiry_stmt, "i", $enquiry_id);
-                mysqli_stmt_execute($enquiry_stmt);
-                $enquiry_result = mysqli_stmt_get_result($enquiry_stmt);
-                $enquiry = mysqli_fetch_assoc($enquiry_result);
-                
-                // Generate enquiry number
-                $enquiry_number = 'GH ' . sprintf('%04d', rand(1, 9999));
-                
-                // Insert into converted_leads
-                $insert_sql = "INSERT INTO converted_leads (enquiry_id, enquiry_number, travel_start_date, travel_end_date, booking_confirmed) 
-                              VALUES (?, ?, NULL, NULL, 0)";
-                $insert_stmt = mysqli_prepare($conn, $insert_sql);
-                mysqli_stmt_bind_param($insert_stmt, "is", $enquiry_id, $enquiry_number);
-                mysqli_stmt_execute($insert_stmt);
-            }
-        }
+    if($enquiry_id > 0 && $status_id > 0) {
+        $sql = "UPDATE enquiries SET status_id = ?, last_updated = NOW() WHERE id = ?";
         
-        // Return success response
-        $response = array(
-            'success' => true,
-            'message' => 'Status updated successfully'
-        );
+        if($stmt = mysqli_prepare($conn, $sql)) {
+            mysqli_stmt_bind_param($stmt, "ii", $status_id, $enquiry_id);
+            
+            if(mysqli_stmt_execute($stmt)) {
+                $affected_rows = mysqli_stmt_affected_rows($stmt);
+                error_log("Update successful - Affected rows: $affected_rows");
+                
+                // Check if status is "Converted"
+                $status_check_sql = "SELECT name FROM lead_status WHERE id = ?";
+                if($status_stmt = mysqli_prepare($conn, $status_check_sql)) {
+                    mysqli_stmt_bind_param($status_stmt, "i", $status_id);
+                    mysqli_stmt_execute($status_stmt);
+                    $status_result = mysqli_stmt_get_result($status_stmt);
+                    $status_row = mysqli_fetch_assoc($status_result);
+                    
+                    if($status_row && strtolower($status_row['name']) == 'converted') {
+                        header("location: edit_enquiry.php?id=$enquiry_id&converted=1");
+                        exit;
+                    }
+                    mysqli_stmt_close($status_stmt);
+                }
+            } else {
+                error_log("Update failed - MySQL error: " . mysqli_error($conn));
+            }
+            mysqli_stmt_close($stmt);
+        } else {
+            error_log("Prepare failed - MySQL error: " . mysqli_error($conn));
+        }
     } else {
-        // Return error response
-        $response = array(
-            'success' => false,
-            'message' => 'Failed to update status'
-        );
+        error_log("Invalid IDs - Enquiry ID: $enquiry_id, Status ID: $status_id");
     }
-    
-    // Return JSON response
-    header('Content-Type: application/json');
-    echo json_encode($response);
 } else {
-    // Return error response for missing parameters
-    $response = array(
-        'success' => false,
-        'message' => 'Missing required parameters'
-    );
-    
-    // Return JSON response
-    header('Content-Type: application/json');
-    echo json_encode($response);
+    error_log("Invalid request method or missing parameters");
 }
 
-// Close connection
-mysqli_close($conn);
+// Force cache refresh with timestamp
+header("Cache-Control: no-cache, must-revalidate");
+header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+header("location: view_enquiries.php?updated=" . time());
+exit;
 ?>

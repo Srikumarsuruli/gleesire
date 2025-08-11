@@ -62,7 +62,51 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                             $_SESSION["loggedin"] = true;
                             $_SESSION["id"] = $id;
                             $_SESSION["username"] = $username;
-                            $_SESSION["role_id"] = $role_id;                            
+                            $_SESSION["role_id"] = $role_id;
+                            
+                            // Log user login with location
+                            $login_time = date('Y-m-d H:i:s');
+                            $login_date = date('Y-m-d');
+                            $ip_address = $_SERVER['REMOTE_ADDR'];
+                            $user_agent = $_SERVER['HTTP_USER_AGENT'];
+                            
+                            // Get location from IP with fallback
+                            $location_data = @json_decode(file_get_contents("http://ip-api.com/json/{$ip_address}"), true);
+                            if($location_data && $location_data['status'] == 'success') {
+                                $country = $location_data['country'];
+                                $city = $location_data['city'];
+                            } else {
+                                // Fallback for local/private IPs
+                                $country = 'Local Network';
+                                $city = 'Office';
+                            }
+                            
+                            // Check if user already has a session today
+                            $check_sql = "SELECT id FROM user_login_logs WHERE user_id = ? AND date = ? AND logout_time IS NULL";
+                            if($check_stmt = mysqli_prepare($conn, $check_sql)) {
+                                mysqli_stmt_bind_param($check_stmt, "is", $id, $login_date);
+                                mysqli_stmt_execute($check_stmt);
+                                $check_result = mysqli_stmt_get_result($check_stmt);
+                                
+                                if(mysqli_num_rows($check_result) > 0) {
+                                    // Continue existing session
+                                    $row = mysqli_fetch_assoc($check_result);
+                                    $_SESSION["current_login_id"] = $row['id'];
+                                } else {
+                                    // Create new session with location
+                                    $log_sql = "INSERT INTO user_login_logs (user_id, login_time, date, ip_address, country, city, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                                    if($log_stmt = mysqli_prepare($conn, $log_sql)) {
+                                        mysqli_stmt_bind_param($log_stmt, "issssss", $id, $login_time, $login_date, $ip_address, $country, $city, $user_agent);
+                                        mysqli_stmt_execute($log_stmt);
+                                        $_SESSION["current_login_id"] = mysqli_insert_id($conn);
+                                        mysqli_stmt_close($log_stmt);
+                                    }
+                                }
+                                mysqli_stmt_close($check_stmt);
+                            }
+                            
+                            $_SESSION["login_start_time"] = time();
+                            $_SESSION["login_date"] = $login_date;
                             
                             // Redirect user to index page
                             header("location: index.php");
@@ -84,8 +128,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
     }
     
-    // Close connection
-    mysqli_close($conn);
+
 }
 ?>
 
@@ -98,9 +141,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     <title>Login - Lead Management System</title>
     
     <!-- Site favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/deskapp/vendors/images/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/deskapp/vendors/images/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/deskapp/vendors/images/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/deskapp/src/images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/deskapp/src/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/deskapp/src/images/favicon-16x16.png">
     
     <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">

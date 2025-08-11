@@ -41,83 +41,6 @@ if(mysqli_num_rows($booking_result) == 0) {
 
 $booking = mysqli_fetch_assoc($booking_result);
 
-// Include TCPDF library
-require_once('assets/tcpdf/tcpdf.php');
-
-// Create new PDF document
-$pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-
-// Set document information
-$pdf->SetCreator('Lead Management System');
-$pdf->SetAuthor('Lead Management System');
-$pdf->SetTitle('Booking Details - ' . $booking['enquiry_number']);
-$pdf->SetSubject('Booking Details');
-
-// Remove header/footer
-$pdf->setPrintHeader(false);
-$pdf->setPrintFooter(false);
-
-// Set default monospaced font
-$pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
-
-// Set margins
-$pdf->SetMargins(15, 15, 15);
-
-// Set auto page breaks
-$pdf->SetAutoPageBreak(TRUE, 15);
-
-// Set image scale factor
-$pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-
-// Add a page
-$pdf->AddPage();
-
-// Set font
-$pdf->SetFont('helvetica', 'B', 16);
-
-// Title
-$pdf->Cell(0, 10, 'Booking Details', 0, 1, 'C');
-$pdf->SetFont('helvetica', '', 12);
-$pdf->Cell(0, 10, 'File Number: ' . $booking['enquiry_number'], 0, 1, 'C');
-$pdf->Ln(5);
-
-// Create content
-$pdf->SetFont('helvetica', 'B', 12);
-$pdf->Cell(0, 10, 'Customer Information', 0, 1);
-$pdf->SetFont('helvetica', '', 10);
-
-// Customer details table
-$html = '<table cellspacing="0" cellpadding="5" border="0">
-    <tr>
-        <td width="30%"><strong>Customer Name:</strong></td>
-        <td width="70%">' . $booking['customer_name'] . '</td>
-    </tr>
-    <tr>
-        <td><strong>Mobile Number:</strong></td>
-        <td>' . $booking['mobile_number'] . '</td>
-    </tr>
-    <tr>
-        <td><strong>Email:</strong></td>
-        <td>' . ($booking['email'] ? $booking['email'] : '-') . '</td>
-    </tr>
-    <tr>
-        <td><strong>Customer Location:</strong></td>
-        <td>' . ($booking['customer_location'] ? $booking['customer_location'] : '-') . '</td>
-    </tr>
-    <tr>
-        <td><strong>Secondary Contact:</strong></td>
-        <td>' . ($booking['secondary_contact'] ? $booking['secondary_contact'] : '-') . '</td>
-    </tr>
-</table>';
-
-$pdf->writeHTML($html, true, false, true, false, '');
-$pdf->Ln(5);
-
-// Booking details
-$pdf->SetFont('helvetica', 'B', 12);
-$pdf->Cell(0, 10, 'Booking Details', 0, 1);
-$pdf->SetFont('helvetica', '', 10);
-
 // Format travel period
 $travel_period = '-';
 if($booking['travel_start_date'] && $booking['travel_end_date']) {
@@ -130,81 +53,84 @@ if($booking['adults_count'] > 0) $travelers[] = $booking['adults_count'] . ' Adu
 if($booking['children_count'] > 0) $travelers[] = $booking['children_count'] . ' Children';
 if($booking['infants_count'] > 0) $travelers[] = $booking['infants_count'] . ' Infants';
 $travelers_text = !empty($travelers) ? implode(', ', $travelers) : '-';
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking Details - <?php echo $booking['enquiry_number']; ?></title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .section { margin-bottom: 20px; }
+        .section h3 { background-color: #f5f5f5; padding: 10px; margin: 0; border-left: 4px solid #007bff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        td { padding: 8px; border-bottom: 1px solid #eee; }
+        td:first-child { font-weight: bold; width: 30%; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="margin-bottom: 20px;">
+        <button onclick="window.print()">Print PDF</button>
+        <button onclick="window.close()">Close</button>
+    </div>
+    
+    <div class="header">
+        <h1>Booking Details</h1>
+        <h3>File Number: <?php echo htmlspecialchars($booking['enquiry_number']); ?></h3>
+    </div>
+    
+    <div class="section">
+        <h3>Customer Information</h3>
+        <table>
+            <tr><td>Customer Name:</td><td><?php echo htmlspecialchars($booking['customer_name']); ?></td></tr>
+            <tr><td>Mobile Number:</td><td><?php echo htmlspecialchars($booking['mobile_number']); ?></td></tr>
+            <tr><td>Email:</td><td><?php echo $booking['email'] ? htmlspecialchars($booking['email']) : '-'; ?></td></tr>
+            <tr><td>Customer Location:</td><td><?php echo $booking['customer_location'] ? htmlspecialchars($booking['customer_location']) : '-'; ?></td></tr>
+            <tr><td>Secondary Contact:</td><td><?php echo $booking['secondary_contact'] ? htmlspecialchars($booking['secondary_contact']) : '-'; ?></td></tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <h3>Booking Details</h3>
+        <table>
+            <tr><td>Booking Date:</td><td><?php echo date('d-m-Y', strtotime($booking['created_at'])); ?></td></tr>
+            <tr><td>Lead Number:</td><td><?php echo htmlspecialchars($booking['lead_number']); ?></td></tr>
+            <tr><td>Destination:</td><td><?php echo $booking['destination_name'] ? htmlspecialchars($booking['destination_name']) : '-'; ?></td></tr>
+            <tr><td>Travel Month:</td><td><?php echo $booking['travel_month'] ? date('F Y', strtotime($booking['travel_month'])) : '-'; ?></td></tr>
+            <tr><td>Travel Period:</td><td><?php echo $travel_period; ?></td></tr>
+            <tr><td>Travelers:</td><td><?php echo $travelers_text; ?></td></tr>
+            <tr><td>Customer Available Timing:</td><td><?php echo $booking['customer_available_timing'] ? htmlspecialchars($booking['customer_available_timing']) : '-'; ?></td></tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <h3>Source Information</h3>
+        <table>
+            <tr><td>Department:</td><td><?php echo htmlspecialchars($booking['department_name']); ?></td></tr>
+            <tr><td>Source:</td><td><?php echo htmlspecialchars($booking['source_name']); ?></td></tr>
+            <tr><td>Ad Campaign:</td><td><?php echo $booking['campaign_name'] ? htmlspecialchars($booking['campaign_name']) : '-'; ?></td></tr>
+            <tr><td>Attended By:</td><td><?php echo htmlspecialchars($booking['attended_by_name']); ?></td></tr>
+            <tr><td>File Manager:</td><td><?php echo $booking['file_manager_name'] ? htmlspecialchars($booking['file_manager_name']) : '-'; ?></td></tr>
+        </table>
+    </div>
+    
+    <?php if(!empty($booking['other_details'])): ?>
+    <div class="section">
+        <h3>Additional Details</h3>
+        <p><?php echo nl2br(htmlspecialchars($booking['other_details'])); ?></p>
+    </div>
+    <?php endif; ?>
+    
+    <script>
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+    </script>
+</body>
+</html>
+<?php exit;
 
-$html = '<table cellspacing="0" cellpadding="5" border="0">
-    <tr>
-        <td width="30%"><strong>Booking Date:</strong></td>
-        <td width="70%">' . date('d-m-Y', strtotime($booking['created_at'])) . '</td>
-    </tr>
-    <tr>
-        <td><strong>Lead Number:</strong></td>
-        <td>' . $booking['lead_number'] . '</td>
-    </tr>
-    <tr>
-        <td><strong>Destination:</strong></td>
-        <td>' . ($booking['destination_name'] ? $booking['destination_name'] : '-') . '</td>
-    </tr>
-    <tr>
-        <td><strong>Travel Month:</strong></td>
-        <td>' . ($booking['travel_month'] ? date('F Y', strtotime($booking['travel_month'])) : '-') . '</td>
-    </tr>
-    <tr>
-        <td><strong>Travel Period:</strong></td>
-        <td>' . $travel_period . '</td>
-    </tr>
-    <tr>
-        <td><strong>Travelers:</strong></td>
-        <td>' . $travelers_text . '</td>
-    </tr>
-    <tr>
-        <td><strong>Customer Available Timing:</strong></td>
-        <td>' . ($booking['customer_available_timing'] ? $booking['customer_available_timing'] : '-') . '</td>
-    </tr>
-</table>';
-
-$pdf->writeHTML($html, true, false, true, false, '');
-$pdf->Ln(5);
-
-// Source information
-$pdf->SetFont('helvetica', 'B', 12);
-$pdf->Cell(0, 10, 'Source Information', 0, 1);
-$pdf->SetFont('helvetica', '', 10);
-
-$html = '<table cellspacing="0" cellpadding="5" border="0">
-    <tr>
-        <td width="30%"><strong>Department:</strong></td>
-        <td width="70%">' . $booking['department_name'] . '</td>
-    </tr>
-    <tr>
-        <td><strong>Source:</strong></td>
-        <td>' . $booking['source_name'] . '</td>
-    </tr>
-    <tr>
-        <td><strong>Ad Campaign:</strong></td>
-        <td>' . ($booking['campaign_name'] ? $booking['campaign_name'] : '-') . '</td>
-    </tr>
-    <tr>
-        <td><strong>Attended By:</strong></td>
-        <td>' . $booking['attended_by_name'] . '</td>
-    </tr>
-    <tr>
-        <td><strong>File Manager:</strong></td>
-        <td>' . ($booking['file_manager_name'] ? $booking['file_manager_name'] : '-') . '</td>
-    </tr>
-</table>';
-
-$pdf->writeHTML($html, true, false, true, false, '');
-$pdf->Ln(5);
-
-// Additional details
-if(!empty($booking['other_details'])) {
-    $pdf->SetFont('helvetica', 'B', 12);
-    $pdf->Cell(0, 10, 'Additional Details', 0, 1);
-    $pdf->SetFont('helvetica', '', 10);
-    $pdf->MultiCell(0, 10, $booking['other_details'], 0, 'L');
-}
-
-// Output the PDF
-$pdf->Output('booking_' . $booking['enquiry_number'] . '.pdf', 'D');
-exit;
 ?>

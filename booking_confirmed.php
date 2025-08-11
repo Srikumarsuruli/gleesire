@@ -30,7 +30,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["filter"])) {
 $sql = "SELECT e.*, u.full_name as attended_by_name, d.name as department_name,
         s.name as source_name, ac.name as campaign_name,
         cl.enquiry_number, cl.travel_start_date, cl.travel_end_date, cl.created_at as booking_date,
-        cl.file_manager_id, fm.full_name as file_manager_name
+        cl.file_manager_id, fm.full_name as file_manager_name,
+        lsm.status_name as lead_status
         FROM enquiries e 
         JOIN users u ON e.attended_by = u.id 
         JOIN departments d ON e.department_id = d.id
@@ -38,7 +39,8 @@ $sql = "SELECT e.*, u.full_name as attended_by_name, d.name as department_name,
         LEFT JOIN ad_campaigns ac ON e.ad_campaign_id = ac.id
         JOIN converted_leads cl ON e.id = cl.enquiry_id
         LEFT JOIN users fm ON cl.file_manager_id = fm.id
-        WHERE cl.booking_confirmed = 1"; // Only confirmed bookings
+        JOIN lead_status_map lsm ON e.id = lsm.enquiry_id
+        WHERE lsm.status_name = 'Closed – Booked'"; // Only show leads with status 'Closed – Booked'
 
 $params = array();
 $types = "";
@@ -95,6 +97,14 @@ if(!empty($date_filter)) {
     }
 }
 
+// Get total count of records
+$count_sql = "SELECT COUNT(*) FROM enquiries e 
+        JOIN lead_status_map lsm ON e.id = lsm.enquiry_id
+        WHERE lsm.status_name = 'Closed – Booked'";
+$count_result = mysqli_query($conn, $count_sql);
+$count_row = mysqli_fetch_array($count_result);
+$total_records = $count_row ? $count_row[0] : 0;
+
 // Add order by clause
 $sql .= " ORDER BY cl.created_at DESC";
 
@@ -108,8 +118,12 @@ if(!empty($params)) {
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 
-// Get file managers for filter dropdown
-$file_managers_sql = "SELECT * FROM users ORDER BY full_name";
+// Get file managers for filter dropdown - only those with confirmed bookings
+$file_managers_sql = "SELECT DISTINCT u.* FROM users u 
+                      JOIN converted_leads cl ON u.id = cl.file_manager_id 
+                      JOIN lead_status_map lsm ON cl.enquiry_id = lsm.enquiry_id 
+                      WHERE lsm.status_name = 'Closed – Booked' 
+                      ORDER BY u.full_name";
 $file_managers = mysqli_query($conn, $file_managers_sql);
 
 // Get departments for filter dropdown
@@ -125,19 +139,40 @@ $ad_campaigns_sql = "SELECT * FROM ad_campaigns WHERE status = 'active' ORDER BY
 $ad_campaigns = mysqli_query($conn, $ad_campaigns_sql);
 ?>
 
+<!-- Check for confirmation message -->
+<?php
+$confirmation_message = "";
+if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
+    $confirmation_message = "<div class='alert alert-success'>Lead successfully moved to Booking Confirmed.</div>";
+} else if(isset($_GET["status_updated"]) && $_GET["status_updated"] == 1) {
+    $confirmation_message = "<div class='alert alert-success'>Lead status updated successfully.</div>";
+} else if(isset($_GET["error"]) && $_GET["error"] == 1) {
+    $confirmation_message = "<div class='alert alert-danger'>Error updating lead status.</div>";
+} else if(isset($_GET["error"]) && $_GET["error"] == 2) {
+    $confirmation_message = "<div class='alert alert-danger'>Invalid request.</div>";
+}
+?>
+
+<?php if(!empty($confirmation_message)): ?>
 <div class="row">
     <div class="col-md-12">
-        <h2 class="mb-4">Booking Confirmed</h2>
+        <?php echo $confirmation_message; ?>
+    </div>
+</div>
+<?php endif; ?>
+
+<div class="row">
+    <div class="col-md-12">
         
         <!-- Include filter styles -->
         <link rel="stylesheet" href="assets/css/filter-styles.css">
         
         <!-- Filter Section -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Filters</h5>
+        <div class="card-box mb-30">
+            <div class="pd-20">
+                <h4 class="text-blue h4">Filters</h4>
             </div>
-            <div class="card-body">
+            <div class="pb-20 pd-20">
                 <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" id="filter-form">
                     <div class="filter-row">
                         <div class="form-group">
@@ -208,7 +243,6 @@ $ad_campaigns = mysqli_query($conn, $ad_campaigns_sql);
                         </div>
                         <div class="filter-buttons">
                             <button type="submit" name="filter" class="btn btn-primary">Apply Filters</button>
-                            <button type="button" class="btn btn-secondary" onclick="resetFilters()">Reset</button>
                         </div>
                     </div>
                 </form>
@@ -216,51 +250,72 @@ $ad_campaigns = mysqli_query($conn, $ad_campaigns_sql);
         </div>
         
         <!-- Bookings Table -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Confirmed Bookings</h5>
+        <div class="card-box mb-30">
+            <div class="pd-20">
+                <h4 class="text-blue h4">Confirmed Bookings (<?php echo $total_records; ?> total)</h4>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Booking Date</th>
-                                <th>File Number</th>
-                                <th>Customer Name</th>
-                                <th>Mobile Number</th>
-                                <th>Trip Start Date</th>
-                                <th>End Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if(mysqli_num_rows($result) > 0): ?>
-                                <?php while($row = mysqli_fetch_assoc($result)): ?>
-                                    <tr>
-                                        <td><?php echo date('d-m-Y', strtotime($row['booking_date'])); ?></td>
-                                        <td><?php echo htmlspecialchars($row['enquiry_number']); ?></td>
-                                        <td><?php echo htmlspecialchars($row['customer_name']); ?></td>
-                                        <td><?php echo htmlspecialchars($row['mobile_number']); ?></td>
-                                        <td><?php echo $row['travel_start_date'] ? date('d-m-Y', strtotime($row['travel_start_date'])) : '-'; ?></td>
-                                        <td><?php echo $row['travel_end_date'] ? date('d-m-Y', strtotime($row['travel_end_date'])) : '-'; ?></td>
-                                        <td>
-                                            <div class="dropdown">
-                                                <a class="btn btn-link font-24 p-0 line-height-1 no-arrow dropdown-toggle" href="#" role="button" data-toggle="dropdown">
-                                                    <i class="dw dw-more"></i>
+            <div class="pb-20">
+                <div class="table-responsive" style="overflow-x: auto;">
+                    <table class="data-table table stripe hover nowrap" style="min-width: 1200px;">
+                    <thead>
+                        <tr>
+                            <th style="min-width: 100px;">Booking<br>Date</th>
+                            <th style="min-width: 80px;">Enquiry<br>#</th>
+                            <th style="min-width: 80px;">Lead<br>#</th>
+                            <th style="min-width: 120px;">Customer<br>Name</th>
+                            <th style="min-width: 100px;">Mobile<br>Number</th>
+                            <th style="min-width: 80px;">Source</th>
+                            <th style="min-width: 100px;">Campaign</th>
+                            <th style="min-width: 100px;">Trip Start<br>Date</th>
+                            <th style="min-width: 100px;">Trip End<br>Date</th>
+                            <th style="min-width: 100px;">Attended<br>By</th>
+                            <th style="min-width: 100px;">File<br>Manager</th>
+                            <th style="min-width: 100px;">Department</th>
+                            <th class="datatable-nosort" style="min-width: 80px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if(mysqli_num_rows($result) > 0): ?>
+                            <?php while($row = mysqli_fetch_assoc($result)): ?>
+                                <tr data-id="<?php echo $row['id']; ?>" class="<?php echo (isset($_GET['highlight']) && $_GET['highlight'] == $row['id']) ? 'highlight-row' : ''; ?>">
+                                    <td><?php echo date('d-m-Y', strtotime($row['booking_date'])); ?></td>
+                                    <td><?php echo htmlspecialchars($row['lead_number']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['enquiry_number']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['customer_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['mobile_number']); ?></td>
+                                    <!-- <td><?php echo htmlspecialchars($row['email']); ?></td> -->
+                                    <td><?php echo htmlspecialchars($row['source_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['campaign_name'] ?? 'N/A'); ?></td>
+                                    <td><?php echo $row['travel_start_date'] ? date('d-m-Y', strtotime($row['travel_start_date'])) : '-'; ?></td>
+                                    <td><?php echo $row['travel_end_date'] ? date('d-m-Y', strtotime($row['travel_end_date'])) : '-'; ?></td>
+                                    <td><?php echo htmlspecialchars($row['attended_by_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['file_manager_name'] ?? 'Not Assigned'); ?></td>
+                                    <td><?php echo htmlspecialchars($row['department_name']); ?></td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a class="btn btn-link font-24 p-0 line-height-1 no-arrow dropdown-toggle" href="#" role="button" data-toggle="dropdown">
+                                                <i class="dw dw-more"></i>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right dropdown-menu-icon-list">
+                                                <!-- <a class="dropdown-item view-booking" href="#" data-toggle="modal" data-target="#viewModal<?php echo $row['id']; ?>">
+                                                    <i class="dw dw-eye"></i> View
+                                                </a> -->
+                                                <a class="dropdown-item" href="edit_enquiry.php?id=<?php echo $row['id']; ?>">
+                                                    <i class="dw dw-edit2"></i> Edit
                                                 </a>
-                                                <div class="dropdown-menu dropdown-menu-right dropdown-menu-icon-list">
-                                                    <a class="dropdown-item view-booking" href="#" data-toggle="modal" data-target="#viewModal<?php echo $row['id']; ?>">
-                                                        <i class="dw dw-eye"></i> View
-                                                    </a>
-                                                    <a class="dropdown-item" href="download_booking.php?id=<?php echo $row['id']; ?>">
-                                                        <i class="dw dw-download"></i> Download PDF
-                                                    </a>
-                                                    <a class="dropdown-item" href="comments.php?id=<?php echo $row['id']; ?>&type=booking">
-                                                        <i class="dw dw-chat"></i> Comments
-                                                    </a>
-                                                </div>
+                                                <a class="dropdown-item" href="download_booking.php?id=<?php echo $row['id']; ?>">
+                                                    <i class="dw dw-download"></i> Download PDF
+                                                </a>
+                                                <a class="dropdown-item" href="comments.php?id=<?php echo $row['id']; ?>&type=booking">
+                                                    <i class="dw dw-chat"></i> Comments
+                                                </a>
+                                                <?php if(hasPrivilege('new_cost_file')): ?>
+                                                <a class="dropdown-item" href="new_cost_file.php?id=<?php echo $row['id']; ?>">
+                                                    <i class="dw dw-file"></i> Cost File
+                                                </a>
+                                                <?php endif; ?>
                                             </div>
+                                        </div>
                                             
                                             <!-- View Modal -->
                                             <div class="modal fade" id="viewModal<?php echo $row['id']; ?>" tabindex="-1" role="dialog" aria-labelledby="viewModalLabel<?php echo $row['id']; ?>" aria-hidden="true">
@@ -277,7 +332,8 @@ $ad_campaigns = mysqli_query($conn, $ad_campaigns_sql);
                                                             // Get booking details
                                                             $booking_sql = "SELECT e.*, u.full_name as attended_by_name, d.name as department_name, 
                                                                         s.name as source_name, ac.name as campaign_name,
-                                                                        cl.*, dest.name as destination_name, fm.full_name as file_manager_name 
+                                                                        cl.*, dest.name as destination_name, fm.full_name as file_manager_name,
+                                                                        lsm.status_name as lead_status
                                                                         FROM enquiries e 
                                                                         JOIN users u ON e.attended_by = u.id 
                                                                         JOIN departments d ON e.department_id = d.id 
@@ -286,7 +342,8 @@ $ad_campaigns = mysqli_query($conn, $ad_campaigns_sql);
                                                                         JOIN converted_leads cl ON e.id = cl.enquiry_id
                                                                         LEFT JOIN destinations dest ON cl.destination_id = dest.id
                                                                         LEFT JOIN users fm ON cl.file_manager_id = fm.id
-                                                                        WHERE e.id = ?";
+                                                                        JOIN lead_status_map lsm ON e.id = lsm.enquiry_id
+                                                                        WHERE e.id = ? AND lsm.status_name = 'Closed – Booked'";
                                                             $booking_stmt = mysqli_prepare($conn, $booking_sql);
                                                             mysqli_stmt_bind_param($booking_stmt, "i", $row['id']);
                                                             mysqli_stmt_execute($booking_stmt);
@@ -338,6 +395,7 @@ $ad_campaigns = mysqli_query($conn, $ad_campaigns_sql);
                                                                 <div class="col-md-6">
                                                                     <p><strong>Customer Available Timing:</strong> <?php echo $booking['customer_available_timing'] ? htmlspecialchars($booking['customer_available_timing']) : '-'; ?></p>
                                                                     <p><strong>File Manager:</strong> <?php echo $booking['file_manager_name'] ? htmlspecialchars($booking['file_manager_name']) : '-'; ?></p>
+                                                                    <p><strong>Lead Status:</strong> <?php echo $booking['lead_status'] ? htmlspecialchars($booking['lead_status']) : '-'; ?></p>
                                                                     <p><strong>Other Details:</strong> <?php echo $booking['other_details'] ? htmlspecialchars($booking['other_details']) : '-'; ?></p>
                                                                 </div>
                                                             </div>
@@ -363,56 +421,194 @@ $ad_campaigns = mysqli_query($conn, $ad_campaigns_sql);
                     </table>
                 </div>
             </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Show/hide custom date range based on date filter selection
-    document.addEventListener('DOMContentLoaded', function() {
-        const dateFilter = document.getElementById('date-filter');
-        const customDateRange = document.getElementById('custom-date-range');
-        
-        if (dateFilter && customDateRange) {
-            dateFilter.addEventListener('change', function() {
-                if (this.value === 'custom') {
-                    customDateRange.style.display = 'flex';
-                } else {
-                    customDateRange.style.display = 'none';
+// Initialize DataTable with custom options
+document.addEventListener('DOMContentLoaded', function() {
+    window.addEventListener('load', function() {
+        if (typeof $.fn.DataTable !== 'undefined') {
+            // Destroy any existing DataTable instance
+            if ($.fn.DataTable.isDataTable('.data-table')) {
+                $('.data-table').DataTable().destroy();
+            }
+            
+            // Initialize with custom options
+            $('.data-table').DataTable({
+                scrollCollapse: true,
+                autoWidth: false,
+                responsive: true,
+                searching: false,  // Disable built-in search as we have custom filter
+                ordering: true,
+                paging: true,
+                info: true,
+                columnDefs: [{
+                    targets: "datatable-nosort",
+                    orderable: false,
+                }],
+                "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                "language": {
+                    "info": "_START_-_END_ of _TOTAL_ entries",
+                    searchPlaceholder: "Search",
+                    paginate: {
+                        next: '<i class="ion-chevron-right"></i>',
+                        previous: '<i class="ion-chevron-left"></i>'
+                    }
                 }
             });
         }
-        
-        });
+    });
+});
+
+// Show/hide custom date range based on date filter selection
+document.getElementById('date-filter').addEventListener('change', function() {
+    var customDateRange = document.getElementById('custom-date-range');
+    if (this.value === 'custom') {
+        customDateRange.style.display = 'flex';
+    } else {
+        customDateRange.style.display = 'none';
+    }
+});
+
+// Initialize modals and dropdowns
+$(document).ready(function() {
+    // Fix dropdown toggle functionality
+    $('.dropdown-toggle').dropdown();
     
-    // Function to reset filters
-    function resetFilters() {
-        document.getElementById('file-manager-filter').selectedIndex = 0;
-        document.getElementById('department-filter').selectedIndex = 0;
-        document.getElementById('source-filter').selectedIndex = 0;
-        document.getElementById('ad-campaign-filter').selectedIndex = 0;
-        document.getElementById('date-filter').selectedIndex = 0;
-        document.getElementById('custom-date-range').style.display = 'none';
-        document.getElementById('start-date').value = '';
-        document.getElementById('end-date').value = '';
+    // Make sure modals work properly
+    $('.view-booking').on('click', function(e) {
+        e.preventDefault();
+        var targetModal = $(this).data('target');
+        $(targetModal).modal('show');
+    });
+    
+    // Set enquiry ID in comment modal and load comments
+    $('.comment-link').on('click', function(e) {
+        var enquiryId = $(this).data('id');
+        var customerName = $(this).data('customer');
         
-        // Submit the form
-        document.getElementById('filter-form').submit();
+        // Set the modal title with customer name
+        $('#add-comment-modal-title').text('Comments for ' + customerName);
+        
+        // Set form values
+        $('#enquiry-id').val(enquiryId);
+        $('#table-id').val('enquiries');
+        
+        // Load existing comments
+        loadComments(enquiryId);
+    });
+    
+    // Function to load comments
+    function loadComments(enquiryId) {
+        $('#comments-container').html('<p>Loading comments...</p>');
+        
+        $.ajax({
+            url: 'get_comments.php',
+            type: 'GET',
+            data: {
+                enquiry_id: enquiryId
+            },
+            success: function(response) {
+                try {
+                    var data = JSON.parse(response);
+                    if (data.success) {
+                        var commentsHtml = '';
+                        if (data.comments && data.comments.length > 0) {
+                            data.comments.forEach(function(comment) {
+                                commentsHtml += '<div class="comment-box">' +
+                                    '<div class="comment-header">' +
+                                    '<span class="comment-user">' + comment.user_name + '</span>' +
+                                    '<span class="comment-date">' + comment.created_at + '</span>' +
+                                    '</div>' +
+                                    '<div class="comment-body">' + comment.comment.replace(/\n/g, '<br>') + '</div>' +
+                                    '</div>';
+                            });
+                        } else {
+                            commentsHtml = '<p class="text-muted">No comments yet.</p>';
+                        }
+                        $('#comments-container').html(commentsHtml);
+                    } else {
+                        $('#comments-container').html('<p class="text-danger">Error loading comments: ' + data.message + '</p>');
+                    }
+                } catch (e) {
+                    $('#comments-container').html('<p class="text-danger">Error processing response</p>');
+                }
+            },
+            error: function() {
+                $('#comments-container').html('<p class="text-danger">Error loading comments</p>');
+            }
+        });
     }
     
-    // Initialize modals and dropdowns
-    $(document).ready(function() {
-        // Fix dropdown toggle functionality
-        $('.dropdown-toggle').dropdown();
+    // Handle form submission via AJAX
+    $('#comment-form').on('submit', function(e) {
+        e.preventDefault();
+        var enquiryId = $('#enquiry-id').val();
+        var comment = $('#comment').val();
         
-        // Make sure modals work properly
-        $('.view-booking').on('click', function(e) {
-            e.preventDefault();
-            var targetModal = $(this).data('target');
-            $(targetModal).modal('show');
+        $.ajax({
+            url: 'add_comment.php',
+            type: 'POST',
+            data: {
+                enquiry_id: enquiryId,
+                comment: comment,
+                table_id: $('#table-id').val()
+            },
+            success: function(response) {
+                try {
+                    var data = JSON.parse(response);
+                    if (data.success) {
+                        // Clear the textarea
+                        $('#comment').val('');
+                        
+                        // Reload comments
+                        loadComments(enquiryId);
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                } catch (e) {
+                    alert('Error processing response');
+                }
+            },
+            error: function() {
+                alert('Error submitting comment');
+            }
         });
     });
+});
 </script>
+
+<!-- Add Comment Modal -->
+<div class="modal fade" id="add-comment-modal" tabindex="-1" role="dialog" aria-labelledby="add-comment-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="add-comment-modal-title">Comments</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="comments-container">
+                    <!-- Comments will be loaded here -->
+                </div>
+                <hr>
+                <form id="comment-form">
+                    <input type="hidden" name="enquiry_id" id="enquiry-id">
+                    <input type="hidden" name="table_id" id="table-id">
+                    <div class="form-group">
+                        <label for="comment">Add Comment</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Comment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php
 // Include footer

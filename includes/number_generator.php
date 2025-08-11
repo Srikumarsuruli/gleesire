@@ -1,5 +1,5 @@
 <?php
-function generateNumber($type, $conn) {
+function generateNumber($type, $conn, $preview = false) {
     $year = date('Y');
     $month = date('m');
     
@@ -24,7 +24,7 @@ function generateNumber($type, $conn) {
     )";
     mysqli_query($conn, $table_sql);
     
-    // Get or create sequence for this type/year/month
+    // Get current sequence for this type/year/month
     $check_sql = "SELECT last_number FROM number_sequences WHERE type = ? AND year = ? AND month = ?";
     $stmt = mysqli_prepare($conn, $check_sql);
     mysqli_stmt_bind_param($stmt, "sii", $type, $year, $month);
@@ -32,21 +32,26 @@ function generateNumber($type, $conn) {
     $result = mysqli_stmt_get_result($stmt);
     
     if (mysqli_num_rows($result) > 0) {
-        // Update existing sequence
         $row = mysqli_fetch_assoc($result);
         $next_number = $row['last_number'] + 1;
         
-        $update_sql = "UPDATE number_sequences SET last_number = ? WHERE type = ? AND year = ? AND month = ?";
-        $update_stmt = mysqli_prepare($conn, $update_sql);
-        mysqli_stmt_bind_param($update_stmt, "isii", $next_number, $type, $year, $month);
-        mysqli_stmt_execute($update_stmt);
+        if (!$preview) {
+            // Update existing sequence only if not preview
+            $update_sql = "UPDATE number_sequences SET last_number = ? WHERE type = ? AND year = ? AND month = ?";
+            $update_stmt = mysqli_prepare($conn, $update_sql);
+            mysqli_stmt_bind_param($update_stmt, "isii", $next_number, $type, $year, $month);
+            mysqli_stmt_execute($update_stmt);
+        }
     } else {
-        // Create new sequence
         $next_number = 1;
-        $insert_sql = "INSERT INTO number_sequences (type, year, month, last_number) VALUES (?, ?, ?, ?)";
-        $insert_stmt = mysqli_prepare($conn, $insert_sql);
-        mysqli_stmt_bind_param($insert_stmt, "siii", $type, $year, $month, $next_number);
-        mysqli_stmt_execute($insert_stmt);
+        
+        if (!$preview) {
+            // Create new sequence only if not preview
+            $insert_sql = "INSERT INTO number_sequences (type, year, month, last_number) VALUES (?, ?, ?, ?)";
+            $insert_stmt = mysqli_prepare($conn, $insert_sql);
+            mysqli_stmt_bind_param($insert_stmt, "siii", $type, $year, $month, $next_number);
+            mysqli_stmt_execute($insert_stmt);
+        }
     }
     
     // Format the number
