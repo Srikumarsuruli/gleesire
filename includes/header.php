@@ -206,10 +206,11 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                             <span class="micon bi bi-calendar-check"></span><span class="mtext">Reservation/Booking</span>
                         </a>
                         <ul class="submenu">
-                            <?php if(hasPrivilege('hotel_resorts') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Hotel/Resorts">Hotel/Resorts</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('hotel_resorts') || $_SESSION["role_id"] == 1): ?><li><a href="hotel_resorts.php">Hotel/Resorts</a></li><?php endif; ?>
+                            <li><a href="hotel_cruise_details.php">Hotel/Resort Cruise Details</a></li>
                             <?php if(hasPrivilege('cruise_reservation') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Cruise">Cruise</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('visa_air_ticket') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Visa & Air Ticket">Visa & Air Ticket</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('transportation_reservation') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Transportation">Transportation</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('visa_air_ticket') || $_SESSION["role_id"] == 1): ?><li><a href="visa_ticket_booking.php">Visa & Air Ticket</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('transportation_reservation') || $_SESSION["role_id"] == 1): ?><li><a href="transportation_booking.php">Transportation</a></li><?php endif; ?>
                         </ul>
                     </li>
                     <?php endif; ?>

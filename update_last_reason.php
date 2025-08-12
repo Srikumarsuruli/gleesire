@@ -23,16 +23,19 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['enquiry_id']) && isset(
         mysqli_stmt_execute($check_stmt);
         $check_result = mysqli_stmt_get_result($check_stmt);
         
+        // Get current IST datetime
+        $current_ist_time = date('Y-m-d H:i:s');
+        
         if(mysqli_num_rows($check_result) > 0) {
             // Update existing record
-            $sql = "UPDATE lead_status_map SET last_reason = ?, last_reason_updated_at = NOW() WHERE enquiry_id = ?";
+            $sql = "UPDATE lead_status_map SET last_reason = ?, last_reason_updated_at = ? WHERE enquiry_id = ?";
             $stmt = mysqli_prepare($conn, $sql);
-            mysqli_stmt_bind_param($stmt, "si", $last_reason, $enquiry_id);
+            mysqli_stmt_bind_param($stmt, "ssi", $last_reason, $current_ist_time, $enquiry_id);
         } else {
             // Insert new record with empty status_name
-            $sql = "INSERT INTO lead_status_map (enquiry_id, status_name, last_reason, last_reason_updated_at) VALUES (?, '', ?, NOW())";
+            $sql = "INSERT INTO lead_status_map (enquiry_id, status_name, last_reason, last_reason_updated_at) VALUES (?, '', ?, ?)";
             $stmt = mysqli_prepare($conn, $sql);
-            mysqli_stmt_bind_param($stmt, "is", $enquiry_id, $last_reason);
+            mysqli_stmt_bind_param($stmt, "iss", $enquiry_id, $last_reason, $current_ist_time);
         }
         
         if(mysqli_stmt_execute($stmt)) {

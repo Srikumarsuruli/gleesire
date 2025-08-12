@@ -18,11 +18,14 @@ function moveConvertedEnquiriesToLeads() {
             // Generate enquiry number
             $enquiry_number = 'GH ' . sprintf('%04d', rand(1, 9999));
             
+            // Get current IST datetime
+            $current_ist_time = date('Y-m-d H:i:s');
+            
             // Insert into converted_leads table
-            $insert_sql = "INSERT INTO converted_leads (enquiry_id, enquiry_number, travel_start_date, travel_end_date, booking_confirmed) 
-                          VALUES (?, ?, NULL, NULL, 0)";
+            $insert_sql = "INSERT INTO converted_leads (enquiry_id, enquiry_number, travel_start_date, travel_end_date, booking_confirmed, created_at) 
+                          VALUES (?, ?, NULL, NULL, 0, ?)";
             $insert_stmt = mysqli_prepare($conn, $insert_sql);
-            mysqli_stmt_bind_param($insert_stmt, "is", $enquiry['id'], $enquiry_number);
+            mysqli_stmt_bind_param($insert_stmt, "iss", $enquiry['id'], $enquiry_number, $current_ist_time);
             mysqli_stmt_execute($insert_stmt);
         }
         return true;

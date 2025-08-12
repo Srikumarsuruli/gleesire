@@ -33,11 +33,14 @@ if(isset($_GET["id"]) && !empty($_GET["id"])) {
         $exists_result = mysqli_stmt_get_result($exists_stmt);
         
         if(mysqli_num_rows($exists_result) == 0) {
+            // Get current IST datetime
+            $current_ist_time = date('Y-m-d H:i:s');
+            
             // Insert into converted_leads table
-            $insert_sql = "INSERT INTO converted_leads (enquiry_id, enquiry_number, travel_start_date, travel_end_date, booking_confirmed) 
-                          VALUES (?, ?, NULL, NULL, 0)";
+            $insert_sql = "INSERT INTO converted_leads (enquiry_id, enquiry_number, travel_start_date, travel_end_date, booking_confirmed, created_at) 
+                          VALUES (?, ?, NULL, NULL, 0, ?)";
             $insert_stmt = mysqli_prepare($conn, $insert_sql);
-            mysqli_stmt_bind_param($insert_stmt, "is", $enquiry_id, $enquiry['lead_number']);
+            mysqli_stmt_bind_param($insert_stmt, "iss", $enquiry_id, $enquiry['lead_number'], $current_ist_time);
             
             if(mysqli_stmt_execute($insert_stmt)) {
                 // Redirect back to view_enquiries.php with success message

@@ -41,12 +41,15 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["enquiry_id"]) && isset(
         exit;
     }
     
+    // Get current IST datetime
+    $current_ist_time = date('Y-m-d H:i:s');
+    
     // Prepare an insert statement
-    $sql = "INSERT INTO comments (enquiry_id, user_id, comment, created_at) VALUES (?, ?, ?, NOW())";
+    $sql = "INSERT INTO comments (enquiry_id, user_id, comment, created_at) VALUES (?, ?, ?, ?)";
     
     if($stmt = mysqli_prepare($conn, $sql)) {
         // Bind variables to the prepared statement as parameters
-        mysqli_stmt_bind_param($stmt, "iis", $enquiry_id, $user_id, $comment);
+        mysqli_stmt_bind_param($stmt, "iiss", $enquiry_id, $user_id, $comment, $current_ist_time);
         
         // Attempt to execute the prepared statement
         if(mysqli_stmt_execute($stmt)) {

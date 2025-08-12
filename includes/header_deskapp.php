@@ -224,6 +224,14 @@ function hasPrivilege($menu, $action = 'view') {
                         </a>
                     </li>
                     <?php endif; ?>
+                    <li class="dropdown">
+                        <a href="javascript:;" class="dropdown-toggle">
+                            <span class="micon bi bi-calendar-check"></span><span class="mtext">Reservations/Bookings</span>
+                        </a>
+                        <ul class="submenu">
+                            <li><a href="hotel_cruise_details.php">Hotel/Resorts</a></li>
+                        </ul>
+                    </li>
                     <?php if($_SESSION["role_id"] == 1): ?>
                     <li class="dropdown">
                         <a href="javascript:;" class="dropdown-toggle">

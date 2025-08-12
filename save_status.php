@@ -70,22 +70,25 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                 $old_status = $old_status_row['status_name'];
             }
             
+            // Get current IST datetime
+            $current_ist_time = date('Y-m-d H:i:s');
+            
             // Update or insert lead status
             $upsert_sql = "INSERT INTO lead_status_map (enquiry_id, status_name, last_reason, created_at) 
-                          VALUES (?, ?, ?, NOW()) 
+                          VALUES (?, ?, ?, ?) 
                           ON DUPLICATE KEY UPDATE 
                           status_name = VALUES(status_name), 
                           last_reason = VALUES(last_reason), 
-                          created_at = NOW()";
+                          created_at = VALUES(created_at)";
             $upsert_stmt = mysqli_prepare($conn, $upsert_sql);
-            mysqli_stmt_bind_param($upsert_stmt, "iss", $enquiry_id, $status, $last_reason);
+            mysqli_stmt_bind_param($upsert_stmt, "isss", $enquiry_id, $status, $last_reason, $current_ist_time);
             
             if(mysqli_stmt_execute($upsert_stmt)) {
                 // Log lead status change
                 $log_sql = "INSERT INTO lead_status_change_log (enquiry_id, old_status, new_status, changed_by, changed_at) 
-                           VALUES (?, ?, ?, ?, NOW())";
+                           VALUES (?, ?, ?, ?, ?)";
                 $log_stmt = mysqli_prepare($conn, $log_sql);
-                mysqli_stmt_bind_param($log_stmt, "issi", $enquiry_id, $old_status, $status, $_SESSION["id"]);
+                mysqli_stmt_bind_param($log_stmt, "issis", $enquiry_id, $old_status, $status, $_SESSION["id"], $current_ist_time);
                 mysqli_stmt_execute($log_stmt);
                 
                 header("location: view_leads.php?status_updated=1");

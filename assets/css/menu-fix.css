@@ -1,0 +1,23 @@
+/* Mobile overlay only */
+.mobile-menu-overlay {
+    display: block !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: all 0.3s ease-in-out !important;
+}
+
+.mobile-menu-overlay.show {
+    opacity: 0.6 !important;
+    visibility: visible !important;
+}
+
+/* Mobile hamburger menu fix */
+@media (max-width: 1300px) {
+    .left-side-bar:not(.open) {
+        left: -281px !important;
+    }
+    
+    .left-side-bar.open {
+        left: 0 !important;
+    }
+}

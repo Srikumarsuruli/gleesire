@@ -1,45 +1,33 @@
 // Menu functionality fix
 $(document).ready(function() {
-    // Ensure menu icon click works
-    $('.menu-icon').on('click', function(e) {
+    // Remove any existing handlers and add new one
+    $('.menu-icon').off('click').on('click', function(e) {
         e.preventDefault();
-        $('body').toggleClass('sidebar-shrink');
-        $('.left-side-bar').toggleClass('open');
-        $('.mobile-menu-overlay').toggleClass('show');
-    });
-    
-    // Ensure header search toggle works
-    $('[data-toggle="header_search"]').on('click', function(e) {
-        e.preventDefault();
-        $('.header-search').slideToggle();
-    });
-    
-    // Ensure dropdown menus work in header
-    $('.header .dropdown-toggle').on('click', function(e) {
-        e.preventDefault();
-        var $dropdown = $(this).closest('.dropdown');
-        var $menu = $dropdown.find('.dropdown-menu');
+        e.stopPropagation();
         
-        // Close other dropdowns
-        $('.header .dropdown-menu').not($menu).removeClass('show');
+        var $sidebar = $('.left-side-bar');
+        var $overlay = $('.mobile-menu-overlay');
         
-        // Toggle current dropdown
-        $menu.toggleClass('show');
-    });
-    
-    // Close dropdowns when clicking outside
-    $(document).on('click', function(e) {
-        if (!$(e.target).closest('.dropdown').length) {
-            $('.header .dropdown-menu').removeClass('show');
+        if ($sidebar.hasClass('open')) {
+            // Close sidebar
+            $sidebar.removeClass('open');
+            $overlay.removeClass('show');
+        } else {
+            // Open sidebar
+            $sidebar.addClass('open');
+            $overlay.addClass('show');
         }
     });
     
-    // Sidebar menu active state
-    var currentPage = window.location.pathname.split('/').pop();
-    $('#accordion-menu a').each(function() {
-        var href = $(this).attr('href');
-        if (href && href.indexOf(currentPage) !== -1) {
-            $(this).addClass('active');
-        }
+    // Close sidebar when clicking overlay
+    $('.mobile-menu-overlay').off('click').on('click', function() {
+        $('.left-side-bar').removeClass('open');
+        $(this).removeClass('show');
+    });
+    
+    // Close sidebar button
+    $('.close-sidebar').off('click').on('click', function() {
+        $('.left-side-bar').removeClass('open');
+        $('.mobile-menu-overlay').removeClass('show');
     });
 });

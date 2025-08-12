@@ -285,6 +285,22 @@ WHERE r.role_name IN ('Sales Team', 'Sales Manager')
 ORDER BY u.full_name";
 $users = mysqli_query($conn, $sql);
 
+// Get the attended by user name for display
+$attended_by_name = '';
+if (!empty($enquiry['attended_by'])) {
+    $sql = "SELECT full_name FROM users WHERE id = ?";
+    if ($stmt = mysqli_prepare($conn, $sql)) {
+        mysqli_stmt_bind_param($stmt, "i", $enquiry['attended_by']);
+        if (mysqli_stmt_execute($stmt)) {
+            $result = mysqli_stmt_get_result($stmt);
+            if ($row = mysqli_fetch_assoc($result)) {
+                $attended_by_name = $row['full_name'];
+            }
+        }
+        mysqli_stmt_close($stmt);
+    }
+}
+
 // Get destinations for dropdown
 $sql = "SELECT * FROM destinations ORDER BY name";
 $destinations = mysqli_query($conn, $sql);
@@ -403,15 +419,9 @@ if($converted_lead && $converted_lead['enquiry_number'] && (strpos($converted_le
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="attended-by" class="form-label required">Lead Attended By</label>
-                                <select class="custom-select col-12" id="attended-by" name="attended_by" required>
-                                    <?php mysqli_data_seek($users, 0); ?>
-                                    <?php while($user = mysqli_fetch_assoc($users)): ?>
-                                        <option value="<?php echo $user['id']; ?>" <?php echo ($user['id'] == $enquiry['attended_by']) ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($user['full_name']); ?>
-                                        </option>
-                                    <?php endwhile; ?>
-                                </select>
+                                <label for="attended-by" class="form-label">Lead Attended By</label>
+                                <input type="text" class="form-control" id="attended-by" name="attended_by_display" value="<?php echo htmlspecialchars($attended_by_name); ?>" readonly>
+                                <input type="hidden" name="attended_by" value="<?php echo htmlspecialchars($enquiry['attended_by']); ?>">
                             </div>
                         </div>
                         <div class="col-md-6">

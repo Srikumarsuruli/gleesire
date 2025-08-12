@@ -97,6 +97,20 @@ $result = mysqli_query($conn, $sql);
             }
         },
     });
+    
+    // Hamburger menu fix
+    $(document).off('click', '.menu-icon').on('click', '.menu-icon', function(e) {
+        e.preventDefault();
+        var sidebar = $('.left-side-bar');
+        var overlay = $('.mobile-menu-overlay');
+        if (sidebar.hasClass('open')) {
+            sidebar.removeClass('open');
+            overlay.removeClass('show');
+        } else {
+            sidebar.addClass('open');
+            overlay.addClass('show');
+        }
+    });
 </script>
 
 <?php require_once "includes/footer.php"; ?>

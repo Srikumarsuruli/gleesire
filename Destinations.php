@@ -97,6 +97,13 @@ $result = mysqli_query($conn, $sql);
             }
         },
     });
+    
+    // Override hamburger menu after all scripts load
+    $('.menu-icon').off('click').on('click', function(e) {
+        e.preventDefault();
+        $('.left-side-bar').toggleClass('open');
+        $('.mobile-menu-overlay').toggleClass('show');
+    });
 </script>
 
 <?php require_once "includes/footer.php"; ?>

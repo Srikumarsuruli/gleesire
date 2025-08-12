@@ -4,18 +4,18 @@ require_once "includes/header.php";
 // Handle delete request
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $delete_id = $_GET['delete'];
-    $delete_sql = "DELETE FROM transport_details WHERE id = ?";
+    $delete_sql = "DELETE FROM visa_ticket_booking WHERE id = ?";
     if ($stmt = mysqli_prepare($conn, $delete_sql)) {
         mysqli_stmt_bind_param($stmt, "i", $delete_id);
         if (mysqli_stmt_execute($stmt)) {
-            echo "<script>alert('Transport detail deleted successfully'); window.location.href='transport_details.php';</script>";
+            echo "<script>alert('Visa & ticket booking deleted successfully'); window.location.href='visa_ticket_booking.php';</script>";
         }
         mysqli_stmt_close($stmt);
     }
 }
 
-// Fetch transport details
-$sql = "SELECT * FROM transport_details ORDER BY created_at DESC";
+// Fetch visa & ticket bookings
+$sql = "SELECT * FROM visa_ticket_booking ORDER BY created_at DESC";
 $result = mysqli_query($conn, $sql);
 ?>
 
@@ -23,30 +23,32 @@ $result = mysqli_query($conn, $sql);
     <div class="pd-20">
         <div class="row">
             <div class="col-md-6">
-                <h4 class="text-blue h4">Transport Details</h4>
+                <h4 class="text-blue h4">Visa & Air Ticket Booking Details</h4>
             </div>
             <div class="col-md-6 text-right">
-                <a href="add_transport_detail.php" class="btn btn-primary">
-                    <i class="fa fa-plus"></i> Add New Transport
+                <a href="add_visa_ticket_booking.php" class="btn btn-primary">
+                    <i class="fa fa-plus"></i> Add New Visa & Ticket
                 </a>
             </div>
         </div>
     </div>
     <div class="pb-20" style="overflow-x: auto;">
         <div class="table-responsive">
-            <table class="data-table table stripe hover" style="width: 100%; min-width: 1000px;">
+            <table class="data-table table stripe hover" style="width: 100%; min-width: 1500px;">
                 <thead>
                     <tr>
                         <th style="min-width: 60px;">SL NO</th>
+                        <th style="min-width: 120px;">Cost Sheet Number</th>
+                        <th style="min-width: 100px;">Booking Date</th>
+                        <th style="min-width: 100px;">Checkin Date</th>
+                        <th style="min-width: 100px;">Check Out Date</th>
                         <th style="min-width: 120px;">Destination</th>
-                        <th style="min-width: 150px;">Company Name</th>
-                        <th style="min-width: 120px;">Contact Person</th>
-                        <th style="min-width: 100px;">Mobile</th>
-                        <th style="min-width: 150px;">Email</th>
-                        <th style="min-width: 100px;">Vehicle</th>
-                        <th style="min-width: 100px;">Daily Rent</th>
-                        <th style="min-width: 100px;">Rate/KM</th>
-                        <th style="min-width: 80px;">Status</th>
+                        <th style="min-width: 100px;">Agent Type</th>
+                        <th style="min-width: 150px;">Supplier</th>
+                        <th style="min-width: 150px;">Name of Supplier</th>
+                        <th style="min-width: 120px;">Contact Number</th>
+                        <th style="min-width: 120px;">Availability Status</th>
+                        <th style="min-width: 120px;">Booking Status</th>
                         <th style="min-width: 100px;">Actions</th>
                     </tr>
                 </thead>
@@ -58,26 +60,39 @@ $result = mysqli_query($conn, $sql);
                 ?>
                 <tr>
                     <td><?php echo $sl_no++; ?></td>
+                    <td><?php echo htmlspecialchars($row['cost_sheet_number'] ?? ''); ?></td>
+                    <td><?php echo $row['booking_date'] ? date('d-m-Y', strtotime($row['booking_date'])) : ''; ?></td>
+                    <td><?php echo $row['checkin_date'] ? date('d-m-Y', strtotime($row['checkin_date'])) : ''; ?></td>
+                    <td><?php echo $row['checkout_date'] ? date('d-m-Y', strtotime($row['checkout_date'])) : ''; ?></td>
                     <td><?php echo htmlspecialchars($row['destination']); ?></td>
-                    <td><?php echo htmlspecialchars($row['company_name']); ?></td>
-                    <td><?php echo htmlspecialchars($row['contact_person']); ?></td>
-                    <td><?php echo htmlspecialchars($row['mobile']); ?></td>
-                    <td><?php echo htmlspecialchars($row['email']); ?></td>
-                    <td><?php echo htmlspecialchars($row['vehicle']); ?></td>
-                    <td>₹<?php echo number_format($row['daily_rent'], 2); ?></td>
-                    <td>₹<?php echo number_format($row['rate_per_km'], 2); ?></td>
                     <td>
-                        <span class="badge <?php echo $row['status'] == 'Active' ? 'badge-success' : 'badge-danger'; ?>">
-                            <?php echo $row['status']; ?>
+                        <span class="badge <?php echo ($row['agent_type'] ?? 'Domestic') == 'Domestic' ? 'badge-info' : 'badge-primary'; ?>">
+                            <?php echo $row['agent_type'] ?? 'Domestic'; ?>
+                        </span>
+                    </td>
+                    <td><?php echo htmlspecialchars($row['supplier']); ?></td>
+                    <td><?php echo htmlspecialchars($row['supplier_name']); ?></td>
+                    <td><?php echo htmlspecialchars($row['contact_number']); ?></td>
+                    <td>
+                        <span class="badge <?php echo ($row['availability_status'] ?? 'Available') == 'Available' ? 'badge-success' : 'badge-warning'; ?>">
+                            <?php echo $row['availability_status'] ?? 'Available'; ?>
                         </span>
                     </td>
                     <td>
-                        <a href="edit_transport_detail.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-primary">
+                        <span class="badge <?php 
+                            $status = $row['booking_status'] ?? 'Booking Confirmed';
+                            echo $status == 'Booking Confirmed' ? 'badge-success' : ($status == 'Amendment' ? 'badge-warning' : 'badge-danger'); 
+                        ?>">
+                            <?php echo $status; ?>
+                        </span>
+                    </td>
+                    <td>
+                        <a href="edit_visa_ticket_booking.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-primary">
                             <i class="fa fa-edit"></i>
                         </a>
-                        <a href="transport_details.php?delete=<?php echo $row['id']; ?>" 
+                        <a href="visa_ticket_booking.php?delete=<?php echo $row['id']; ?>" 
                            class="btn btn-sm btn-danger" 
-                           onclick="return confirm('Are you sure you want to delete this transport detail?')">
+                           onclick="return confirm('Are you sure you want to delete this visa & ticket booking?')">
                             <i class="fa fa-trash"></i>
                         </a>
                     </td>
@@ -87,7 +102,7 @@ $result = mysqli_query($conn, $sql);
                 else:
                 ?>
                 <tr>
-                    <td colspan="11" class="text-center">No transport details found</td>
+                    <td colspan="13" class="text-center">No visa & ticket bookings found</td>
                 </tr>
                 <?php endif; ?>
             </tbody>

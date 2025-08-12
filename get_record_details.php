@@ -53,10 +53,12 @@ if(isset($_GET['id']) && !empty($_GET['id']) && isset($_GET['type']) && !empty($
             $sql = "SELECT 
                     cl.*,
                     d.name as destination_name,
-                    u.full_name as file_manager_name
+                    u.full_name as file_manager_name,
+                    COALESCE(nd.name, cl.night_day) as night_day_name
                     FROM converted_leads cl
                     LEFT JOIN destinations d ON cl.destination_id = d.id
                     LEFT JOIN users u ON cl.file_manager_id = u.id
+                    LEFT JOIN night_day nd ON cl.night_day_id = nd.id
                     WHERE cl.enquiry_id = ?";
                     
             if($stmt = mysqli_prepare($conn, $sql)) {

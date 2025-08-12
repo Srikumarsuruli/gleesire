@@ -114,6 +114,21 @@ $file_manager_sql = "SELECT DISTINCT u.* FROM users u
                      WHERE lsm.status_name = 'Hot Prospect - Pipeline' 
                      ORDER BY u.full_name";
 $file_manager_users = mysqli_query($conn, $file_manager_sql);
+
+// Get counts for each month
+$month_counts = array();
+$months = array('March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February');
+
+foreach($months as $month) {
+    $count_sql = "SELECT COUNT(*) as count FROM enquiries e
+                  LEFT JOIN lead_status_map lsm ON e.id = lsm.enquiry_id
+                  LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id
+                  WHERE lsm.status_name = 'Hot Prospect - Pipeline'
+                  AND cl.travel_month = '$month'";
+    $count_result = mysqli_query($conn, $count_sql);
+    $count_row = mysqli_fetch_assoc($count_result);
+    $month_counts[$month] = $count_row['count'];
+}
 ?>
 
 <div class="row">
@@ -131,51 +146,51 @@ $file_manager_users = mysqli_query($conn, $file_manager_sql);
                     </label>
                     <label class="quick-filter-item">
                         <input type="radio" name="month_filter" value="March" <?php echo ($travel_month == 'March') ? 'checked' : ''; ?> onchange="window.location.href='pipeline.php?month=March'">
-                        <span class="quick-filter-label">Mar</span>
+                        <span class="quick-filter-label">Mar(<?php echo $month_counts['March']; ?>)</span>
                     </label>
                     <label class="quick-filter-item">
                         <input type="radio" name="month_filter" value="April" <?php echo ($travel_month == 'April') ? 'checked' : ''; ?> onchange="window.location.href='pipeline.php?month=April'">
-                        <span class="quick-filter-label">Apr</span>
+                        <span class="quick-filter-label">Apr(<?php echo $month_counts['April']; ?>)</span>
                     </label>
                     <label class="quick-filter-item">
                         <input type="radio" name="month_filter" value="May" <?php echo ($travel_month == 'May') ? 'checked' : ''; ?> onchange="window.location.href='pipeline.php?month=May'">
-                        <span class="quick-filter-label">May</span>
+                        <span class="quick-filter-label">May(<?php echo $month_counts['May']; ?>)</span>
                     </label>
                     <label class="quick-filter-item">
                         <input type="radio" name="month_filter" value="June" <?php echo ($travel_month == 'June') ? 'checked' : ''; ?> onchange="window.location.href='pipeline.php?month=June'">
-                        <span class="quick-filter-label">Jun</span>
+                        <span class="quick-filter-label">Jun(<?php echo $month_counts['June']; ?>)</span>
                     </label>
                     <label class="quick-filter-item">
                         <input type="radio" name="month_filter" value="July" <?php echo ($travel_month == 'July') ? 'checked' : ''; ?> onchange="window.location.href='pipeline.php?month=July'">
-                        <span class="quick-filter-label">Jul</span>
+                        <span class="quick-filter-label">Jul(<?php echo $month_counts['July']; ?>)</span>
                     </label>
                     <label class="quick-filter-item">
                         <input type="radio" name="month_filter" value="August" <?php echo ($travel_month == 'August') ? 'checked' : ''; ?> onchange="window.location.href='pipeline.php?month=August'">
-                        <span class="quick-filter-label">Aug</span>
+                        <span class="quick-filter-label">Aug(<?php echo $month_counts['August']; ?>)</span>
                     </label>
                     <label class="quick-filter-item">
                         <input type="radio" name="month_filter" value="September" <?php echo ($travel_month == 'September') ? 'checked' : ''; ?> onchange="window.location.href='pipeline.php?month=September'">
-                        <span class="quick-filter-label">Sep</span>
+                        <span class="quick-filter-label">Sep(<?php echo $month_counts['September']; ?>)</span>
                     </label>
                     <label class="quick-filter-item">
                         <input type="radio" name="month_filter" value="October" <?php echo ($travel_month == 'October') ? 'checked' : ''; ?> onchange="window.location.href='pipeline.php?month=October'">
-                        <span class="quick-filter-label">Oct</span>
+                        <span class="quick-filter-label">Oct(<?php echo $month_counts['October']; ?>)</span>
                     </label>
                     <label class="quick-filter-item">
                         <input type="radio" name="month_filter" value="November" <?php echo ($travel_month == 'November') ? 'checked' : ''; ?> onchange="window.location.href='pipeline.php?month=November'">
-                        <span class="quick-filter-label">Nov</span>
+                        <span class="quick-filter-label">Nov(<?php echo $month_counts['November']; ?>)</span>
                     </label>
                     <label class="quick-filter-item">
                         <input type="radio" name="month_filter" value="December" <?php echo ($travel_month == 'December') ? 'checked' : ''; ?> onchange="window.location.href='pipeline.php?month=December'">
-                        <span class="quick-filter-label">Dec</span>
+                        <span class="quick-filter-label">Dec(<?php echo $month_counts['December']; ?>)</span>
                     </label>
                     <label class="quick-filter-item">
                         <input type="radio" name="month_filter" value="January" <?php echo ($travel_month == 'January') ? 'checked' : ''; ?> onchange="window.location.href='pipeline.php?month=January'">
-                        <span class="quick-filter-label">Jan</span>
+                        <span class="quick-filter-label">Jan(<?php echo $month_counts['January']; ?>)</span>
                     </label>
                     <label class="quick-filter-item">
                         <input type="radio" name="month_filter" value="February" <?php echo ($travel_month == 'February') ? 'checked' : ''; ?> onchange="window.location.href='pipeline.php?month=February'">
-                        <span class="quick-filter-label">Feb</span>
+                        <span class="quick-filter-label">Feb(<?php echo $month_counts['February']; ?>)</span>
                     </label>
                 </div>
             </div>
