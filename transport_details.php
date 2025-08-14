@@ -1,4 +1,6 @@
 <?php
+
+
 require_once "includes/header.php";
 
 // Handle delete request
@@ -96,9 +98,9 @@ $result = mysqli_query($conn, $sql);
     </div>
 </div>
 
-<script src="assets/deskapp/vendors/scripts/core.js"></script>
-<script src="assets/deskapp/vendors/scripts/script.min.js"></script>
-<script src="assets/deskapp/vendors/scripts/process.js"></script>
+<!-- <script src="assets/deskapp/vendors/scripts/core.js"></script> -->
+<!-- <script src="assets/deskapp/vendors/scripts/script.min.js"></script> -->
+<!-- <script src="assets/deskapp/vendors/scripts/process.js"></script> -->
 <script src="assets/deskapp/vendors/scripts/layout-settings.js"></script>
 <script src="assets/deskapp/src/plugins/datatables/js/jquery.dataTables.min.js"></script>
 <script src="assets/deskapp/src/plugins/datatables/js/dataTables.bootstrap4.min.js"></script>
@@ -124,19 +126,7 @@ $result = mysqli_query($conn, $sql);
         },
     });
     
-    // Hamburger menu fix
-    $(document).off('click', '.menu-icon').on('click', '.menu-icon', function(e) {
-        e.preventDefault();
-        var sidebar = $('.left-side-bar');
-        var overlay = $('.mobile-menu-overlay');
-        if (sidebar.hasClass('open')) {
-            sidebar.removeClass('open');
-            overlay.removeClass('show');
-        } else {
-            sidebar.addClass('open');
-            overlay.addClass('show');
-        }
-    });
+  
 </script>
 
 <?php require_once "includes/footer.php"; ?>

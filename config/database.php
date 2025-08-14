@@ -5,7 +5,7 @@ require_once __DIR__ . '/timezone.php';
 // Database configuration
 define('DB_SERVER', 'localhost');
 define('DB_USERNAME', 'root');
-define('DB_PASSWORD', '');
+define('DB_PASSWORD', 'root');
 define('DB_NAME', 'lead_management');
 
 // Attempt to connect to MySQL database

@@ -96,7 +96,7 @@ $base_sql = "SELECT DISTINCT e.*, u.full_name as attended_by_name, d.name as dep
         cl.adults_count, cl.children_count, cl.infants_count, cl.children_age_details, cl.lead_type,
         lsm.status_name as lead_status, fm.full_name as file_manager_name,
         dest.name as destination_name,
-        GREATEST(COALESCE(lsm.updated_at, '1970-01-01'), COALESCE(lsm.last_reason_updated_at, '1970-01-01')) as last_updated_date
+        lsm.created_at as last_updated_date
         FROM enquiries e 
         JOIN users u ON e.attended_by = u.id 
         JOIN departments d ON e.department_id = d.id 
@@ -209,11 +209,20 @@ $total_records = $count_row ? $count_row[0] : 0;
 // Execute the main query
 if(!empty($params)) {
     $stmt = mysqli_prepare($conn, $sql);
+    
+    if (!$stmt) {
+        die("Prepare failed: " . mysqli_error($conn));
+    }
+
     mysqli_stmt_bind_param($stmt, $types, ...$params);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
 } else {
     $result = mysqli_query($conn, $sql);
+}
+
+if (!$result) {
+    die("Query failed: " . mysqli_error($conn));
 }
 
 // Get users for attended by filter dropdown - only those with leads in view_leads
@@ -459,9 +468,9 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
         <div class="d-flex justify-content-between align-items-center">
             <h4 class="text-blue h4">Leads</h4>
             <?php if(isAdmin()): ?>
-                <!-- <a href="export_leads.php" class="btn btn-success">
+                <a href="export_leads.php" class="btn btn-success">
                     <i class="dw dw-download"></i> Export to CSV
-                </a> -->
+                </a>
             <?php endif; ?>
         </div>
     </div>

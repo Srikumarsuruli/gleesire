@@ -1,0 +1,38 @@
+/* Global font size for cost file pages */
+.cost-file-container input,
+.cost-file-container select,
+.cost-file-container textarea,
+.cost-file-container .form-control,
+.cost-file-container .table,
+.cost-file-container td,
+.cost-file-container th,
+.cost-file-container .info-label,
+.cost-file-container .info-value,
+.cost-file-container .service-text {
+    font-size: 10px !important;
+}
+
+/* Adjust spacing for smaller text */
+.cost-file-container .info-row {
+    padding: 8px 0;
+}
+
+.cost-file-container .form-control {
+    height: 28px;
+    padding: 2px 5px;
+}
+
+/* Keep headers at reasonable size */
+.cost-file-container h5 {
+    font-size: 14px !important;
+}
+
+.cost-file-container h6 {
+    font-size: 12px !important;
+}
+
+/* Adjust button sizes */
+.cost-file-container .btn-sm {
+    padding: 2px 5px;
+    font-size: 10px !important;
+}

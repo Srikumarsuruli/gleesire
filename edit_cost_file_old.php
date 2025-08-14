@@ -292,46 +292,248 @@ $total_received = floatval($payment_data['total_received']);
 $payment_data['balance_amount'] = $package_cost - $total_received;
 ?>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <link rel="stylesheet" href="cost_file_styles.css">
+<style>
+/* Include the same styles from new_cost_file.php */
+.cost-file-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin: 20px auto;
+    max-width: 1200px;
+}
 
+.cost-file-header {
+    background: linear-gradient(135deg, #4facfe 0%, #3b3b3b 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+    position: relative;
+}
+
+.cost-file-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.cost-file-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-top: 10px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    padding: 40px;
+}
+
+.info-card {
+    background: #f8f9ff;
+    border-radius: 15px;
+    padding: 5px;
+    border-left: 5px solid #4facfe;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.info-value {
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.services-section {
+    background: #fff;
+    margin: 0 40px 40px;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.services-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0px;
+    margin-top: 25px;
+    padding: 10px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.service-item {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 8px 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 210px;
+    position: relative;
+    overflow: hidden;
+}
+.service-item.selected {
+    background: linear-gradient(135deg, #03a9b8 0%, #242424 100%);
+    color: white;
+    border-color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);
+}
+
+.service-icon-small {
+    font-size: 1.2rem;
+    width: 20px;
+    text-align: center;
+}
+
+.service-text {
+    font-weight: 600;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.table-responsive {
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    max-height: 450px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.payment-summary-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .payment-summary-container {
+        flex-direction: column;
+    }
+}
+
+.table {
+    font-size: 0.85rem;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    text-align: center;
+    vertical-align: middle;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.table .form-control {
+    max-width: none;
+    width: 100%;
+    height: 35px;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.btn-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 15px 40px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    margin: 0 10px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-modern:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.action-buttons {
+    text-align: center;
+    padding: 40px;
+    background: #f8f9fa;
+}
+
+.alert {
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 40px;
+    font-weight: 500;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+    border: none;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+    border: none;
+}
+</style>
 
 <div class="cost-file-container">
     <div class="cost-file-card">
         <div class="cost-file-header">
             <h1 class="cost-file-title">Create New Version</h1>
-            <p class="cost-file-subtitle">
-                Cost Sheet No: <?php echo htmlspecialchars($cost_data['cost_sheet_number']); ?> | 
-                Reference: <?php echo htmlspecialchars($cost_data['customer_name']); ?> | 
-                Last Updated: <?php echo date('d-m-Y H:i', strtotime($cost_data['updated_at'])); ?>
-            </p>
-            <div style="margin-top: 20px;">
-                <a href="view_payment_receipts.php?id=<?php echo $cost_file_id; ?>" class="btn btn-sm btn-info">
-                    <i class="fa fa-credit-card"></i> View Payment Details
-                </a>
+            <p class="cost-file-subtitle">Cost Sheet No: <?php echo htmlspecialchars($cost_data['cost_sheet_number']); ?> | Reference: <?php echo htmlspecialchars($cost_data['customer_name']); ?> | Last Updated: <?php echo date('d-m-Y H:i', strtotime($cost_data['updated_at'])); ?></p>
+            <div class="text-right" style="margin-top: 10px;">
+                <a href="view_payment_receipts.php?id=<?php echo $cost_file_id; ?>" class="btn btn-sm btn-info"><i class="fa fa-credit-card"></i> View Payment Details</a>
             </div>
         </div>
 
         <?php if(!empty($success_message)): ?>
-            <div class="alert alert-success">
-                <i class="fa fa-check-circle"></i>
-                <?php echo $success_message; ?>
-            </div>
+            <div class="alert alert-success"><?php echo $success_message; ?></div>
         <?php endif; ?>
         
         <?php if(!empty($error_message)): ?>
-            <div class="alert alert-danger">
-                <i class="fa fa-exclamation-circle"></i>
-                <?php echo $error_message; ?>
-            </div>
+            <div class="alert alert-danger"><?php echo $error_message; ?></div>
         <?php endif; ?>
 
         <form method="post" id="cost-file-form" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"] . "?id=" . $cost_file_id); ?>" enctype="multipart/form-data" onsubmit="return confirmNewVersion(event)">
             <div class="info-grid">
                 <!-- Customer Information -->
                 <div class="info-card">
-                    <h5><i class="fas fa-user"></i> Customer Information</h5>
+                    <h5><i class="icon-copy fa fa-user"></i> Customer Information</h5>
                     <div class="info-row">
                         <span class="info-label">Guest Name:</span>
                         <input type="text" class="form-control form-control-sm" name="guest_name" value="<?php echo htmlspecialchars($cost_data['guest_name'] ?? $cost_data['customer_name']); ?>">
@@ -364,7 +566,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
 
                 <!-- Travel Information -->
                 <div class="info-card">
-                    <h5><i class="fas fa-plane"></i> Travel Information</h5>
+                    <h5><i class="icon-copy fa fa-plane"></i> Travel Information</h5>
                     <div class="info-row">
                         <span class="info-label">Tour Package:</span>
                         <select class="form-control form-control-sm" name="tour_package">
@@ -403,6 +605,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             <option value="GB" <?php echo ($cost_data['nationality'] == 'GB') ? 'selected' : ''; ?>>United Kingdom</option>
                             <option value="AE" <?php echo ($cost_data['nationality'] == 'AE') ? 'selected' : ''; ?>>United Arab Emirates</option>
                             <option value="SA" <?php echo ($cost_data['nationality'] == 'SA') ? 'selected' : ''; ?>>Saudi Arabia</option>
+                            <!-- Add more countries as needed -->
                         </select>
                     </div>
                     <div class="info-row">
@@ -421,7 +624,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
 
                 <!-- Passenger Information -->
                 <div class="info-card">
-                    <h5><i class="fas fa-users"></i> Number of PAX</h5>
+                    <h5><i class="icon-copy fa fa-users"></i> Number of PAX</h5>
                     <div class="info-row">
                         <span class="info-label">Adults:</span>
                         <input type="number" class="form-control form-control-sm" name="adults_count" value="<?php echo isset($cost_data['adults_count']) && $cost_data['adults_count'] !== null ? $cost_data['adults_count'] : '0'; ?>" min="0">
@@ -457,59 +660,54 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                     </div>
                     <div class="info-row">
                         <span class="info-label">Total PAX:</span>
-                        <input type="text" class="form-control form-control-sm" id="total-pax" readonly>
+                        <input type="text" class="form-control form-control-sm" id="total-pax" readonly style="background: #f0f8ff; font-weight: bold;">
                     </div>
                 </div>
 
                 <!-- Services Selection -->
                 <div class="info-card">
-                    <h5><i class="fas fa-cogs"></i> Select Services</h5>
+                    <h5><i class="icon-copy fa fa-cogs"></i> Select Services</h5>
                     <div class="services-list">
                         <div class="service-item <?php echo in_array('visa_flight', $selected_services) ? 'selected' : ''; ?>" onclick="toggleService(this, 'visa_flight')">
-                            <i class="fas fa-plane service-icon-small"></i>
+                            <i class="fa fa-plane service-icon-small"></i>
                             <span class="service-text">VISA / FLIGHT BOOKING</span>
                             <input type="checkbox" name="services[]" value="visa_flight" <?php echo in_array('visa_flight', $selected_services) ? 'checked' : ''; ?> style="display: none;">
                         </div>
                         
                         <div class="service-item <?php echo in_array('accommodation', $selected_services) ? 'selected' : ''; ?>" onclick="toggleService(this, 'accommodation')">
-                            <i class="fas fa-bed service-icon-small"></i>
+                            <i class="fa fa-bed service-icon-small"></i>
                             <span class="service-text">ACCOMMODATION</span>
                             <input type="checkbox" name="services[]" value="accommodation" <?php echo in_array('accommodation', $selected_services) ? 'checked' : ''; ?> style="display: none;">
                         </div>
                         
                         <div class="service-item <?php echo in_array('transportation', $selected_services) ? 'selected' : ''; ?>" onclick="toggleService(this, 'transportation')">
-                            <i class="fas fa-car service-icon-small"></i>
+                            <i class="fa fa-car service-icon-small"></i>
                             <span class="service-text">TRANSPORTATION</span>
                             <input type="checkbox" name="services[]" value="transportation" <?php echo in_array('transportation', $selected_services) ? 'checked' : ''; ?> style="display: none;">
                         </div>
                         
                         <div class="service-item <?php echo in_array('cruise_hire', $selected_services) ? 'selected' : ''; ?>" onclick="toggleService(this, 'cruise_hire')">
-                            <i class="fas fa-ship service-icon-small"></i>
+                            <i class="fa fa-ship service-icon-small"></i>
                             <span class="service-text">CRUISE HIRE</span>
                             <input type="checkbox" name="services[]" value="cruise_hire" <?php echo in_array('cruise_hire', $selected_services) ? 'checked' : ''; ?> style="display: none;">
                         </div>
                         
                         <div class="service-item <?php echo in_array('extras', $selected_services) ? 'selected' : ''; ?>" onclick="toggleService(this, 'extras')">
-                            <i class="fas fa-plus service-icon-small"></i>
+                            <i class="fa fa-plus service-icon-small"></i>
                             <span class="service-text">EXTRAS/MISCELLANEOUS</span>
                             <input type="checkbox" name="services[]" value="extras" <?php echo in_array('extras', $selected_services) ? 'checked' : ''; ?> style="display: none;">
                         </div>
                         
                         <div class="service-item <?php echo in_array('travel_insurance', $selected_services) ? 'selected' : ''; ?>" onclick="toggleService(this, 'travel_insurance')">
-                            <i class="fas fa-shield-alt service-icon-small"></i>
+                            <i class="fa fa-shield service-icon-small"></i>
                             <span class="service-text">TRAVEL INSURANCE</span>
                             <input type="checkbox" name="services[]" value="travel_insurance" <?php echo in_array('travel_insurance', $selected_services) ? 'checked' : ''; ?> style="display: none;">
                         </div>
                         
                         <div class="service-item <?php echo in_array('agent_package', $selected_services) ? 'selected' : ''; ?>" onclick="toggleService(this, 'agent_package')">
-                            <i class="fas fa-briefcase service-icon-small"></i>
+                            <i class="fa fa-briefcase service-icon-small"></i>
                             <span class="service-text">AGENT PACKAGE SERVICE</span>
                             <input type="checkbox" name="services[]" value="agent_package" <?php echo in_array('agent_package', $selected_services) ? 'checked' : ''; ?> style="display: none;">
-                        </div>
-                        <div class="service-item <?php echo in_array('medical_tourism', $selected_services) ? 'selected' : ''; ?>" onclick="toggleService(this, 'medical_tourism')">
-                            <i class="fas fa-briefcase service-icon-small"></i>
-                            <span class="service-text">MEDICAL TOURISM</span>
-                            <input type="checkbox" name="services[]" value="medical_tourism" <?php echo in_array('medical_tourism', $selected_services) ? 'checked' : ''; ?> style="display: none;">
                         </div>
                     </div>
                 </div>
@@ -517,14 +715,113 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
 
             <!-- VISA / FLIGHT BOOKING Section -->
             <div id="visa-flight-section" class="services-section" style="display: <?php echo in_array('visa_flight', $selected_services) ? 'block' : 'none'; ?>;">
-                <h5>
-                    <i class="fas fa-plane"></i> VISA / FLIGHT BOOKING
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addVisaRow()">
-                        <i class="fas fa-plus"></i> Add Visa
-                    </button>
-                </h5>
-                                
-                <div class="table-responsive" style="margin-bottom: 18px;">
+                <h5><i class="icon-copy fa fa-plane"></i> VISA / FLIGHT BOOKING</h5>
+                
+                <!-- Travel Details -->
+                <div class="info-card" style="margin-bottom: 30px;"><br>
+                    <h6>Travel Details</h6>
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>TRAVEL PERIOD</th>
+                                <th>DATE</th>
+                                <th>CITY</th>
+                                <th>FLIGHT</th>
+                                <th>NIGHTS/DAYS</th>
+                                <th>Flight Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ARRIVAL</td>
+                                <td><input type="date" class="form-control form-control-sm" name="arrival_date" value="<?php echo $cost_data['arrival_date'] ?? ''; ?>"></td>
+                                <td><input type="text" class="form-control form-control-sm" name="arrival_city" placeholder="City" value="<?php echo $cost_data['arrival_city'] ?? ''; ?>"></td>
+                                <td><input type="text" class="form-control form-control-sm" name="arrival_flight" placeholder="Flight No" value="<?php echo $cost_data['arrival_flight'] ?? ''; ?>"></td>
+                                <td>
+                                    <select class="form-control form-control-sm" name="arrival_nights_days">
+                                        <option value="">Select</option>
+                                        <option value="Day" <?php echo (isset($cost_data['arrival_nights_days']) && $cost_data['arrival_nights_days'] == 'Day') ? 'selected' : ''; ?>>Day Flight</option>
+                                        <option value="Night" <?php echo (isset($cost_data['arrival_nights_days']) && $cost_data['arrival_nights_days'] == 'Night') ? 'selected' : ''; ?>>Night Flight</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-control form-control-sm" name="arrival_connection">
+                                        <option value="">Select</option>
+                                        <option value="Direct" <?php echo (isset($cost_data['arrival_connection']) && $cost_data['arrival_connection'] == 'Direct') ? 'selected' : ''; ?>>Direct</option>
+                                        <option value="Connection" <?php echo (isset($cost_data['arrival_connection']) && $cost_data['arrival_connection'] == 'Connection') ? 'selected' : ''; ?>>Connection</option>
+                                    </select>
+                                </td>
+                                <td><button type="button" class="btn btn-sm btn-info" onclick="addConnectingFlight('arrival')"><i class="fa fa-plus"></i></button></td>
+                            </tr>
+                            <tr id="arrival-connecting" style="display: <?php echo !empty($cost_data['arrival_connecting_date']) ? 'table-row' : 'none'; ?>">
+                                <td>ARRIVAL (Connecting)</td>
+                                <td><input type="date" class="form-control form-control-sm" name="arrival_connecting_date" value="<?php echo $cost_data['arrival_connecting_date'] ?? ''; ?>"></td>
+                                <td><input type="text" class="form-control form-control-sm" name="arrival_connecting_city" placeholder="City" value="<?php echo $cost_data['arrival_connecting_city'] ?? ''; ?>"></td>
+                                <td><input type="text" class="form-control form-control-sm" name="arrival_connecting_flight" placeholder="Flight No" value="<?php echo $cost_data['arrival_connecting_flight'] ?? ''; ?>"></td>
+                                <td>
+                                    <select class="form-control form-control-sm" name="arrival_connecting_nights_days">
+                                        <option value="">Select</option>
+                                        <option value="Day" <?php echo (isset($cost_data['arrival_connecting_nights_days']) && $cost_data['arrival_connecting_nights_days'] == 'Day') ? 'selected' : ''; ?>>Day Flight</option>
+                                        <option value="Night" <?php echo (isset($cost_data['arrival_connecting_nights_days']) && $cost_data['arrival_connecting_nights_days'] == 'Night') ? 'selected' : ''; ?>>Night Flight</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-control form-control-sm" name="arrival_connecting_type">
+                                        <option value="">Select</option>
+                                        <option value="Direct" <?php echo (isset($cost_data['arrival_connecting_type']) && $cost_data['arrival_connecting_type'] == 'Direct') ? 'selected' : ''; ?>>Direct</option>
+                                        <option value="Connection" <?php echo (isset($cost_data['arrival_connecting_type']) && $cost_data['arrival_connecting_type'] == 'Connection') ? 'selected' : ''; ?>>Connection</option>
+                                    </select>
+                                </td>
+                                <td><button type="button" class="btn btn-sm btn-danger" onclick="removeConnectingFlight('arrival')"><i class="fa fa-minus"></i></button></td>
+                            </tr>
+                            <tr>
+                                <td>DEPARTURE</td>
+                                <td><input type="date" class="form-control form-control-sm" name="departure_date" value="<?php echo $cost_data['departure_date'] ?? ''; ?>"></td>
+                                <td><input type="text" class="form-control form-control-sm" name="departure_city" placeholder="City" value="<?php echo $cost_data['departure_city'] ?? ''; ?>"></td>
+                                <td><input type="text" class="form-control form-control-sm" name="departure_flight" placeholder="Flight No" value="<?php echo $cost_data['departure_flight'] ?? ''; ?>"></td>
+                                <td>
+                                    <select class="form-control form-control-sm" name="departure_nights_days">
+                                        <option value="">Select</option>
+                                        <option value="Day" <?php echo (isset($cost_data['departure_nights_days']) && $cost_data['departure_nights_days'] == 'Day') ? 'selected' : ''; ?>>Day Flight</option>
+                                        <option value="Night" <?php echo (isset($cost_data['departure_nights_days']) && $cost_data['departure_nights_days'] == 'Night') ? 'selected' : ''; ?>>Night Flight</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-control form-control-sm" name="departure_connection">
+                                        <option value="">Select</option>
+                                        <option value="Direct" <?php echo (isset($cost_data['departure_connection']) && $cost_data['departure_connection'] == 'Direct') ? 'selected' : ''; ?>>Direct</option>
+                                        <option value="Connection" <?php echo (isset($cost_data['departure_connection']) && $cost_data['departure_connection'] == 'Connection') ? 'selected' : ''; ?>>Connection</option>
+                                    </select>
+                                </td>
+                                <td><button type="button" class="btn btn-sm btn-info" onclick="addConnectingFlight('departure')"><i class="fa fa-plus"></i></button></td>
+                            </tr>
+                            <tr id="departure-connecting" style="display: <?php echo !empty($cost_data['departure_connecting_date']) ? 'table-row' : 'none'; ?>">
+                                <td>DEPARTURE (Connecting)</td>
+                                <td><input type="date" class="form-control form-control-sm" name="departure_connecting_date" value="<?php echo $cost_data['departure_connecting_date'] ?? ''; ?>"></td>
+                                <td><input type="text" class="form-control form-control-sm" name="departure_connecting_city" placeholder="City" value="<?php echo $cost_data['departure_connecting_city'] ?? ''; ?>"></td>
+                                <td><input type="text" class="form-control form-control-sm" name="departure_connecting_flight" placeholder="Flight No" value="<?php echo $cost_data['departure_connecting_flight'] ?? ''; ?>"></td>
+                                <td>
+                                    <select class="form-control form-control-sm" name="departure_connecting_nights_days">
+                                        <option value="">Select</option>
+                                        <option value="Day" <?php echo (isset($cost_data['departure_connecting_nights_days']) && $cost_data['departure_connecting_nights_days'] == 'Day') ? 'selected' : ''; ?>>Day Flight</option>
+                                        <option value="Night" <?php echo (isset($cost_data['departure_connecting_nights_days']) && $cost_data['departure_connecting_nights_days'] == 'Night') ? 'selected' : ''; ?>>Night Flight</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-control form-control-sm" name="departure_connecting_type">
+                                        <option value="">Select</option>
+                                        <option value="Direct" <?php echo (isset($cost_data['departure_connecting_type']) && $cost_data['departure_connecting_type'] == 'Direct') ? 'selected' : ''; ?>>Direct</option>
+                                        <option value="Connection" <?php echo (isset($cost_data['departure_connecting_type']) && $cost_data['departure_connecting_type'] == 'Connection') ? 'selected' : ''; ?>>Connection</option>
+                                    </select>
+                                </td>
+                                <td><button type="button" class="btn btn-sm btn-danger" onclick="removeConnectingFlight('departure')"><i class="fa fa-minus"></i></button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="table-responsive">
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
@@ -568,125 +865,17 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                         <tfoot>
                             <tr>
                                 <td colspan="7" class="text-right"><strong>TOTAL VISA COST:</strong></td>
-                                <td><input type="text" class="form-control form-control-sm" id="visa-grand-total" readonly></td>
+                                <td><input type="text" class="form-control form-control-sm" id="visa-grand-total" readonly style="background: #e8f5e8; font-weight: bold;"></td>
                             </tr>
                         </tfoot>
                     </table>
-                </div>
-
-                <!-- Travel Details -->
-                <div class="info-card" style="border: none; padding:0;">
-                    <h6><i class="fas fa-calendar-alt"></i> Travel Details</h6>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm">
-                            <thead>
-                                <tr>
-                                    <th>TRAVEL PERIOD</th>
-                                    <th>DATE</th>
-                                    <th>CITY</th>
-                                    <th>FLIGHT</th>
-                                    <th>NIGHTS/DAYS</th>
-                                    <th>Flight Type</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>ARRIVAL</strong></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="arrival_date" value="<?php echo $cost_data['arrival_date'] ?? ''; ?>"></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="arrival_city" placeholder="City" value="<?php echo $cost_data['arrival_city'] ?? ''; ?>"></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="arrival_flight" placeholder="Flight No" value="<?php echo $cost_data['arrival_flight'] ?? ''; ?>"></td>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="arrival_nights_days">
-                                            <option value="">Select</option>
-                                            <option value="Day" <?php echo (isset($cost_data['arrival_nights_days']) && $cost_data['arrival_nights_days'] == 'Day') ? 'selected' : ''; ?>>Day Flight</option>
-                                            <option value="Night" <?php echo (isset($cost_data['arrival_nights_days']) && $cost_data['arrival_nights_days'] == 'Night') ? 'selected' : ''; ?>>Night Flight</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="arrival_connection">
-                                            <option value="">Select</option>
-                                            <option value="Direct" <?php echo (isset($cost_data['arrival_connection']) && $cost_data['arrival_connection'] == 'Direct') ? 'selected' : ''; ?>>Direct</option>
-                                            <option value="Connection" <?php echo (isset($cost_data['arrival_connection']) && $cost_data['arrival_connection'] == 'Connection') ? 'selected' : ''; ?>>Connection</option>
-                                        </select>
-                                    </td>
-                                    <td><button type="button" class="btn btn-sm btn-info" onclick="addConnectingFlight('arrival')"><i class="fas fa-plus"></i></button></td>
-                                </tr>
-                                <tr id="arrival-connecting" style="display: <?php echo !empty($cost_data['arrival_connecting_date']) ? 'table-row' : 'none'; ?>">
-                                    <td><strong>ARRIVAL (Connecting)</strong></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="arrival_connecting_date" value="<?php echo $cost_data['arrival_connecting_date'] ?? ''; ?>"></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="arrival_connecting_city" placeholder="City" value="<?php echo $cost_data['arrival_connecting_city'] ?? ''; ?>"></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="arrival_connecting_flight" placeholder="Flight No" value="<?php echo $cost_data['arrival_connecting_flight'] ?? ''; ?>"></td>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="arrival_connecting_nights_days">
-                                            <option value="">Select</option>
-                                            <option value="Day" <?php echo (isset($cost_data['arrival_connecting_nights_days']) && $cost_data['arrival_connecting_nights_days'] == 'Day') ? 'selected' : ''; ?>>Day Flight</option>
-                                            <option value="Night" <?php echo (isset($cost_data['arrival_connecting_nights_days']) && $cost_data['arrival_connecting_nights_days'] == 'Night') ? 'selected' : ''; ?>>Night Flight</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="arrival_connecting_type">
-                                            <option value="">Select</option>
-                                            <option value="Direct" <?php echo (isset($cost_data['arrival_connecting_type']) && $cost_data['arrival_connecting_type'] == 'Direct') ? 'selected' : ''; ?>>Direct</option>
-                                            <option value="Connection" <?php echo (isset($cost_data['arrival_connecting_type']) && $cost_data['arrival_connecting_type'] == 'Connection') ? 'selected' : ''; ?>>Connection</option>
-                                        </select>
-                                    </td>
-                                    <td><button type="button" class="btn btn-sm btn-danger" onclick="removeConnectingFlight('arrival')"><i class="fas fa-minus"></i></button></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>DEPARTURE</strong></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="departure_date" value="<?php echo $cost_data['departure_date'] ?? ''; ?>"></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="departure_city" placeholder="City" value="<?php echo $cost_data['departure_city'] ?? ''; ?>"></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="departure_flight" placeholder="Flight No" value="<?php echo $cost_data['departure_flight'] ?? ''; ?>"></td>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="departure_nights_days">
-                                            <option value="">Select</option>
-                                            <option value="Day" <?php echo (isset($cost_data['departure_nights_days']) && $cost_data['departure_nights_days'] == 'Day') ? 'selected' : ''; ?>>Day Flight</option>
-                                            <option value="Night" <?php echo (isset($cost_data['departure_nights_days']) && $cost_data['departure_nights_days'] == 'Night') ? 'selected' : ''; ?>>Night Flight</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="departure_connection">
-                                            <option value="">Select</option>
-                                            <option value="Direct" <?php echo (isset($cost_data['departure_connection']) && $cost_data['departure_connection'] == 'Direct') ? 'selected' : ''; ?>>Direct</option>
-                                            <option value="Connection" <?php echo (isset($cost_data['departure_connection']) && $cost_data['departure_connection'] == 'Connection') ? 'selected' : ''; ?>>Connection</option>
-                                        </select>
-                                    </td>
-                                    <td><button type="button" class="btn btn-sm btn-info" onclick="addConnectingFlight('departure')"><i class="fas fa-plus"></i></button></td>
-                                </tr>
-                                <tr id="departure-connecting" style="display: <?php echo !empty($cost_data['departure_connecting_date']) ? 'table-row' : 'none'; ?>">
-                                    <td><strong>DEPARTURE (Connecting)</strong></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="departure_connecting_date" value="<?php echo $cost_data['departure_connecting_date'] ?? ''; ?>"></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="departure_connecting_city" placeholder="City" value="<?php echo $cost_data['departure_connecting_city'] ?? ''; ?>"></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="departure_connecting_flight" placeholder="Flight No" value="<?php echo $cost_data['departure_connecting_flight'] ?? ''; ?>"></td>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="departure_connecting_nights_days">
-                                            <option value="">Select</option>
-                                            <option value="Day" <?php echo (isset($cost_data['departure_connecting_nights_days']) && $cost_data['departure_connecting_nights_days'] == 'Day') ? 'selected' : ''; ?>>Day Flight</option>
-                                            <option value="Night" <?php echo (isset($cost_data['departure_connecting_nights_days']) && $cost_data['departure_connecting_nights_days'] == 'Night') ? 'selected' : ''; ?>>Night Flight</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="departure_connecting_type">
-                                            <option value="">Select</option>
-                                            <option value="Direct" <?php echo (isset($cost_data['departure_connecting_type']) && $cost_data['departure_connecting_type'] == 'Direct') ? 'selected' : ''; ?>>Direct</option>
-                                            <option value="Connection" <?php echo (isset($cost_data['departure_connecting_type']) && $cost_data['departure_connecting_type'] == 'Connection') ? 'selected' : ''; ?>>Connection</option>
-                                        </select>
-                                    </td>
-                                    <td><button type="button" class="btn btn-sm btn-danger" onclick="removeConnectingFlight('departure')"><i class="fas fa-minus"></i></button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addVisaRow()"><i class="fa fa-plus"></i> Add Visa</button>
                 </div>
             </div>
-            
+
             <!-- ACCOMMODATION Section -->
             <div id="accommodation-section" class="services-section" style="display: <?php echo in_array('accommodation', $selected_services) ? 'block' : 'none'; ?>;">
-                <h5>
-                    <i class="icon-copy fa fa-bed"></i> ACCOMMODATION
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addAccommodationRow()"><i class="fa fa-plus"></i> Add Accommodation</button>
-                </h5>
+                <h5><i class="icon-copy fa fa-bed"></i> ACCOMMODATION</h5>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
                         <thead>
@@ -821,15 +1010,13 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             </tr>
                         </tfoot>
                     </table>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addAccommodationRow()"><i class="fa fa-plus"></i> Add Accommodation</button>
                 </div>
             </div>
 
             <!-- TRANSPORTATION Section -->
             <div id="transportation-section" class="services-section" style="display: <?php echo in_array('transportation', $selected_services) ? 'block' : 'none'; ?>;">
-                <h5>
-                    <i class="icon-copy fa fa-car"></i> INTERNAL TRANSPORTATION
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addTransportationRow()"><i class="fa fa-plus"></i> Add Transportation</button>
-                </h5>
+                <h5><i class="icon-copy fa fa-car"></i> INTERNAL TRANSPORTATION</h5>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
                         <thead>
@@ -906,15 +1093,13 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             </tr>
                         </tfoot>
                     </table>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addTransportationRow()"><i class="fa fa-plus"></i> Add Transportation</button>
                 </div>
             </div>
 
             <!-- CRUISE HIRE Section -->
             <div id="cruise-hire-section" class="services-section" style="display: <?php echo in_array('cruise_hire', $selected_services) ? 'block' : 'none'; ?>;">
-                <h5>
-                    <i class="icon-copy fa fa-ship"></i> CRUISE HIRE
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addCruiseRow()"><i class="fa fa-plus"></i> Add Cruise</button>
-                </h5>
+                <h5><i class="icon-copy fa fa-ship"></i> CRUISE HIRE</h5>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
                         <thead>
@@ -994,15 +1179,13 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             </tr>
                         </tfoot>
                     </table>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addCruiseRow()"><i class="fa fa-plus"></i> Add Cruise</button>
                 </div>
             </div>
 
             <!-- AGENT PACKAGE SERVICE Section -->
             <div id="agent-package-section" class="services-section" style="display: <?php echo in_array('agent_package', $selected_services) ? 'block' : 'none'; ?>;">
-                <h5>
-                    <i class="icon-copy fa fa-briefcase"></i> AGENT PACKAGE SERVICE
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addAgentPackageRow()"><i class="fa fa-plus"></i> Add Package</button>
-                </h5>
+                <h5><i class="icon-copy fa fa-briefcase"></i> AGENT PACKAGE SERVICE</h5>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
                         <thead>
@@ -1077,97 +1260,13 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             </tr>
                         </tfoot>
                     </table>
-                </div>
-            </div>
-            
-            <div id="medical-tourism-section" class="services-section" style="display: <?php echo in_array('medical_tourism', $selected_services) ? 'block' : 'none'; ?>;">
-                <h5>
-                    <i class="icon-copy fa fa-briefcase"></i> AGENT PACKAGE SERVICE
                     <button type="button" class="btn btn-sm btn-primary" onclick="addAgentPackageRow()"><i class="fa fa-plus"></i> Add Package</button>
-                </h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-sm">
-                        <thead>
-                            <tr>
-                                <th>DESTINATION</th>
-                                <th>AGENT/SUPPLIER</th>
-                                <th>START DATE</th>
-                                <th>END DATE</th>
-                                <th>ADULTS</th>
-                                <th>PRICE/ADULT</th>
-                                <th>CHILDREN</th>
-                                <th>PRICE/CHILD</th>
-                                <th>INFANTS</th>
-                                <th>PRICE/INFANT</th>
-                                <th>TOTAL</th>
-                            </tr>
-                        </thead>
-                        <tbody id="agent-package-tbody">
-                            <?php 
-                            $agent_package_data = json_decode($cost_data['agent_package_data'] ?? '[]', true);
-                            if (!empty($agent_package_data) && is_array($agent_package_data)): 
-                            ?>
-                                <?php foreach ($agent_package_data as $index => $package): ?>
-                                <tr>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][destination]">
-                                            <option value="">Select Destination</option>
-                                            <?php mysqli_data_seek($destinations, 0); while($dest = mysqli_fetch_assoc($destinations)): ?>
-                                                <option value="<?php echo htmlspecialchars($dest['name']); ?>" <?php echo ($package['destination'] == $dest['name']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($dest['name']); ?></option>
-                                            <?php endwhile; ?>
-                                        </select>
-                                    </td>
-                                    <td><input type="text" class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][agent_supplier]" value="<?php echo htmlspecialchars($package['agent_supplier'] ?? ''); ?>" placeholder="Agent/Supplier" style="width: 120px;"></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][start_date]" value="<?php echo $package['start_date'] ?? ''; ?>"></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][end_date]" value="<?php echo $package['end_date'] ?? ''; ?>"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-adult-count" name="agent_package[<?php echo $index; ?>][adult_count]" data-row="<?php echo $index; ?>" value="<?php echo $package['adult_count'] ?? $cost_data['adults_count'] ?? 0; ?>" style="width: 70px;" onchange="calculateAgentPackageTotal(<?php echo $index; ?>)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-adult-price" name="agent_package[<?php echo $index; ?>][adult_price]" data-row="<?php echo $index; ?>" value="<?php echo $package['adult_price'] ?? 0; ?>" style="width: 100px;" onchange="calculateAgentPackageTotal(<?php echo $index; ?>)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-child-count" name="agent_package[<?php echo $index; ?>][child_count]" data-row="<?php echo $index; ?>" value="<?php echo $package['child_count'] ?? $cost_data['children_count'] ?? 0; ?>" style="width: 70px;" onchange="calculateAgentPackageTotal(<?php echo $index; ?>)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-child-price" name="agent_package[<?php echo $index; ?>][child_price]" data-row="<?php echo $index; ?>" value="<?php echo $package['child_price'] ?? 0; ?>" style="width: 100px;" onchange="calculateAgentPackageTotal(<?php echo $index; ?>)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-infant-count" name="agent_package[<?php echo $index; ?>][infant_count]" data-row="<?php echo $index; ?>" value="<?php echo $package['infant_count'] ?? $cost_data['infants_count'] ?? 0; ?>" style="width: 70px;" onchange="calculateAgentPackageTotal(<?php echo $index; ?>)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-infant-price" name="agent_package[<?php echo $index; ?>][infant_price]" data-row="<?php echo $index; ?>" value="<?php echo $package['infant_price'] ?? 0; ?>" style="width: 100px;" onchange="calculateAgentPackageTotal(<?php echo $index; ?>)"></td>
-                                    <td><input type="text" class="form-control form-control-sm agent-package-total" name="agent_package[<?php echo $index; ?>][total]" data-row="<?php echo $index; ?>" value="<?php echo $package['total'] ?? '0.00'; ?>" readonly style="background: #f0f8ff; font-weight: bold; width: 120px;"></td>
-                                </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="agent_package[0][destination]">
-                                            <option value="">Select Destination</option>
-                                            <?php mysqli_data_seek($destinations, 0); while($dest = mysqli_fetch_assoc($destinations)): ?>
-                                                <option value="<?php echo htmlspecialchars($dest['name']); ?>"><?php echo htmlspecialchars($dest['name']); ?></option>
-                                            <?php endwhile; ?>
-                                        </select>
-                                    </td>
-                                    <td><input type="text" class="form-control form-control-sm" name="agent_package[0][agent_supplier]" placeholder="Agent/Supplier" style="width: 120px;"></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="agent_package[0][start_date]" value="<?php echo $cost_data['travel_start_date'] ?? ''; ?>"></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="agent_package[0][end_date]" value="<?php echo $cost_data['travel_end_date'] ?? ''; ?>"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-adult-count" name="agent_package[0][adult_count]" data-row="0" value="<?php echo $cost_data['adults_count'] ?? 0; ?>" style="width: 70px;" onchange="calculateAgentPackageTotal(0)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-adult-price" name="agent_package[0][adult_price]" data-row="0" value="0" style="width: 100px;" onchange="calculateAgentPackageTotal(0)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-child-count" name="agent_package[0][child_count]" data-row="0" value="<?php echo $cost_data['children_count'] ?? 0; ?>" style="width: 70px;" onchange="calculateAgentPackageTotal(0)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-child-price" name="agent_package[0][child_price]" data-row="0" value="0" style="width: 100px;" onchange="calculateAgentPackageTotal(0)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-infant-count" name="agent_package[0][infant_count]" data-row="0" value="<?php echo $cost_data['infants_count'] ?? 0; ?>" style="width: 70px;" onchange="calculateAgentPackageTotal(0)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-infant-price" name="agent_package[0][infant_price]" data-row="0" value="0" style="width: 100px;" onchange="calculateAgentPackageTotal(0)"></td>
-                                    <td><input type="text" class="form-control form-control-sm agent-package-total" name="agent_package[0][total]" data-row="0" readonly style="background: #f0f8ff; font-weight: bold; width: 120px;"></td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="10" class="text-right"><strong>TOTAL AGENT PACKAGE COST:</strong></td>
-                                <td><input type="text" class="form-control form-control-sm" id="agent-package-grand-total" readonly style="background: #e8f5e8; font-weight: bold;"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
                 </div>
             </div>
 
             <!-- EXTRAS/MISCELLANEOUS Section -->
             <div id="extras-section" class="services-section" style="display: <?php echo in_array('extras', $selected_services) ? 'block' : 'none'; ?>;">
-                <h5>
-                    <i class="icon-copy fa fa-plus"></i> EXTRAS/MISCELLANEOUS
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addExtrasRow()"><i class="fa fa-plus"></i> Add Service</button>
-                </h5>
+                <h5><i class="icon-copy fa fa-plus"></i> EXTRAS/MISCELLANEOUS</h5>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
                         <thead>
@@ -1207,65 +1306,69 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             </tr>
                         </tfoot>
                     </table>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addExtrasRow()"><i class="fa fa-plus"></i> Add Service</button>
                 </div>
             </div>
 
-            <!-- Continue with all other sections following the same pattern... -->
-            <!-- For brevity, I'm showing the structure. You would continue with accommodation, transportation, etc. -->
-
             <!-- Payment and Summary Section -->
-            <div class="payment-summary-container">
+            <div class="payment-summary-container" style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
                 <!-- Payment Details -->
-                <div class="info-card" style="flex: 1; min-width: 400px;">
-                    <h5><i class="fas fa-credit-card"></i> Payment Details</h5>
-                   <div class="info-row">
-                            <span class="info-label">Date:</span>
-                            <input type="date" class="form-control form-control-sm" name="payment_date" value="<?php echo $payment_data['date'] ?? ''; ?>">
+                <div class="services-section" style="flex: 1; min-width: 300px;">
+                    <h5><i class="icon-copy fa fa-credit-card"></i> Payment Details</h5>
+                    <div class="info-grid" style="padding: 0; margin-top: 20px;">
+                        <div class="info-card">
+                            <div class="info-row">
+                                <span class="info-label">Date:</span>
+                                <input type="date" class="form-control form-control-sm" name="payment_date" value="<?php echo $payment_data['date'] ?? ''; ?>">
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Bank:</span>
+                                <select class="form-control form-control-sm" name="payment_bank">
+                                    <option value="">Select Bank</option>
+                                    <option value="HDFC BANK" <?php echo ($payment_data['bank'] == 'HDFC BANK') ? 'selected' : ''; ?>>HDFC BANK</option>
+                                    <option value="ICICI BANK" <?php echo ($payment_data['bank'] == 'ICICI BANK') ? 'selected' : ''; ?>>ICICI BANK</option>
+                                    </select>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Amount:</span>
+                                <input type="number" class="form-control form-control-sm" name="payment_amount" value="<?php echo $payment_data['amount'] ?? '0'; ?>" placeholder="0.00" onchange="updatePaymentTotals()" oninput="updatePaymentTotals()">
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Receipt:</span>
+                                <input type="file" class="form-control form-control-sm" name="payment_receipt" accept="image/*">
+                            </div>
                         </div>
-                        <div class="info-row">
-                            <span class="info-label">Bank:</span>
-                            <select class="form-control form-control-sm" name="payment_bank">
-                                <option value="">Select Bank</option>
-                                <option value="HDFC BANK" <?php echo ($payment_data['bank'] == 'HDFC BANK') ? 'selected' : ''; ?>>HDFC BANK</option>
-                                <option value="ICICI BANK" <?php echo ($payment_data['bank'] == 'ICICI BANK') ? 'selected' : ''; ?>>ICICI BANK</option>
-                            </select>
+                        <div class="info-card">
+                            <div class="info-row">
+                                <span class="info-label">Total Received:</span>
+                                <input type="text" class="form-control form-control-sm" name="total_received" value="<?php echo number_format((float)($payment_data['total_received'] ?? 0), 2, '.', ''); ?>" readonly placeholder="0.00">
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Balance Amount:</span>
+                                <input type="text" class="form-control form-control-sm" name="balance_amount" value="<?php echo number_format((float)($payment_data['balance_amount'] ?? 0), 2, '.', ''); ?>" readonly placeholder="0.00">
+                            </div>
                         </div>
-                        <div class="info-row">
-                            <span class="info-label">Amount:</span>
-                            <input type="number" class="form-control form-control-sm" name="payment_amount" value="<?php echo $payment_data['amount'] ?? '0'; ?>" placeholder="0.00" onchange="updatePaymentTotals()" oninput="updatePaymentTotals()">
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Receipt:</span>
-                            <input type="file" class="form-control form-control-sm" name="payment_receipt" accept="image/*">
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Total Received:</span>
-                            <input type="text" class="form-control form-control-sm" name="total_received" value="<?php echo number_format((float)($payment_data['total_received'] ?? 0), 2, '.', ''); ?>" readonly>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Balance Amount:</span>
-                            <input type="text" class="form-control form-control-sm" name="balance_amount" value="<?php echo number_format((float)($payment_data['balance_amount'] ?? 0), 2, '.', ''); ?>" readonly>
-                        </div>
+                    </div>
                 </div>
 
                 <!-- Summary -->
-                <div class="services-section" style="flex: 1; min-width: 400px;">
-                    <h5><i class="fas fa-calculator"></i> Summary</h5>
+                <div class="services-section" style="flex: 1; min-width: 300px;">
+                    <h5><i class="icon-copy fa fa-calculator"></i> Summary</h5>
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm">
                             <tbody>
                                 <tr>
                                     <td><strong>TOTAL EXPENSE</strong></td>
                                     <td></td>
-                                    <td><input type="text" class="form-control form-control-sm" id="summary-total-expense" name="total_expense" value="<?php echo $cost_data['total_expense']; ?>" readonly></td>
+                                    <td><input type="text" class="form-control form-control-sm" id="summary-total-expense" name="total_expense" value="<?php echo $cost_data['total_expense']; ?>" readonly style="background: #f0f8ff; font-weight: bold;"></td>
                                 </tr>
                                 <tr>
                                     <td><strong>MARK UP (PROFIT)</strong></td>
                                     <td>
                                         <input type="number" class="form-control form-control-sm" id="markup-percentage" name="markup_percentage" value="<?php echo $cost_data['markup_percentage']; ?>" onchange="calculateSummary()" placeholder="%" style="max-width: 80px;">
-                                        <span id="markup-percent-display" style="font-size: 0.8rem; color: var(--gray-600);"><?php echo $cost_data['markup_percentage']; ?>%</span>
+                                        <span id="markup-percent-display" style="font-size: 0.8rem; color: #666;"><?php echo $cost_data['markup_percentage']; ?>%</span>
                                     </td>
-                                    <td><input type="text" class="form-control form-control-sm" id="markup-amount" name="markup_amount" value="<?php echo $cost_data['markup_amount']; ?>" readonly></td>
+                                    <td><input type="text" class="form-control form-control-sm" id="markup-amount" name="markup_amount" value="<?php echo $cost_data['markup_amount']; ?>" readonly style="background: #f0f8ff; font-weight: bold;"></td>
                                 </tr>
                                 <tr>
                                     <td><strong>SERVICE TAX</strong></td>
@@ -1278,12 +1381,12 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                             <option value="1.18" <?php echo ($cost_data['tax_percentage'] == 1.18) ? 'selected' : ''; ?>>1.18%</option>
                                         </select>
                                     </td>
-                                    <td><input type="text" class="form-control form-control-sm" id="tax-amount" name="tax_amount" value="<?php echo $cost_data['tax_amount']; ?>" readonly></td>
+                                    <td><input type="text" class="form-control form-control-sm" id="tax-amount" name="tax_amount" value="<?php echo $cost_data['tax_amount']; ?>" readonly style="background: #f0f8ff; font-weight: bold;"></td>
                                 </tr>
                                 <tr>
                                     <td><strong>PACKAGE COST</strong></td>
                                     <td></td>
-                                    <td><input type="number" class="form-control form-control-sm" id="package-cost" name="package_cost" value="<?php echo $cost_data['package_cost']; ?>" onchange="calculateFromPackageCost()"></td>
+                                    <td><input type="number" class="form-control form-control-sm" id="package-cost" name="package_cost" value="<?php echo $cost_data['package_cost']; ?>" style="background: #e8f5e8; font-weight: bold;" onchange="calculateFromPackageCost()"></td>
                                 </tr>
                                 <tr>
                                     <td><strong>Amount in</strong></td>
@@ -1293,7 +1396,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <tr>
                                     <td></td>
                                     <td></td>
-                                    <td><input type="text" class="form-control form-control-sm" id="converted-amount" name="converted_amount" value="<?php echo $cost_data['converted_amount']; ?>" readonly></td>
+                                    <td><input type="text" class="form-control form-control-sm" id="converted-amount" name="converted_amount" value="<?php echo $cost_data['converted_amount']; ?>" readonly style="background: #fff3cd; font-weight: bold;"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1303,10 +1406,10 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
 
             <div class="action-buttons">
                 <button type="submit" class="btn-modern">
-                    <i class="fas fa-save"></i> Update Cost File
+                    <i class="fa fa-save"></i> Update Cost File
                 </button>
                 <a href="view_cost_sheets.php" class="btn-modern btn-secondary-modern">
-                    <i class="fas fa-arrow-left"></i> Back to Cost Files
+                    <i class="fa fa-arrow-left"></i> Back to Cost Files
                 </a>
             </div>
         </form>

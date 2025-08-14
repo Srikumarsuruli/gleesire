@@ -117,9 +117,9 @@ $result = mysqli_query($conn, $sql);
     </div>
 </div>
 
-<script src="assets/deskapp/vendors/scripts/core.js"></script>
-<script src="assets/deskapp/vendors/scripts/script.min.js"></script>
-<script src="assets/deskapp/vendors/scripts/process.js"></script>
+<!-- <script src="assets/deskapp/vendors/scripts/core.js"></script> -->
+<!-- <script src="assets/deskapp/vendors/scripts/script.min.js"></script> -->
+<!-- <script src="assets/deskapp/vendors/scripts/process.js"></script> -->
 <script src="assets/deskapp/vendors/scripts/layout-settings.js"></script>
 <script src="assets/deskapp/src/plugins/datatables/js/jquery.dataTables.min.js"></script>
 <script src="assets/deskapp/src/plugins/datatables/js/dataTables.bootstrap4.min.js"></script>
