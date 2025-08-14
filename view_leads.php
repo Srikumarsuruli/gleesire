@@ -130,7 +130,7 @@ if($_SESSION["role_id"] == 11 || $_SESSION["role_id"] == 12) {
 
 // Add quick filter conditions
 if($quick_filter == "fresh") {
-    $sql .= " AND e.id NOT IN (SELECT DISTINCT enquiry_id FROM comments WHERE enquiry_id IS NOT NULL)"; // No comments
+    $sql .= " AND (lsm.status_name IS NULL OR lsm.status_name = '' OR lsm.status_name = 'Select Status')"; // No status or empty status
 }
 
 $params = array();
@@ -254,7 +254,7 @@ if($_SESSION["role_id"] == 11 || $_SESSION["role_id"] == 12) {
     }
 }
 
-$fresh_count = mysqli_fetch_array(mysqli_query($conn, "SELECT COUNT(DISTINCT e.id) FROM enquiries e LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id LEFT JOIN comments c ON e.id = c.enquiry_id WHERE e.status_id = 3 AND cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL) AND c.id IS NULL" . $user_filter))[0];
+$fresh_count = mysqli_fetch_array(mysqli_query($conn, "SELECT COUNT(DISTINCT e.id) FROM enquiries e LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id LEFT JOIN lead_status_map lsm ON e.id = lsm.enquiry_id WHERE e.status_id = 3 AND cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL) AND (lsm.status_name IS NULL OR lsm.status_name = '' OR lsm.status_name = 'Select Status')" . $user_filter))[0];
 $attended_count = mysqli_fetch_array(mysqli_query($conn, "SELECT COUNT(DISTINCT e.id) FROM enquiries e LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id LEFT JOIN lead_status_map lsm ON e.id = lsm.enquiry_id WHERE e.status_id = 3 AND cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL) AND lsm.status_name = 'Prospect - Attended'" . $user_filter))[0];
 $progress1_count = mysqli_fetch_array(mysqli_query($conn, "SELECT COUNT(DISTINCT e.id) FROM enquiries e LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id LEFT JOIN lead_status_map lsm ON e.id = lsm.enquiry_id WHERE e.status_id = 3 AND cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL) AND lsm.status_name = 'Prospect - Quote given'" . $user_filter))[0];
 $progress2_count = mysqli_fetch_array(mysqli_query($conn, "SELECT COUNT(DISTINCT e.id) FROM enquiries e LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id LEFT JOIN lead_status_map lsm ON e.id = lsm.enquiry_id WHERE e.status_id = 3 AND cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL) AND lsm.status_name = 'Neutral Prospect - In Discussion'" . $user_filter))[0];

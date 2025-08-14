@@ -197,13 +197,23 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             `;
                         } else {
+                            // Show both lead number and enquiry number if available
+                            let numberDisplay = '';
+                            if (item.lead_number && item.enquiry_number) {
+                                numberDisplay = `${item.lead_number} → ${item.enquiry_number}`;
+                            } else if (item.enquiry_number) {
+                                numberDisplay = item.enquiry_number;
+                            } else {
+                                numberDisplay = item.lead_number;
+                            }
+                            
                             resultItem.innerHTML = `
                                 <div class="search-result-title">
                                     <span class="search-result-type ${typeClass}">${typeLabel}</span>
                                     ${item.customer_name}
                                 </div>
                                 <div class="search-result-subtitle">
-                                    ${item.type === 'enquiry' ? item.lead_number : item.enquiry_number} | ${item.mobile_number} | ${formattedDate}
+                                    ${numberDisplay} | ${item.mobile_number} | ${formattedDate}
                                     ${item.referral_code ? ' | Ref: ' + item.referral_code : ''}
                                 </div>
                             `;
@@ -234,9 +244,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             // Fetch details if not already loaded
                             if (detailsContainer.querySelector('.loading-details')) {
-                                fetch(`get_record_details.php?id=${item.id}&type=${item.type}`)
+                                fetch(`get_record_details.php?id=${item.id}&type=${item.type}&t=${Date.now()}`)
                                     .then(response => response.json())
                                     .then(data => {
+                                        console.log('Debug: Received data:', data);
                                         let detailsHTML = '';
                                         
                                         // Basic enquiry details
@@ -257,20 +268,51 @@ document.addEventListener('DOMContentLoaded', function() {
                                         }
                                         
                                         // Lead details if available
+                                        console.log('Debug: Lead data exists:', !!data.lead);
+                                        if (data.lead) {
+                                            console.log('Debug: night_day value:', data.lead.night_day);
+                                            console.log('Debug: night_day_name value:', data.lead.night_day_name);
+                                            console.log('Debug: travel_month value:', data.lead.travel_month);
+                                        }
                                         if (data.lead) {
                                             detailsHTML += '<div class="detail-section">';
-                                            detailsHTML += '<div class="detail-section-title">Lead Details</div>';
+                                            detailsHTML += '<div class="detail-section-title">Converted Enquiry Details</div>';
                                             detailsHTML += `<div class="detail-row"><span class="detail-label">Enquiry Number:</span> <span class="detail-value">${data.lead.enquiry_number}</span></div>`;
                                             detailsHTML += `<div class="detail-row"><span class="detail-label">Customer Location:</span> <span class="detail-value">${data.lead.customer_location || 'N/A'}</span></div>`;
                                             detailsHTML += `<div class="detail-row"><span class="detail-label">Secondary Contact:</span> <span class="detail-value">${data.lead.secondary_contact || 'N/A'}</span></div>`;
-                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Destination:</span> <span class="detail-value">${data.lead.destination_name || 'N/A'}</span></div>`;
-                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Travel Month:</span> <span class="detail-value">${data.lead.travel_month ? new Date(data.lead.travel_month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'N/A'}</span></div>`;
-                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Travel Dates:</span> <span class="detail-value">${data.lead.travel_start_date ? new Date(data.lead.travel_start_date).toLocaleDateString() : 'N/A'} to ${data.lead.travel_end_date ? new Date(data.lead.travel_end_date).toLocaleDateString() : 'N/A'}</span></div>`;
-                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Night/Day:</span> <span class="detail-value">${data.lead.night_day_name || 'N/A'}</span></div>`;
-                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Travelers:</span> <span class="detail-value">Adults: ${data.lead.adults_count || '0'}, Children: ${data.lead.children_count || '0'}, Infants: ${data.lead.infants_count || '0'}</span></div>`;
+                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Destination:</span> <span class="detail-value">${data.lead.destination_name || data.lead.others || 'N/A'}</span></div>`;
+                                            let travelMonth = 'N/A';
+                                            if (data.lead.travel_month && data.lead.travel_month !== null && data.lead.travel_month !== '') {
+                                                travelMonth = data.lead.travel_month;
+                                            }
+                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Travel Month:</span> <span class="detail-value">${travelMonth}</span></div>`;
+                                            // Handle night_day display - check multiple possible fields
+                                            let nightDayValue = 'N/A';
+                                            if (data.lead.night_day_name) {
+                                                nightDayValue = data.lead.night_day_name;
+                                            } else if (data.lead.night_day && data.lead.night_day !== null && data.lead.night_day !== '') {
+                                                nightDayValue = data.lead.night_day;
+                                            }
+                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Night/Day:</span> <span class="detail-value">${nightDayValue}</span></div>`;
+                                            let startDate = data.lead.travel_start_date ? new Date(data.lead.travel_start_date).toLocaleDateString() : 'N/A';
+                                            let endDate = data.lead.travel_end_date ? new Date(data.lead.travel_end_date).toLocaleDateString() : 'N/A';
+                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Travel Period:</span> <span class="detail-value">${startDate} to ${endDate}</span></div>`;
+                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Adults Count:</span> <span class="detail-value">${data.lead.adults_count || '0'}</span></div>`;
+                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Children Count:</span> <span class="detail-value">${data.lead.children_count || '0'}</span></div>`;
+                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Infants Count:</span> <span class="detail-value">${data.lead.infants_count || '0'}</span></div>`;
+                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Children Age Details:</span> <span class="detail-value">${data.lead.children_age_details || 'N/A'}</span></div>`;
+                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Total Passengers:</span> <span class="detail-value">${(parseInt(data.lead.adults_count || 0) + parseInt(data.lead.children_count || 0) + parseInt(data.lead.infants_count || 0))}</span></div>`;
+                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Customer Available Timing:</span> <span class="detail-value">${data.lead.customer_available_timing || 'N/A'}</span></div>`;
                                             detailsHTML += `<div class="detail-row"><span class="detail-label">File Manager:</span> <span class="detail-value">${data.lead.file_manager_name || 'N/A'}</span></div>`;
+                                            detailsHTML += `<div class="detail-row"><span class="detail-label">Lead Priority:</span> <span class="detail-value">${data.lead.lead_type || 'N/A'}</span></div>`;
                                             detailsHTML += `<div class="detail-row"><span class="detail-label">Booking Status:</span> <span class="detail-value">${data.lead.booking_confirmed == 1 ? 'Confirmed' : 'Not Confirmed'}</span></div>`;
+                                            if (data.lead.booking_confirmed == 1) {
+                                                detailsHTML += `<div class="detail-row"><span class="detail-label">Sale Amount:</span> <span class="detail-value">₹${data.lead.sale_amount ? parseFloat(data.lead.sale_amount).toLocaleString('en-IN', {minimumFractionDigits: 2}) : '0.00'}</span></div>`;
+                                                detailsHTML += `<div class="detail-row"><span class="detail-label">Revenue Amount:</span> <span class="detail-value">₹${data.lead.revenue_amount ? parseFloat(data.lead.revenue_amount).toLocaleString('en-IN', {minimumFractionDigits: 2}) : '0.00'}</span></div>`;
+                                            }
                                             detailsHTML += '</div>';
+                                        } else {
+                                            console.log('Debug: No lead data found');
                                         }
                                         
                                         // Comments if available

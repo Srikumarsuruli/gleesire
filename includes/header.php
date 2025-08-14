@@ -49,12 +49,62 @@ if($stmt = mysqli_prepare($conn, $sql)) {
     <!-- Critical CSS -->
     <link rel="stylesheet" type="text/css" href="assets/deskapp/vendors/styles/core.css">
     <link rel="stylesheet" type="text/css" href="assets/deskapp/vendors/styles/icon-font.min.css">
+    <link rel="stylesheet" type="text/css" href="assets/deskapp/src/plugins/datatables/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" type="text/css" href="assets/deskapp/src/plugins/datatables/css/responsive.bootstrap4.min.css">
     <link rel="stylesheet" type="text/css" href="assets/deskapp/vendors/styles/style.css">
     <link rel="stylesheet" type="text/css" href="assets/css/custom.css">
     <link rel="stylesheet" type="text/css" href="assets/css/dropdown-fix.css">
     
 </head>
 <body>
+    <!-- <div class="pre-loader">
+        <div class="pre-loader-box">
+            <div class="loader-logo">
+                <div class="flight-animation">
+                    <div class="flight-icon">✈️</div>
+                    <div class="flight-path"></div>
+                </div>
+            </div>
+            <div class="loading-text">loading data</div>
+        </div>
+    </div> -->
+    
+    <style>
+    .flight-animation {
+        position: relative;
+        width: 200px;
+        height: 60px;
+        margin: 0 auto;
+    }
+    
+    .flight-icon {
+        font-size: 30px;
+        position: absolute;
+        animation: fly 2s ease-in-out infinite;
+    }
+    
+    .flight-path {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent 0%, #007bff 50%, transparent 100%);
+        animation: pathGlow 2s ease-in-out infinite;
+    }
+    
+    @keyframes fly {
+        0% { left: -30px; top: 30px; transform: rotate(-10deg); }
+        50% { left: 85px; top: 15px; transform: rotate(5deg); }
+        100% { left: 200px; top: 0px; transform: rotate(15deg); }
+    }
+    
+    @keyframes pathGlow {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 1; }
+    }
+    </style>
+
     <div class="header">
         <div class="header-left">
             <div class="menu-icon bi bi-list"></div>
@@ -310,6 +360,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
     
     <!-- Row highlighting -->
     <script src="assets/js/highlight-row.js"></script>
+   <script src="assets/js/menu-fix.js"></script>
     
     <!-- Comments functionality -->
     <script src="assets/js/comments.js"></script>

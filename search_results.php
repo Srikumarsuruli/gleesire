@@ -52,29 +52,44 @@ if(isset($_GET['query']) && !empty($_GET['query'])) {
     $search_query = $_GET['query'];
     $results = array();
     
-    // Search in enquiries table
+    // Search in enquiries table with lead information
     if(hasPrivilege('view_enquiries')) {
         $sql = "SELECT 
-                'enquiry' as type,
+                CASE 
+                    WHEN cl.booking_confirmed = 1 THEN 'booking'
+                    WHEN cl.id IS NOT NULL THEN 'lead'
+                    ELSE 'enquiry'
+                END as type,
                 e.id,
                 e.lead_number,
+                cl.enquiry_number,
                 e.customer_name,
                 e.mobile_number,
                 e.email,
                 e.referral_code,
                 e.received_datetime,
-                'view_enquiries.php' as redirect_url
+                CASE 
+                    WHEN cl.booking_confirmed = 1 THEN 'booking_confirmed.php'
+                    WHEN cl.id IS NOT NULL THEN 'view_leads.php'
+                    ELSE 'view_enquiries.php'
+                END as redirect_url,
+                CASE 
+                    WHEN cl.id IS NOT NULL THEN 1
+                    ELSE 0
+                END as has_lead_data
                 FROM enquiries e
+                LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id
                 WHERE e.lead_number LIKE ? 
                 OR e.customer_name LIKE ? 
                 OR e.mobile_number LIKE ? 
                 OR e.email LIKE ?
                 OR e.referral_code LIKE ?
+                OR cl.enquiry_number LIKE ?
                 LIMIT 5";
                 
         if($stmt = mysqli_prepare($conn, $sql)) {
             $search_param = "%" . $search_query . "%";
-            mysqli_stmt_bind_param($stmt, "sssss", $search_param, $search_param, $search_param, $search_param, $search_param);
+            mysqli_stmt_bind_param($stmt, "ssssss", $search_param, $search_param, $search_param, $search_param, $search_param, $search_param);
             
             if(mysqli_stmt_execute($stmt)) {
                 $enquiry_result = mysqli_stmt_get_result($stmt);
@@ -87,82 +102,7 @@ if(isset($_GET['query']) && !empty($_GET['query'])) {
         }
     }
     
-    // Search in converted_leads table
-    if(hasPrivilege('view_leads')) {
-        $sql = "SELECT 
-                'lead' as type,
-                e.id,
-                cl.enquiry_number,
-                e.lead_number,
-                e.customer_name,
-                e.mobile_number,
-                e.email,
-                e.referral_code,
-                e.received_datetime,
-                'view_leads.php' as redirect_url
-                FROM converted_leads cl
-                JOIN enquiries e ON cl.enquiry_id = e.id
-                WHERE cl.enquiry_number LIKE ? 
-                OR e.lead_number LIKE ? 
-                OR e.customer_name LIKE ? 
-                OR e.mobile_number LIKE ? 
-                OR e.email LIKE ?
-                OR e.referral_code LIKE ?
-                LIMIT 5";
-                
-        if($stmt = mysqli_prepare($conn, $sql)) {
-            $search_param = "%" . $search_query . "%";
-            mysqli_stmt_bind_param($stmt, "ssssss", $search_param, $search_param, $search_param, $search_param, $search_param, $search_param);
-            
-            if(mysqli_stmt_execute($stmt)) {
-                $lead_result = mysqli_stmt_get_result($stmt);
-                
-                while($row = mysqli_fetch_assoc($lead_result)) {
-                    $results[] = $row;
-                }
-            }
-            mysqli_stmt_close($stmt);
-        }
-    }
-    
-    // Search in booking_confirmed table
-    if(hasPrivilege('booking_confirmed')) {
-        $sql = "SELECT 
-                'booking' as type,
-                e.id,
-                cl.enquiry_number,
-                e.lead_number,
-                e.customer_name,
-                e.mobile_number,
-                e.email,
-                e.referral_code,
-                e.received_datetime,
-                'booking_confirmed.php' as redirect_url
-                FROM converted_leads cl
-                JOIN enquiries e ON cl.enquiry_id = e.id
-                WHERE cl.booking_confirmed = 1
-                AND (cl.enquiry_number LIKE ? 
-                OR e.lead_number LIKE ? 
-                OR e.customer_name LIKE ? 
-                OR e.mobile_number LIKE ? 
-                OR e.email LIKE ?
-                OR e.referral_code LIKE ?)
-                LIMIT 5";
-                
-        if($stmt = mysqli_prepare($conn, $sql)) {
-            $search_param = "%" . $search_query . "%";
-            mysqli_stmt_bind_param($stmt, "ssssss", $search_param, $search_param, $search_param, $search_param, $search_param, $search_param);
-            
-            if(mysqli_stmt_execute($stmt)) {
-                $booking_result = mysqli_stmt_get_result($stmt);
-                
-                while($row = mysqli_fetch_assoc($booking_result)) {
-                    $results[] = $row;
-                }
-            }
-            mysqli_stmt_close($stmt);
-        }
-    }
+
     
     // Search in comments table
     $sql = "SELECT 

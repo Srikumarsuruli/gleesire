@@ -11,16 +11,33 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
 // Get counts for dashboard
 $total_enquiries = $total_leads = $total_confirmed = $total_pipeline = 0;
 
-// Total enquiries
-$sql = "SELECT COUNT(*) as count FROM enquiries";
+// User-based filtering
+$user_filter = "";
+if($_SESSION["role_id"] == 11 || $_SESSION["role_id"] == 12) {
+    $current_user_id = $_SESSION['id'] ?? $_SESSION['user_id'] ?? null;
+    if($current_user_id) {
+        $user_filter = " AND cl.file_manager_id = " . $current_user_id;
+    }
+}
+
+// Total enquiries (user-based)
+if($_SESSION["role_id"] == 11 || $_SESSION["role_id"] == 12) {
+    $sql = "SELECT COUNT(DISTINCT e.id) as count FROM enquiries e LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id WHERE 1=1" . $user_filter;
+} else {
+    $sql = "SELECT COUNT(*) as count FROM enquiries";
+}
 $result = mysqli_query($conn, $sql);
 if($result) {
     $row = mysqli_fetch_assoc($result);
     $total_enquiries = $row['count'];
 }
 
-// Total leads
-$sql = "SELECT COUNT(*) as count FROM enquiries WHERE status_id = 3";
+// Total leads (user-based)
+if($_SESSION["role_id"] == 11 || $_SESSION["role_id"] == 12) {
+    $sql = "SELECT COUNT(DISTINCT e.id) as count FROM enquiries e LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id WHERE e.status_id = 3" . $user_filter;
+} else {
+    $sql = "SELECT COUNT(*) as count FROM enquiries WHERE status_id = 3";
+}
 $result = mysqli_query($conn, $sql);
 if($result) {
     $row = mysqli_fetch_assoc($result);
@@ -59,17 +76,17 @@ if($result) {
     $total_travel_completed = $row['count'];
 }
 
-// Total pipeline leads
-$sql = "SELECT COUNT(*) as count FROM enquiries e 
-        JOIN lead_status_map lsm ON e.id = lsm.enquiry_id
-        WHERE e.status_id = 3 AND lsm.status_name IN (
-            'Hot Prospect - Quote given',
-            'Prospect - Attended',
-            'Prospect - Awaiting Rate from Agent',
-            'Neutral Prospect - In Discussion',
-            'Future Hot Prospect - Quote Given (with delay)',
-            'Future Prospect - Postponed'
-        )";
+// Total pipeline leads (user-based) - using same logic as pipeline.php
+if($_SESSION["role_id"] == 11 || $_SESSION["role_id"] == 12) {
+    $sql = "SELECT COUNT(DISTINCT e.id) as count FROM enquiries e 
+            JOIN lead_status_map lsm ON e.id = lsm.enquiry_id
+            LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id
+            WHERE lsm.status_name = 'Hot Prospect - Pipeline'" . $user_filter;
+} else {
+    $sql = "SELECT COUNT(*) as count FROM enquiries e 
+            JOIN lead_status_map lsm ON e.id = lsm.enquiry_id
+            WHERE lsm.status_name = 'Hot Prospect - Pipeline'";
+}
 $result = mysqli_query($conn, $sql);
 if($result) {
     $row = mysqli_fetch_assoc($result);
@@ -288,14 +305,15 @@ $total_sale_amount = 0;
 ?>
 
 
-
+<h4 class="h4 text-blue mb-20">Enquiry & Lead Funnel</h4>
 <div class="row pb-10">
+    
     <div class="col-xl-2 col-lg-4 col-md-6 mb-20">
         <div class="card-box height-100-p widget-style3">
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
                     <div class="weight-700 font-24 text-dark"><?php echo $total_enquiries; ?></div>
-                    <div class="font-14 text-secondary weight-500">Total Enquiries</div>
+                    <div class="font-14 text-secondary weight-500">Enquiry Count</div>
                 </div>
                 <div class="widget-icon">
                     <div class="icon" data-color="#00eccf">
@@ -310,7 +328,7 @@ $total_sale_amount = 0;
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
                     <div class="weight-700 font-24 text-dark"><?php echo $total_leads; ?></div>
-                    <div class="font-14 text-secondary weight-500">Total Leads &nbsp;&nbsp;&nbsp;</div>
+                    <div class="font-14 text-secondary weight-500">Lead Count</div>
                 </div>
                 <div class="widget-icon">
                     <div class="icon" data-color="#ff5b5b">
@@ -325,7 +343,7 @@ $total_sale_amount = 0;
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
                     <div class="weight-700 font-24 text-dark"><?php echo $total_pipeline; ?></div>
-                    <div class="font-14 text-secondary weight-500">Total Pipeline &nbsp;&nbsp;&nbsp;</div>
+                    <div class="font-14 text-secondary weight-500">Pipeline Count</div>
                 </div>
                 <div class="widget-icon">
                     <div class="icon" data-color="#09cc06">
@@ -339,8 +357,8 @@ $total_sale_amount = 0;
         <div class="card-box height-100-p widget-style3">
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
-                    <div class="weight-700 font-24 text-dark"><?php echo $total_confirmed; ?></div>
-                    <div class="font-14 text-secondary weight-500">Confirmed Bookings</div>
+                    <div class="weight-700 font-24 text-dark">0</div>
+                    <div class="font-14 text-secondary weight-500">Booking Count</div>
                 </div>
                 <div class="widget-icon">
                     <div class="icon" data-color="#1b00ff">
@@ -355,7 +373,7 @@ $total_sale_amount = 0;
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
                     <div class="weight-700 font-24 text-dark">0</div>
-                    <div class="font-14 text-secondary weight-500">Travel Completed</div>
+                    <div class="font-14 text-secondary weight-500">Travel Count</div>
                 </div>
                 <div class="widget-icon">
                     <div class="icon" data-color="#28a745">
@@ -369,8 +387,8 @@ $total_sale_amount = 0;
         <div class="card-box height-100-p widget-style3">
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
-                    <div class="weight-700 font-24 text-dark"><?php echo $total_canceled; ?></div>
-                    <div class="font-14 text-secondary weight-500">Booking Canceled</div>
+                    <div class="weight-700 font-24 text-dark">0</div>
+                    <div class="font-14 text-secondary weight-500">Cancel Count</div>
                 </div>
                 <div class="widget-icon">
                     <div class="icon" data-color="#dc3545">
@@ -381,6 +399,7 @@ $total_sale_amount = 0;
         </div>
     </div>
 </div>
+    <h4 class="h4 text-blue mb-20">Financial Metrics & Cancellations</h4>
 
 <div class="row pb-10">
     <div class="col-xl-2 col-lg-4 col-md-6 mb-20">
@@ -388,7 +407,7 @@ $total_sale_amount = 0;
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
                     <div class="weight-700 font-24 text-dark">₹<?php echo number_format($total_marketing_cost, 2); ?></div>
-                    <div class="font-14 text-secondary weight-500">Marketing Cost</div>
+                    <div class="font-14 text-secondary weight-500">Ad Spend</div>
                 </div>
                 <div class="widget-icon">
                     <div class="icon" data-color="#ff9800">
@@ -403,7 +422,7 @@ $total_sale_amount = 0;
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
                     <div class="weight-700 font-24 text-dark">₹<?php echo number_format($total_sale_amount, 2); ?></div>
-                    <div class="font-14 text-secondary weight-500">Total Sale Amount</div>
+                    <div class="font-14 text-secondary weight-500">Sales Value</div>
                 </div>
                 <div class="widget-icon">
                     <div class="icon" data-color="#17a2b8">
@@ -418,7 +437,7 @@ $total_sale_amount = 0;
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
                     <div class="weight-700 font-24 text-dark">₹<?php echo number_format($total_marketing_revenue, 2); ?></div>
-                    <div class="font-14 text-secondary weight-500">Total Revenue</div>
+                    <div class="font-14 text-secondary weight-500">Revenue Value</div>
                 </div>
                 <div class="widget-icon">
                     <div class="icon" data-color="#4caf50">
@@ -432,8 +451,8 @@ $total_sale_amount = 0;
         <div class="card-box height-100-p widget-style3">
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
-                    <div class="weight-700 font-24 text-dark"><?php echo $total_pipeline; ?></div>
-                    <div class="font-14 text-secondary weight-500">Pipeline Amount</div>
+                    <div class="weight-700 font-24 text-dark">₹0.00</div>
+                    <div class="font-14 text-secondary weight-500">Pipeline Value</div>
                 </div>
                 <div class="widget-icon">
                     <div class="icon" data-color="#09cc06">
@@ -463,7 +482,7 @@ $total_sale_amount = 0;
             <div class="d-flex flex-wrap">
                 <div class="widget-data">
                     <div class="weight-700 font-24 text-dark">₹<?php echo number_format($canceled_booking_amount, 2); ?></div>
-                    <div class="font-14 text-secondary weight-500">Canceled Booking</div>
+                    <div class="font-14 text-secondary weight-500">Cancel Value</div>
                 </div>
                 <div class="widget-icon">
                     <div class="icon" data-color="#6c757d">
