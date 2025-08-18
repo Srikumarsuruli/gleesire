@@ -243,7 +243,7 @@ $(document).ready(function() {
     });
     
     // Initialize Bootstrap dropdowns
-    $('.dropdown-toggle').dropdown();
+    // $('.dropdown-toggle').dropdown();
     
     // Set file ID for delete confirmation
     $(".delete-file").click(function(e) {

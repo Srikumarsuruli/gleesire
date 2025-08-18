@@ -27,20 +27,21 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["filter"])) {
 }
 
 // Build the SQL query with filters
-$sql = "SELECT e.*, u.full_name as attended_by_name, d.name as department_name,
+$sql = "SELECT e.*,  u.full_name as attended_by_name, d.name as department_name,
         s.name as source_name, ac.name as campaign_name,
         cl.enquiry_number, cl.travel_start_date, cl.travel_end_date, cl.created_at as booking_date,
         cl.file_manager_id, fm.full_name as file_manager_name,
-        lsm.status_name as lead_status
+        tc.id as cost_sheet_id, tc.cost_sheet_number as cost_sheet_number,
+        'Closed – Booked' as lead_status
         FROM enquiries e 
         JOIN users u ON e.attended_by = u.id 
         JOIN departments d ON e.department_id = d.id
         JOIN sources s ON e.source_id = s.id
         LEFT JOIN ad_campaigns ac ON e.ad_campaign_id = ac.id
+        JOIN tour_costings tc ON e.id = tc.enquiry_id
         JOIN converted_leads cl ON e.id = cl.enquiry_id
         LEFT JOIN users fm ON cl.file_manager_id = fm.id
-        JOIN lead_status_map lsm ON e.id = lsm.enquiry_id
-        WHERE lsm.status_name = 'Closed – Booked'"; // Only show leads with status 'Closed – Booked'
+        WHERE tc.confirmed = '1'";
 
 $params = array();
 $types = "";
@@ -99,8 +100,8 @@ if(!empty($date_filter)) {
 
 // Get total count of records
 $count_sql = "SELECT COUNT(*) FROM enquiries e 
-        JOIN lead_status_map lsm ON e.id = lsm.enquiry_id
-        WHERE lsm.status_name = 'Closed – Booked'";
+        JOIN tour_costings tc ON e.id = tc.enquiry_id
+        WHERE tc.confirmed = '1'";
 $count_result = mysqli_query($conn, $count_sql);
 $count_row = mysqli_fetch_array($count_result);
 $total_records = $count_row ? $count_row[0] : 0;
@@ -262,6 +263,7 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                             <th style="min-width: 100px;">Booking<br>Date</th>
                             <th style="min-width: 80px;">Enquiry<br>#</th>
                             <th style="min-width: 80px;">Lead<br>#</th>
+                            <th style="min-width: 80px;">Cost Sheet<br>#</th>
                             <th style="min-width: 120px;">Customer<br>Name</th>
                             <th style="min-width: 100px;">Mobile<br>Number</th>
                             <th style="min-width: 80px;">Source</th>
@@ -281,6 +283,7 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                                     <td><?php echo date('d-m-Y', strtotime($row['booking_date'])); ?></td>
                                     <td><?php echo htmlspecialchars($row['lead_number']); ?></td>
                                     <td><?php echo htmlspecialchars($row['enquiry_number']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['cost_sheet_number']); ?></td>
                                     <td><?php echo htmlspecialchars($row['customer_name']); ?></td>
                                     <td><?php echo htmlspecialchars($row['mobile_number']); ?></td>
                                     <!-- <td><?php echo htmlspecialchars($row['email']); ?></td> -->
@@ -300,9 +303,12 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                                                 <!-- <a class="dropdown-item view-booking" href="#" data-toggle="modal" data-target="#viewModal<?php echo $row['id']; ?>">
                                                     <i class="dw dw-eye"></i> View
                                                 </a> -->
-                                                <a class="dropdown-item" href="edit_enquiry.php?id=<?php echo $row['id']; ?>">
-                                                    <i class="dw dw-edit2"></i> Edit
+                                                <a class="dropdown-item" href="view_cost_file.php?id=<?php echo $row['cost_sheet_id']; ?>">
+                                                    <i class="dw dw-eye"></i> View
                                                 </a>
+                                                <!-- <a class="dropdown-item" href="edit_enquiry.php?id=<?php echo $row['id']; ?>">
+                                                    <i class="dw dw-edit2"></i> Edit
+                                                </a> -->
                                                 <a class="dropdown-item" href="download_booking.php?id=<?php echo $row['id']; ?>">
                                                     <i class="dw dw-download"></i> Download PDF
                                                 </a>
@@ -476,7 +482,7 @@ document.getElementById('date-filter').addEventListener('change', function() {
 // Initialize modals and dropdowns
 $(document).ready(function() {
     // Fix dropdown toggle functionality
-    $('.dropdown-toggle').dropdown();
+    // $('.dropdown-toggle').dropdown();
     
     // Make sure modals work properly
     $('.view-booking').on('click', function(e) {

@@ -25,6 +25,8 @@ if(!hasPrivilege('view_leads')) {
     exit;
 }
 
+$enquiry_id = isset($_GET['enquiry_id']) ? intval($_GET['enquiry_id']) : 0;
+
 // Handle export actions
 if(isset($_GET['action']) && ($_GET['action'] == 'export_pdf' || $_GET['action'] == 'export_excel') && isset($_GET['id'])) {
     $cost_file_id = intval($_GET['id']);
@@ -553,6 +555,10 @@ if(isset($_GET['action']) && ($_GET['action'] == 'export_pdf' || $_GET['action']
                             <td>Package Cost:</td>
                             <td><?php echo htmlspecialchars($cost_sheet['currency']) . ' ' . number_format($cost_sheet['package_cost'], 2); ?></td>
                         </tr>
+                        <tr>
+                            <td>Confirmed:</td>
+                            <td><?php echo number_format($cost_sheet['confirmed'], 0) == 1 ? 'Yes': 'No'; ?></td>
+                        </tr>
                     </table>
                     
                     <div class="summary-box">
@@ -783,12 +789,14 @@ if(isset($_GET['action']) && ($_GET['action'] == 'export_pdf' || $_GET['action']
             }
             fputcsv($output, []); // Empty row for spacing
             
+            fputcsv($output, ['Confirmed:', number_format($cost_sheet['confirmed'], 0) == 1 ? 'Yes': 'No']);
             // Summary
             fputcsv($output, ['Summary']);
             fputcsv($output, ['Total Expense:', $cost_sheet['currency'] . ' ' . number_format($cost_sheet['total_expense'], 2)]);
             fputcsv($output, ['Mark Up (' . number_format($cost_sheet['markup_percentage'], 2) . '%):', $cost_sheet['currency'] . ' ' . number_format($cost_sheet['markup_amount'], 2)]);
             fputcsv($output, ['Service Tax (' . number_format($cost_sheet['tax_percentage'], 2) . '%):', $cost_sheet['currency'] . ' ' . number_format($cost_sheet['tax_amount'], 2)]);
             fputcsv($output, ['Package Cost:', $cost_sheet['currency'] . ' ' . number_format($cost_sheet['package_cost'], 2)]);
+            
             fputcsv($output, []); // Empty row for spacing
             
             // Balance
@@ -859,8 +867,11 @@ $search_number = isset($_GET['search_number']) ? trim($_GET['search_number']) : 
 $sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email,
         SUBSTRING_INDEX(tc.cost_sheet_number, '-S', 1) as base_number
         FROM tour_costings tc 
-        LEFT JOIN enquiries e ON tc.enquiry_id = e.id 
-        WHERE 1=1";
+        LEFT JOIN enquiries e ON tc.enquiry_id = e.id ";
+
+if ($enquiry_id !=0){
+    $sql .= " WHERE tc.enquiry_id = $enquiry_id";
+}
 
 // Add search conditions if provided
 if (!empty($search_name)) {
@@ -885,6 +896,8 @@ while($row = mysqli_fetch_assoc($result)) {
     }
     $grouped_costs[$base][] = $row;
 }
+
+
 ?>
 
 <style>
@@ -1053,8 +1066,9 @@ while($row = mysqli_fetch_assoc($result)) {
                     </div>
                     <div class="col-md-4 text-right">
                         <a href="view_cost_sheets.php" class="btn btn-sm btn-secondary"><i class="fa fa-arrow-left"></i> Back to List</a>
-                        <a href="edit_cost_file.php?id=<?php echo $view_cost_sheet['id']; ?>" class="btn btn-sm btn-primary"><i class="fa fa-edit"></i> Create New Version</a>
-                        <a href="view_payment_receipts.php?id=<?php echo $view_cost_sheet['id']; ?>" class="btn btn-sm btn-info"><i class="fa fa-credit-card"></i> Payment Details</a>
+                        <?php if($has_sheet_confirmed == 0): ?>
+                            <a href="edit_cost_file.php?id=<?php echo $view_cost_sheet['id']; ?>" class="btn btn-sm btn-primary"><i class="fa fa-edit"></i> Edit Cost sheet</a>
+                        <?php endif; ?>                        <!-- <a href="view_payment_receipts.php?id=<?php echo $view_cost_sheet['id']; ?>" class="btn btn-sm btn-info"><i class="fa fa-credit-card"></i> Payment Details</a> -->
                         <a href="view_cost_sheets.php?action=export_pdf&id=<?php echo $view_cost_sheet['id']; ?>" class="btn btn-sm btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i> PDF</a>
                     </div>
                 </div>
@@ -1151,6 +1165,10 @@ while($row = mysqli_fetch_assoc($result)) {
                         <td>Package Cost:</td>
                         <td><?php echo htmlspecialchars($view_cost_sheet['currency']) . ' ' . number_format($view_cost_sheet['package_cost'], 2); ?></td>
                     </tr>
+                    <tr>
+                        <td>Confirmed:</td>
+                        <td><?php echo number_format($view_cost_sheet['confirmed'], 0) == 1 ? 'Yes': 'No'; ?></td>
+                    </tr>
                 </table>
             </div>
             
@@ -1192,7 +1210,17 @@ while($row = mysqli_fetch_assoc($result)) {
             <?php if(!empty($grouped_costs)): ?>
                 <?php $accordion_index = 0; ?>
                 <?php foreach($grouped_costs as $base_number => $versions): ?>
-                    <?php $latest_version = $versions[0]; // First item is latest due to DESC order ?>
+                    <?php $latest_version = $versions[0];
+                        $has_sheet_confirmed = 0;
+                        foreach($versions as $version) {
+                            if($version['confirmed'] == 1) {
+                                $has_sheet_confirmed = 1;
+                                break;
+                            }
+                        } 
+                        
+                    
+                    ?>
                     <div class="card">
                         <div class="card-header" id="heading<?php echo $accordion_index; ?>">
                             <h2 class="mb-0">
@@ -1211,6 +1239,7 @@ while($row = mysqli_fetch_assoc($result)) {
                                                 <th>Version</th>
                                                 <th>Guest Name</th>
                                                 <th>Package Cost</th>
+                                                <th>Confirmed</th>
                                                 <th>Created At</th>
                                                 <th>Download</th>
                                                 <th>Actions</th>
@@ -1222,6 +1251,7 @@ while($row = mysqli_fetch_assoc($result)) {
                                                     <td><strong><?php echo htmlspecialchars($version['cost_sheet_number']); ?></strong></td>
                                                     <td><?php echo htmlspecialchars($version['guest_name'] ?? $version['customer_name']); ?></td>
                                                     <td><?php echo htmlspecialchars($version['currency']) . ' ' . number_format($version['package_cost'], 2); ?></td>
+                                                    <td><?php echo number_format($version['confirmed'], 0) == 1 ? 'Yes': 'No'; ?></td>
                                                     <td><?php echo date('d-m-Y H:i', strtotime($version['created_at'])); ?></td>
                                                     <td>
                                                         <a href="view_cost_sheets.php?action=export_pdf&id=<?php echo $version['id']; ?>" class="btn btn-sm btn-danger" target="_blank" title="Download PDF"><i class="fa fa-file-pdf-o"></i> PDF</a>
@@ -1233,8 +1263,13 @@ while($row = mysqli_fetch_assoc($result)) {
                                                             </a>
                                                             <div class="dropdown-menu dropdown-menu-right dropdown-menu-icon-list">
                                                                 <!-- <a class="dropdown-item" href="view_cost_sheets.php?action=view&id=<?php echo $version['id']; ?>"><i class="dw dw-eye"></i> View</a> -->
-                                                                <a class="dropdown-item" href="edit_cost_file.php?id=<?php echo $version['id']; ?>"><i class="dw dw-edit2"></i> Create New Version</a>
-                                                                <a class="dropdown-item" href="view_payment_receipts.php?id=<?php echo $version['id']; ?>"><i class="dw dw-credit-card"></i> Payment Details</a>
+                                                                <a class="dropdown-item" href="view_cost_sheets.php?action=export_pdf&id=<?php echo $version['id']; ?>" target="_blank"><i class="dw dw-eye"></i>View Cost Sheet</a>
+                                                                <?php if($has_sheet_confirmed == 0): ?>
+                                                                    <a class="dropdown-item" href="edit_cost_file.php?id=<?php echo $version['id']; ?>"><i class="dw dw-edit2"></i> Edit Cost Sheet</a>
+                                                                <?php endif; ?>  
+                                                                
+                                                                
+                                                                <!-- <a class="dropdown-item" href="view_payment_receipts.php?id=<?php echo $version['id']; ?>"><i class="dw dw-credit-card"></i> Payment Details</a> -->
                                                                 <?php if(isAdmin()): ?>
                                                                     <a class="dropdown-item" href="view_cost_sheets.php?action=delete&id=<?php echo $version['id']; ?>" onclick="return confirm('Are you sure you want to delete this version?');"><i class="dw dw-delete-3"></i> Delete</a>
                                                                 <?php endif; ?>

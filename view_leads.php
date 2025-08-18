@@ -96,7 +96,8 @@ $base_sql = "SELECT DISTINCT e.*, u.full_name as attended_by_name, d.name as dep
         cl.adults_count, cl.children_count, cl.infants_count, cl.children_age_details, cl.lead_type,
         lsm.status_name as lead_status, fm.full_name as file_manager_name,
         dest.name as destination_name,
-        lsm.created_at as last_updated_date
+        lsm.created_at as last_updated_date,
+        CASE WHEN tc.enquiry_id IS NOT NULL THEN 1 ELSE 0 END as has_cost_sheet
         FROM enquiries e 
         JOIN users u ON e.attended_by = u.id 
         JOIN departments d ON e.department_id = d.id 
@@ -104,6 +105,7 @@ $base_sql = "SELECT DISTINCT e.*, u.full_name as attended_by_name, d.name as dep
         LEFT JOIN ad_campaigns ac ON e.ad_campaign_id = ac.id 
         LEFT JOIN lead_status ls ON (e.status_id = ls.id OR e.status_id = ls.name) 
         LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id
+        LEFT JOIN tour_costings tc ON e.id = tc.enquiry_id
         LEFT JOIN destinations dest ON cl.destination_id = dest.id
         LEFT JOIN lead_status_map lsm ON e.id = lsm.enquiry_id
         LEFT JOIN comments c ON e.id = c.enquiry_id
@@ -598,7 +600,7 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                             </a>
                             <div class="dropdown-menu dropdown-menu-right dropdown-menu-icon-list">
                                 <a class="dropdown-item" href="#" data-toggle="modal" data-target="#viewModal<?php echo $row['id']; ?>"><i class="dw dw-eye"></i> View</a>
-                                <a class="dropdown-item" href="new_cost_file.php?id=<?php echo $row['id']; ?>"><i class="dw dw-file"></i> Cost Sheet</a>
+                                <a class="dropdown-item" href="<?php echo $row['has_cost_sheet'] == '1' ? 'view_cost_sheets.php?enquiry_id=' . $row['id'] : 'new_cost_file.php?id=' . $row['id']; ?>"><i class="dw dw-file"></i> <?php echo $row['has_cost_sheet'] == '1' ? 'View Cost Sheet' : 'Create Cost Sheet'; ?></a>
                                 <a class="dropdown-item" href="comments.php?id=<?php echo $row['id']; ?>&type=lead"><i class="dw dw-chat"></i> Comments</a>
                             </div>
                         </div>
@@ -1011,7 +1013,7 @@ function updateLastReason(id, button) {
         }
         
         // Initialize dropdown functionality
-        $('.dropdown-toggle').dropdown();
+        // $('.dropdown-toggle').dropdown();
         
         // Handle form submission via AJAX
         $('#comment-form').on('submit', function(e) {

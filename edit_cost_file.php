@@ -10,8 +10,9 @@ if(!hasPrivilege('view_leads')) {
 
 // Get cost file ID
 $cost_file_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$enquiry_id = isset($_GET['enquiry_id']) ? intval($_GET['enquiry_id']) : 0;
 
-if($cost_file_id == 0) {
+if($cost_file_id == 0 and $enquiry_id == 0) {
     echo "<div class='alert alert-danger'>Invalid cost file ID.</div>";
     require_once "includes/footer.php";
     exit;
@@ -44,8 +45,22 @@ $sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number, e
         LEFT JOIN users fm ON cl.file_manager_id = fm.id
         WHERE tc.id = ?";
 
+if ($enquiry_id != 0){
+    $sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number, e.referral_code, e.created_at as lead_date,
+        s.name as source_name, dest.name as destination_name, fm.full_name as file_manager_name
+        FROM tour_costings tc 
+        LEFT JOIN enquiries e ON tc.enquiry_id = e.id 
+        LEFT JOIN sources s ON e.source_id = s.id
+        LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id
+        LEFT JOIN destinations dest ON cl.destination_id = dest.id
+        LEFT JOIN users fm ON cl.file_manager_id = fm.id
+        WHERE tc.enquiry_id = ?";
+}
+
+$_id = $cost_file_id != 0 ? $cost_file_id : $enquiry_id;
+
 $stmt = mysqli_prepare($conn, $sql);
-mysqli_stmt_bind_param($stmt, "i", $cost_file_id);
+mysqli_stmt_bind_param($stmt, "i", $_id);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 
@@ -62,6 +77,8 @@ $enquiry_id = $cost_data['enquiry_id'];
 $cost_data['adults_count'] = $cost_data['adults_count'] ?? 0;
 $cost_data['children_count'] = $cost_data['children_count'] ?? 0;
 $cost_data['infants_count'] = $cost_data['infants_count'] ?? 0;
+
+
 
 // Initialize variables
 $success_message = "";
@@ -95,6 +112,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         $tour_package = $_POST['tour_package'] ?? '';
         $currency = $_POST['currency'] ?? 'USD';
         $nationality = $_POST['nationality'] ?? '';
+        $confirmed = intval($_POST['confirmed'] ?? 0);
         $adults_count = intval($_POST['adults_count'] ?? 0);
         $children_count = intval($_POST['children_count'] ?? 0);
         $infants_count = intval($_POST['infants_count'] ?? 0);
@@ -117,6 +135,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         $cruise_data = json_encode($_POST['cruise'] ?? []);
         $extras_data = json_encode($_POST['extras'] ?? []);
         $agent_package_data = json_encode($_POST['agent_package'] ?? []);
+        $medical_tourism_data = json_encode($_POST['medical_tourisms'] ?? []);
+        
         // Get existing payment data to preserve receipt if no new one is uploaded
         $existing_payment_data = json_decode($cost_data['payment_data'] ?? '{}', true);
         $existing_receipt = $existing_payment_data['receipt'] ?? null;
@@ -165,10 +185,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             enquiry_id, cost_sheet_number, guest_name, guest_address, whatsapp_number,
             tour_package, currency, nationality, adults_count, children_count, infants_count,
             selected_services, visa_data, accommodation_data, transportation_data, 
-            cruise_data, extras_data, agent_package_data, payment_data, total_expense, markup_percentage, 
+            cruise_data, extras_data, agent_package_data, medical_tourism_data, payment_data, total_expense, markup_percentage, 
             markup_amount, tax_percentage, tax_amount, package_cost, currency_rate, 
-            converted_amount
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            converted_amount, confirmed
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         $insert_stmt = mysqli_prepare($conn, $insert_sql);
         
@@ -178,8 +198,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             $whatsapp_number, $tour_package, $currency, $nationality, $adults_count, 
             $children_count, $infants_count, $selected_services, $visa_data, 
             $accommodation_data, $transportation_data, $cruise_data, $extras_data, 
-            $agent_package_data, $payment_data, $total_expense, $markup_percentage, $markup_amount, 
-            $tax_percentage, $tax_amount, $package_cost, $currency_rate, $converted_amount
+            $agent_package_data, $medical_tourism_data, $payment_data, $total_expense, $markup_percentage, $markup_amount, 
+            $tax_percentage, $tax_amount, $package_cost, $currency_rate, $converted_amount, $confirmed
         ];
         // Build type string to match exact parameter count
         $type_string = str_repeat('d', count($params)); // Start with all 'd'
@@ -201,7 +221,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         $type_string[15] = 's'; // cruise_data
         $type_string[16] = 's'; // extras_data
         $type_string[17] = 's'; // agent_package_data
-        $type_string[18] = 's'; // payment_data
+        $type_string[18] = 's'; // medical_tourism_data
+        $type_string[19] = 's'; // payment_data
+        $type_string[20] = 'i'; // confirmed
         // Rest are 'd' for decimal values
         
         mysqli_stmt_bind_param($insert_stmt, $type_string,
@@ -275,6 +297,7 @@ $transportation_data = json_decode($cost_data['transportation_data'] ?? '[]', tr
 $cruise_data = json_decode($cost_data['cruise_data'] ?? '[]', true);
 $extras_data = json_decode($cost_data['extras_data'] ?? '[]', true);
 $agent_package_data = json_decode($cost_data['agent_package_data'] ?? '[]', true);
+$medical_tourism_data = json_decode($cost_data['medical_tourism_data'] ?? '[]', true);
 $payment_data = json_decode($cost_data['payment_data'] ?? '{}', true);
 
 // Ensure payment_data is an array
@@ -300,7 +323,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
 <div class="cost-file-container">
     <div class="cost-file-card">
         <div class="cost-file-header">
-            <h1 class="cost-file-title">Create New Version</h1>
+            <h1 class="cost-file-title"> Create New Version</h1>
             <p class="cost-file-subtitle">
                 Cost Sheet No: <?php echo htmlspecialchars($cost_data['cost_sheet_number']); ?> | 
                 Reference: <?php echo htmlspecialchars($cost_data['customer_name']); ?> | 
@@ -507,7 +530,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             <input type="checkbox" name="services[]" value="agent_package" <?php echo in_array('agent_package', $selected_services) ? 'checked' : ''; ?> style="display: none;">
                         </div>
                         <div class="service-item <?php echo in_array('medical_tourism', $selected_services) ? 'selected' : ''; ?>" onclick="toggleService(this, 'medical_tourism')">
-                            <i class="fas fa-briefcase service-icon-small"></i>
+                            <i class="fas fa-hospital-o service-icon-small"></i>
                             <span class="service-text">MEDICAL TOURISM</span>
                             <input type="checkbox" name="services[]" value="medical_tourism" <?php echo in_array('medical_tourism', $selected_services) ? 'checked' : ''; ?> style="display: none;">
                         </div>
@@ -543,7 +566,10 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <?php foreach ($visa_data as $index => $visa): ?>
                                 <tr>
                                     <td><?php echo $index + 1; ?></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="visa[<?php echo $index; ?>][sector]" value="<?php echo htmlspecialchars($visa['sector'] ?? ''); ?>" placeholder="Sector"></td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="visa[<?php echo $index; ?>][sector]" value="<?php echo htmlspecialchars($visa['sector'] ?? ''); ?>" placeholder="Sector">
+                                        <input type="hidden" name="visa[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
+                                    </td>
                                     <td><input type="text" class="form-control form-control-sm" name="visa[<?php echo $index; ?>][supplier]" value="<?php echo htmlspecialchars($visa['supplier'] ?? ''); ?>" placeholder="Supplier"></td>
                                     <td><input type="date" class="form-control form-control-sm" name="visa[<?php echo $index; ?>][travel_date]" value="<?php echo $visa['travel_date'] ?? ''; ?>"></td>
                                     <td><input type="number" class="form-control form-control-sm visa-passengers" name="visa[<?php echo $index; ?>][passengers]" data-row="<?php echo $index; ?>" value="<?php echo $visa['passengers'] ?? '0'; ?>" onchange="calculateVisaTotal(<?php echo $index; ?>)"></td>
@@ -555,7 +581,10 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             <?php else: ?>
                                 <tr>
                                     <td>1</td>
-                                    <td><input type="text" class="form-control form-control-sm" name="visa[0][sector]" placeholder="Sector"></td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="visa[0][sector]" placeholder="Sector">
+                                        <input type="hidden" name="visa[0][idx]" value="0">
+                                    </td>
                                     <td><input type="text" class="form-control form-control-sm" name="visa[0][supplier]" placeholder="Supplier"></td>
                                     <td><input type="date" class="form-control form-control-sm" name="visa[0][travel_date]"></td>
                                     <td><input type="number" class="form-control form-control-sm visa-passengers" name="visa[0][passengers]" data-row="0" value="0" onchange="calculateVisaTotal(0)"></td>
@@ -720,6 +749,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                                 <option value="<?php echo htmlspecialchars($dest['name']); ?>" <?php echo ($accom['destination'] == $dest['name']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($dest['name']); ?></option>
                                             <?php endwhile; ?>
                                         </select>
+                                        <input type="hidden" name="accommodation[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
                                     </td>
                                     <td>
                                         <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][hotel]">
@@ -771,6 +801,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                                 <option value="<?php echo htmlspecialchars($dest['name']); ?>"><?php echo htmlspecialchars($dest['name']); ?></option>
                                             <?php endwhile; ?>
                                         </select>
+                                        <input type="hidden" name="accommodation[0][idx]" value="0">
                                     </td>
                                     <td>
                                         <select class="form-control form-control-sm" name="accommodation[0][hotel]">
@@ -851,7 +882,10 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <?php foreach ($transportation_data as $index => $trans): ?>
                                 <tr>
                                     <td><?php echo $index + 1; ?></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="transportation[<?php echo $index; ?>][supplier]" value="<?php echo htmlspecialchars($trans['supplier'] ?? ''); ?>" placeholder="Supplier Name"></td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="transportation[<?php echo $index; ?>][supplier]" value="<?php echo htmlspecialchars($trans['supplier'] ?? ''); ?>" placeholder="Supplier Name">
+                                        <input type="hidden" name="transportation[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
+                                    </td>
                                     <td>
                                         <select class="form-control form-control-sm" name="transportation[<?php echo $index; ?>][car_type]">
                                             <option value="">Select Car Type</option>
@@ -876,7 +910,10 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             <?php else: ?>
                                 <tr>
                                     <td>1</td>
-                                    <td><input type="text" class="form-control form-control-sm" name="transportation[0][supplier]" placeholder="Supplier Name"></td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="transportation[0][supplier]" placeholder="Supplier Name">
+                                        <input type="hidden" name="transportation[0][idx]" value="0">
+                                    </td>
                                     <td>
                                         <select class="form-control form-control-sm" name="transportation[0][car_type]">
                                             <option value="">Select Car Type</option>
@@ -935,7 +972,10 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <?php foreach ($cruise_data as $index => $cruise): ?>
                                 <tr>
                                     <td><?php echo $index + 1; ?></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="cruise[<?php echo $index; ?>][supplier]" value="<?php echo htmlspecialchars($cruise['supplier'] ?? ''); ?>" placeholder="Supplier Name"></td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="cruise[<?php echo $index; ?>][supplier]" value="<?php echo htmlspecialchars($cruise['supplier'] ?? ''); ?>" placeholder="Supplier Name">
+                                        <input type="hidden" name="cruise[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
+                                    </td>
                                     <td>
                                         <select class="form-control form-control-sm" name="cruise[<?php echo $index; ?>][boat_type]">
                                             <option value="">Select Boat Type</option>
@@ -962,7 +1002,10 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             <?php else: ?>
                                 <tr>
                                     <td>1</td>
-                                    <td><input type="text" class="form-control form-control-sm" name="cruise[0][supplier]" placeholder="Supplier Name"></td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="cruise[0][supplier]" placeholder="Supplier Name">
+                                        <input type="hidden" name="cruise[0][idx]" value="0">
+                                    </td>
                                     <td>
                                         <select class="form-control form-control-sm" name="cruise[0][boat_type]">
                                             <option value="">Select Boat Type</option>
@@ -1034,6 +1077,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                                 <option value="<?php echo htmlspecialchars($dest['name']); ?>" <?php echo ($package['destination'] == $dest['name']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($dest['name']); ?></option>
                                             <?php endwhile; ?>
                                         </select>
+                                        <input type="hidden" name="agent_package[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
                                     </td>
                                     <td><input type="text" class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][agent_supplier]" value="<?php echo htmlspecialchars($package['agent_supplier'] ?? ''); ?>" placeholder="Agent/Supplier" style="width: 120px;"></td>
                                     <td><input type="date" class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][start_date]" value="<?php echo $package['start_date'] ?? ''; ?>"></td>
@@ -1056,6 +1100,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                                 <option value="<?php echo htmlspecialchars($dest['name']); ?>"><?php echo htmlspecialchars($dest['name']); ?></option>
                                             <?php endwhile; ?>
                                         </select>
+                                        <input type="hidden" name="agent_package[0][idx]" value="0">
                                     </td>
                                     <td><input type="text" class="form-control form-control-sm" name="agent_package[0][agent_supplier]" placeholder="Agent/Supplier" style="width: 120px;"></td>
                                     <td><input type="date" class="form-control form-control-sm" name="agent_package[0][start_date]" value="<?php echo $cost_data['travel_start_date'] ?? ''; ?>"></td>
@@ -1082,80 +1127,79 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
             
             <div id="medical-tourism-section" class="services-section" style="display: <?php echo in_array('medical_tourism', $selected_services) ? 'block' : 'none'; ?>;">
                 <h5>
-                    <i class="icon-copy fa fa-briefcase"></i> AGENT PACKAGE SERVICE
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addAgentPackageRow()"><i class="fa fa-plus"></i> Add Package</button>
+                    <i class="icon-copy fa fa-hospital-o"></i> MEDICAL TOURISM
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addMedicalTourismRow()"><i class="fa fa-plus"></i> Add Package</button>
                 </h5>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>DESTINATION</th>
-                                <th>AGENT/SUPPLIER</th>
-                                <th>START DATE</th>
-                                <th>END DATE</th>
-                                <th>ADULTS</th>
-                                <th>PRICE/ADULT</th>
-                                <th>CHILDREN</th>
-                                <th>PRICE/CHILD</th>
-                                <th>INFANTS</th>
-                                <th>PRICE/INFANT</th>
+                                <th>PLACE</th>
+                                <th>TREATMENT DATE</th>
+                                <th>HOSPITAL NAME</th>
+                                <th>TREATMENT TYPE</th>
+                                <th>OP/IP</th>
+                                <th>NET</th>
+                                <th>TDS</th>
+                                <th>OTHER EXPENSES</th>
+                                <th>GST</th>                                
                                 <th>TOTAL</th>
                             </tr>
                         </thead>
-                        <tbody id="agent-package-tbody">
+                        <tbody id="medical-tourism-tbody">
                             <?php 
-                            $agent_package_data = json_decode($cost_data['agent_package_data'] ?? '[]', true);
-                            if (!empty($agent_package_data) && is_array($agent_package_data)): 
+                            $medical_tourism_data = json_decode($cost_data['$medical_tourism_data'] ?? '[]', true);
+                            if (!empty($medical_tourism_data) && is_array($medical_tourism_data)): 
                             ?>
-                                <?php foreach ($agent_package_data as $index => $package): ?>
+                                <?php foreach ($medical_tourism_data as $index => $package): ?>
                                 <tr>
                                     <td>
-                                        <select class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][destination]">
-                                            <option value="">Select Destination</option>
-                                            <?php mysqli_data_seek($destinations, 0); while($dest = mysqli_fetch_assoc($destinations)): ?>
-                                                <option value="<?php echo htmlspecialchars($dest['name']); ?>" <?php echo ($package['destination'] == $dest['name']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($dest['name']); ?></option>
-                                            <?php endwhile; ?>
+                                        <input type="text" class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][place]" value="<?php echo htmlspecialchars($package['place'] ?? ''); ?>" placeholder="Place" style="width: 120px;">
+                                        <input type="hidden" name="medical_tourisms[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
+                                    </td>
+                                    <td><input type="date" class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][treatment_date]" value="<?php echo $package['treatment_date'] ?? ''; ?>"></td>
+                                    <td><input type="text" class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][hospital]" value="<?php echo htmlspecialchars($package['hospital'] ?? ''); ?>" placeholder="Hospital" style="width: 120px;"></td>
+                                    <td>
+                                        <select class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][treatment_type]">
+                                           <option value="">Select type</option>
+                                           <option value="Type 1" >Type 1</option>
                                         </select>
                                     </td>
-                                    <td><input type="text" class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][agent_supplier]" value="<?php echo htmlspecialchars($package['agent_supplier'] ?? ''); ?>" placeholder="Agent/Supplier" style="width: 120px;"></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][start_date]" value="<?php echo $package['start_date'] ?? ''; ?>"></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][end_date]" value="<?php echo $package['end_date'] ?? ''; ?>"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-adult-count" name="agent_package[<?php echo $index; ?>][adult_count]" data-row="<?php echo $index; ?>" value="<?php echo $package['adult_count'] ?? $cost_data['adults_count'] ?? 0; ?>" style="width: 70px;" onchange="calculateAgentPackageTotal(<?php echo $index; ?>)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-adult-price" name="agent_package[<?php echo $index; ?>][adult_price]" data-row="<?php echo $index; ?>" value="<?php echo $package['adult_price'] ?? 0; ?>" style="width: 100px;" onchange="calculateAgentPackageTotal(<?php echo $index; ?>)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-child-count" name="agent_package[<?php echo $index; ?>][child_count]" data-row="<?php echo $index; ?>" value="<?php echo $package['child_count'] ?? $cost_data['children_count'] ?? 0; ?>" style="width: 70px;" onchange="calculateAgentPackageTotal(<?php echo $index; ?>)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-child-price" name="agent_package[<?php echo $index; ?>][child_price]" data-row="<?php echo $index; ?>" value="<?php echo $package['child_price'] ?? 0; ?>" style="width: 100px;" onchange="calculateAgentPackageTotal(<?php echo $index; ?>)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-infant-count" name="agent_package[<?php echo $index; ?>][infant_count]" data-row="<?php echo $index; ?>" value="<?php echo $package['infant_count'] ?? $cost_data['infants_count'] ?? 0; ?>" style="width: 70px;" onchange="calculateAgentPackageTotal(<?php echo $index; ?>)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-infant-price" name="agent_package[<?php echo $index; ?>][infant_price]" data-row="<?php echo $index; ?>" value="<?php echo $package['infant_price'] ?? 0; ?>" style="width: 100px;" onchange="calculateAgentPackageTotal(<?php echo $index; ?>)"></td>
-                                    <td><input type="text" class="form-control form-control-sm agent-package-total" name="agent_package[<?php echo $index; ?>][total]" data-row="<?php echo $index; ?>" value="<?php echo $package['total'] ?? '0.00'; ?>" readonly style="background: #f0f8ff; font-weight: bold; width: 120px;"></td>
+                                    <td><input type="text" class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][op_ip]" value="<?php echo $package['op_ip'] ?? ""; ?>" style="width: 70px;"></td>
+                                    <td><input type="number" class="form-control form-control-sm medical-tourism-net" name="medical_tourisms[<?php echo $index; ?>][net]" data-row="<?php echo $index; ?>" value="<?php echo $package['net'] ?? 0; ?>" style="width: 100px;" onchange="calculateMedicalTourismTotal(<?php echo $index; ?>)"></td>
+                                    <td><input type="number" class="form-control form-control-sm medical-tourism-tds" name="medical_tourisms[<?php echo $index; ?>][tds]" data-row="<?php echo $index; ?>" value="<?php echo $package['tds'] ?? 0; ?>" style="width: 70px;" onchange="calculateMedicalTourismTotal(<?php echo $index; ?>)"></td>
+                                    <td><input type="number" class="form-control form-control-sm medical-tourism-other_expenses" name="medical_tourisms[<?php echo $index; ?>][other_expenses]" data-row="<?php echo $index; ?>" value="<?php echo $package['other_expenses'] ?? 0; ?>" style="width: 100px;" onchange="calculateMedicalTourismTotal(<?php echo $index; ?>)"></td>
+                                    <td>18%</td>
+                                    <td><input type="text" class="form-control form-control-sm medical-tourism-total" name="medical_tourisms[<?php echo $index; ?>][total]" data-row="<?php echo $index; ?>" value="<?php echo $package['total'] ?? '0.00'; ?>" readonly style="background: #f0f8ff; font-weight: bold; width: 120px;"></td>
                                 </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
                                     <td>
-                                        <select class="form-control form-control-sm" name="agent_package[0][destination]">
-                                            <option value="">Select Destination</option>
-                                            <?php mysqli_data_seek($destinations, 0); while($dest = mysqli_fetch_assoc($destinations)): ?>
-                                                <option value="<?php echo htmlspecialchars($dest['name']); ?>"><?php echo htmlspecialchars($dest['name']); ?></option>
-                                            <?php endwhile; ?>
+                                        <input type="text" class="form-control form-control-sm" name="medical_tourisms[0][place]" placeholder="Place" style="width: 120px;">
+                                        <input type="hidden" name="medical_tourisms[0][idx]" value="0">
+                                    </td>
+                                    <td><input type="date" class="form-control form-control-sm" name="medical_tourisms[0][treatment_date]" value="<?php echo $cost_data['treatment_date'] ?? ''; ?>"></td>
+                                    <td><input type="text" class="form-control form-control-sm" name="medical_tourisms[0][hospital]" placeholder="Hospital Name" style="width: 120px;"></td>
+                                    <td>
+                                        <select class="form-control form-control-sm" name="medical_tourisms[0][treatment_type]">
+                                           <option value="">Select type</option>
+                                           <option value="Type 1" >Type 1</option>
                                         </select>
                                     </td>
-                                    <td><input type="text" class="form-control form-control-sm" name="agent_package[0][agent_supplier]" placeholder="Agent/Supplier" style="width: 120px;"></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="agent_package[0][start_date]" value="<?php echo $cost_data['travel_start_date'] ?? ''; ?>"></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="agent_package[0][end_date]" value="<?php echo $cost_data['travel_end_date'] ?? ''; ?>"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-adult-count" name="agent_package[0][adult_count]" data-row="0" value="<?php echo $cost_data['adults_count'] ?? 0; ?>" style="width: 70px;" onchange="calculateAgentPackageTotal(0)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-adult-price" name="agent_package[0][adult_price]" data-row="0" value="0" style="width: 100px;" onchange="calculateAgentPackageTotal(0)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-child-count" name="agent_package[0][child_count]" data-row="0" value="<?php echo $cost_data['children_count'] ?? 0; ?>" style="width: 70px;" onchange="calculateAgentPackageTotal(0)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-child-price" name="agent_package[0][child_price]" data-row="0" value="0" style="width: 100px;" onchange="calculateAgentPackageTotal(0)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-infant-count" name="agent_package[0][infant_count]" data-row="0" value="<?php echo $cost_data['infants_count'] ?? 0; ?>" style="width: 70px;" onchange="calculateAgentPackageTotal(0)"></td>
-                                    <td><input type="number" class="form-control form-control-sm agent-infant-price" name="agent_package[0][infant_price]" data-row="0" value="0" style="width: 100px;" onchange="calculateAgentPackageTotal(0)"></td>
-                                    <td><input type="text" class="form-control form-control-sm agent-package-total" name="agent_package[0][total]" data-row="0" readonly style="background: #f0f8ff; font-weight: bold; width: 120px;"></td>
+                                    <td><input type="text" class="form-control form-control-sm" name="medical_tourisms[0][op_ip]" value="" style="width: 70px;"></td>
+                                    <td><input type="number" class="form-control form-control-sm medical-tourism-net" name="medical_tourisms[0][net]" data-row="0" value="0" style="width: 100px;" onchange="calculateMedicalTourismTotal(0)"></td>
+                                    <td><input type="number" class="form-control form-control-sm medical-tourism-tds" name="medical_tourisms[0][tds]" data-row="0" value="0" style="width: 70px;" onchange="calculateMedicalTourismTotal(0)"></td>
+                                    <td><input type="number" class="form-control form-control-sm medical-tourism-other_expenses" name="medical_tourisms[0][other_expenses]" data-row="0" value="0" style="width: 100px;" onchange="calculateMedicalTourismTotal(0)"></td>
+                                    <td>18%</td>
+                                    <td><input type="text" class="form-control form-control-sm medical-tourism-total" name="medical_tourisms[0][total]" data-row="0" readonly style="background: #f0f8ff; font-weight: bold; width: 120px;"></td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="10" class="text-right"><strong>TOTAL AGENT PACKAGE COST:</strong></td>
-                                <td><input type="text" class="form-control form-control-sm" id="agent-package-grand-total" readonly style="background: #e8f5e8; font-weight: bold;"></td>
+                                <td colspan="9" class="text-right"><strong>TOTAL AGENT PACKAGE COST:</strong></td>
+                                <td><input type="text" class="form-control form-control-sm" id="medical-tourism-grand-total" readonly style="background: #e8f5e8; font-weight: bold;"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -1183,7 +1227,10 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             <?php if (!empty($extras_data) && is_array($extras_data)): ?>
                                 <?php foreach ($extras_data as $index => $extra): ?>
                                 <tr>
-                                    <td><input type="text" class="form-control form-control-sm" name="extras[<?php echo $index; ?>][supplier]" value="<?php echo htmlspecialchars($extra['supplier'] ?? ''); ?>" placeholder="Supplier Name"></td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="extras[<?php echo $index; ?>][supplier]" value="<?php echo htmlspecialchars($extra['supplier'] ?? ''); ?>" placeholder="Supplier Name">
+                                        <input type="hidden" name="extras[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
+                                    </td>
                                     <td><input type="text" class="form-control form-control-sm" name="extras[<?php echo $index; ?>][service_type]" value="<?php echo htmlspecialchars($extra['service_type'] ?? ''); ?>" placeholder="Type of Service"></td>
                                     <td><input type="number" class="form-control form-control-sm extras-amount" name="extras[<?php echo $index; ?>][amount]" data-row="<?php echo $index; ?>" value="<?php echo $extra['amount'] ?? '0'; ?>" onchange="calculateExtrasTotal(<?php echo $index; ?>)" placeholder="0"></td>
                                     <td><input type="number" class="form-control form-control-sm extras-extra" name="extras[<?php echo $index; ?>][extras]" data-row="<?php echo $index; ?>" value="<?php echo $extra['extras'] ?? '0'; ?>" onchange="calculateExtrasTotal(<?php echo $index; ?>)" placeholder="0"></td>
@@ -1192,7 +1239,10 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td><input type="text" class="form-control form-control-sm" name="extras[0][supplier]" placeholder="Supplier Name"></td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="extras[0][supplier]" placeholder="Supplier Name">
+                                        <input type="hidden" name="extras[0][idx]" value="0">
+                                    </td>
                                     <td><input type="text" class="form-control form-control-sm" name="extras[0][service_type]" placeholder="Type of Service"></td>
                                     <td><input type="number" class="form-control form-control-sm extras-amount" name="extras[0][amount]" data-row="0" value="0" onchange="calculateExtrasTotal(0)" placeholder="0"></td>
                                     <td><input type="number" class="form-control form-control-sm extras-extra" name="extras[0][extras]" data-row="0" value="0" onchange="calculateExtrasTotal(0)" placeholder="0"></td>
@@ -1305,6 +1355,11 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                 <button type="submit" class="btn-modern">
                     <i class="fas fa-save"></i> Update Cost File
                 </button>
+                <div class="btn-modern"
+                    onclick="return confirmCostSheet(event)"
+                >
+                    <i class="fas fa-save"></i> Confirm Cost File
+                </div>
                 <a href="view_cost_sheets.php" class="btn-modern btn-secondary-modern">
                     <i class="fas fa-arrow-left"></i> Back to Cost Files
                 </a>
@@ -1320,6 +1375,23 @@ function confirmNewVersion(event) {
     event.preventDefault();
     if (confirm("Do you want to create the new version?")) {
         document.getElementById('cost-file-form').submit();
+        return true;
+    } else {
+        return false;
+    }
+}
+function confirmCostSheet(event) {
+    event.preventDefault();
+    if (confirm("Do you want to confirm this version?")) {
+
+        // add a text input and set name as confirm and value as 1, at last append to the below form
+        const confirmInput = document.createElement('input');
+        confirmInput.type = 'number';
+        confirmInput.name = 'confirmed';
+        confirmInput.value = '1';
+        document.getElementById('cost-file-form').appendChild(confirmInput);
+        
+        document.getElementById('cost-file-form').submit();        
         return true;
     } else {
         return false;
@@ -1606,6 +1678,30 @@ function calculateAgentPackageTotal(row) {
     calculateAgentPackageGrandTotal();
 }
 
+function calculateMedicalTourismTotal(row) {
+
+    const netValue = parseFloat(document.querySelector(`.medical-tourism-net[data-row="${row}"]`).value) || 0;
+    const tdsValue = parseFloat(document.querySelector(`.medical-tourism-tds[data-row="${row}"]`).value) || 0;
+    const otherExpenses = parseFloat(document.querySelector(`.medical-tourism-other_expenses[data-row="${row}"]`).value) || 0;
+    const GST = 18
+    
+   
+    let total_expenses = netValue + tdsValue + otherExpenses
+    let total_tax = total_expenses * GST / 100
+    let total = total_expenses + total_tax
+    
+    document.querySelector(`.medical-tourism-total[data-row="${row}"]`).value = total.toFixed(2);
+    calculateMedicalTourismGrandTotal();
+}
+
+function calculateMedicalTourismGrandTotal() {
+    let grandTotal = 0;
+    document.querySelectorAll('.medical-tourism-total').forEach(input => {
+        grandTotal += parseFloat(input.value) || 0;
+    });
+    document.getElementById('medical-tourism-grand-total').value = grandTotal.toFixed(2);
+}
+
 function calculateAgentPackageGrandTotal() {
     let grandTotal = 0;
     document.querySelectorAll('.agent-package-total').forEach(input => {
@@ -1649,6 +1745,37 @@ function addAgentPackageRow() {
         <td><input type="number" class="form-control form-control-sm agent-infant-count" name="agent_package[${newIndex}][infant_count]" data-row="${newIndex}" value="${infantsCount}" style="width: 70px;" onchange="calculateAgentPackageTotal(${newIndex})"></td>
         <td><input type="number" class="form-control form-control-sm agent-infant-price" name="agent_package[${newIndex}][infant_price]" data-row="${newIndex}" value="0" style="width: 100px;" onchange="calculateAgentPackageTotal(${newIndex})"></td>
         <td><input type="text" class="form-control form-control-sm agent-package-total" name="agent_package[${newIndex}][total]" data-row="${newIndex}" readonly style="background: #f0f8ff; font-weight: bold; width: 120px;"></td>
+    `;
+    
+    tbody.appendChild(newRow);
+}
+
+function addMedicalTourismRow() {
+    const tbody = document.getElementById('medical-tourism-tbody');
+    const rows = tbody.querySelectorAll('tr');
+    const newIndex = rows.length;
+    
+    const newRow = document.createElement('tr');
+    
+    newRow.innerHTML = `
+        <td>
+            <input type="text" class="form-control form-control-sm" name="medical_tourisms[${newIndex}][place]" placeholder="Place" style="width: 120px;">
+            <input type="hidden" name="medical_tourisms[${newIndex}][idx]" value="${newIndex}">
+        </td>
+        <td><input type="date" class="form-control form-control-sm" name="medical_tourisms[${newIndex}][treatment_date]" value=""></td>
+        <td><input type="text" class="form-control form-control-sm" name="medical_tourisms[${newIndex}][hospital]" placeholder="Hospital" style="width: 120px;"></td>
+        <td>
+            <select class="form-control form-control-sm" name="medical_tourisms[${newIndex}][treatment_type]">
+               <option value="">Select type</option>
+               <option value="Type 1" >Type 1</option>
+            </select>
+        </td>
+        <td><input type="text" class="form-control form-control-sm" name="medical_tourisms[${newIndex}][op_ip]" value="" style="width: 70px;"></td>
+        <td><input type="number" class="form-control form-control-sm medical-tourism-net" name="medical_tourisms[${newIndex}][net]" data-row="${newIndex}" value="0" style="width: 100px;" onchange="calculateMedicalTourismTotal(${newIndex})"></td>
+        <td><input type="number" class="form-control form-control-sm medical-tourism-tds" name="medical_tourisms[${newIndex}][tds]" data-row="${newIndex}" value="0" style="width: 70px;" onchange="calculateMedicalTourismTotal(${newIndex})"></td>
+        <td><input type="number" class="form-control form-control-sm medical-tourism-other_expenses" name="medical_tourisms[${newIndex}][other_expenses]" data-row="${newIndex}" value="0" style="width: 100px;" onchange="calculateMedicalTourismTotal(${newIndex})"></td>
+        <td>18%</td>
+        <td><input type="text" class="form-control form-control-sm medical-tourism-total" name="medical_tourisms[${newIndex}][total]" data-row="${newIndex}" readonly style="background: #f0f8ff; font-weight: bold; width: 120px;"></td>
     `;
     
     tbody.appendChild(newRow);

@@ -15,7 +15,47 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
 }
 
 // Fetch visa & ticket bookings
-$sql = "SELECT * FROM visa_ticket_booking ORDER BY created_at DESC";
+$sql = "SELECT 
+    t.id,
+    t.enquiry_id,
+    t.cost_sheet_number,
+    t.guest_name,
+    t.guest_address,
+    t.whatsapp_number,
+    t.tour_package,
+    t.currency,
+    t.nationality,
+    t.booking_status,
+    t.status,
+    t.created_at,
+    
+    acc.idx,
+    acc.sector,
+    acc.supplier,
+    acc.travel_date,
+    acc.passengers,
+    acc.rate_per_person,
+    acc.roe,
+    
+    acc.availability,
+    acc.total
+FROM tour_costings t
+JOIN JSON_TABLE(
+    t.visa_data,
+    '$[*]' COLUMNS (
+        idx VARCHAR(255) PATH '$.idx',
+        sector VARCHAR(255) PATH '$.sector',
+        supplier VARCHAR(255) PATH '$.supplier',
+        travel_date DATE PATH '$.travel_date',
+        passengers INT PATH '$.passengers',
+        rate_per_person DECIMAL(10,2) PATH '$.rate_per_person',
+        roe INT PATH '$.roe',
+        availability VARCHAR(255) PATH '$.availability',
+        total DECIMAL(10,2) PATH '$.total'
+    )
+) AS acc
+WHERE JSON_CONTAINS(t.selected_services, '[\"visa_flight\"]')
+ORDER BY t.created_at DESC;";
 $result = mysqli_query($conn, $sql);
 ?>
 
@@ -37,19 +77,18 @@ $result = mysqli_query($conn, $sql);
             <table class="data-table table stripe hover" style="width: 100%; min-width: 1500px;">
                 <thead>
                     <tr>
-                        <th style="min-width: 60px;">SL NO</th>
-                        <th style="min-width: 120px;">Cost Sheet Number</th>
-                        <th style="min-width: 100px;">Booking Date</th>
-                        <th style="min-width: 100px;">Checkin Date</th>
-                        <th style="min-width: 100px;">Check Out Date</th>
-                        <th style="min-width: 120px;">Destination</th>
-                        <th style="min-width: 100px;">Agent Type</th>
-                        <th style="min-width: 150px;">Supplier</th>
-                        <th style="min-width: 150px;">Name of Supplier</th>
-                        <th style="min-width: 120px;">Contact Number</th>
-                        <th style="min-width: 120px;">Availability Status</th>
-                        <th style="min-width: 120px;">Booking Status</th>
-                        <th style="min-width: 100px;">Actions</th>
+                        <th>SL NO</th>
+                        <th>Cost Sheet Number</th>
+                        <th>Travel Date</th>
+                        <th>Sector</th>
+                        <th>Supplier</th>
+                        <th>No. of Passengers</th>
+                        <th>Rate/Passenger</th>
+                        <th>ROE</th>
+                        <th>Total</th>
+                        <th>Availability Status</th>
+                        <th>Booking Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
             <tbody>
@@ -61,22 +100,28 @@ $result = mysqli_query($conn, $sql);
                 <tr>
                     <td><?php echo $sl_no++; ?></td>
                     <td><?php echo htmlspecialchars($row['cost_sheet_number'] ?? ''); ?></td>
-                    <td><?php echo $row['booking_date'] ? date('d-m-Y', strtotime($row['booking_date'])) : ''; ?></td>
-                    <td><?php echo $row['checkin_date'] ? date('d-m-Y', strtotime($row['checkin_date'])) : ''; ?></td>
-                    <td><?php echo $row['checkout_date'] ? date('d-m-Y', strtotime($row['checkout_date'])) : ''; ?></td>
-                    <td><?php echo htmlspecialchars($row['destination']); ?></td>
-                    <td>
-                        <span class="badge <?php echo ($row['agent_type'] ?? 'Domestic') == 'Domestic' ? 'badge-info' : 'badge-primary'; ?>">
-                            <?php echo $row['agent_type'] ?? 'Domestic'; ?>
-                        </span>
-                    </td>
+                    <td><?php echo $row['travel_date'] ? date('d-m-Y', strtotime($row['travel_date'])) : ''; ?></td>
+                    <td><?php echo htmlspecialchars($row['sector']); ?></td>
                     <td><?php echo htmlspecialchars($row['supplier']); ?></td>
-                    <td><?php echo htmlspecialchars($row['supplier_name']); ?></td>
-                    <td><?php echo htmlspecialchars($row['contact_number']); ?></td>
+                    <td><?php echo htmlspecialchars($row['passengers']); ?></td>
+                    <td>₹<?php echo number_format($row['rate_per_person'], 2); ?></td>
+                    <td>₹<?php echo number_format($row['roe'], 2); ?></td>
+                    <td>₹<?php echo number_format($row['total'], 2); ?></td>
                     <td>
-                        <span class="badge <?php echo ($row['availability_status'] ?? 'Available') == 'Available' ? 'badge-success' : 'badge-warning'; ?>">
-                            <?php echo $row['availability_status'] ?? 'Available'; ?>
-                        </span>
+                         <div style="display: flex; align-items: center; gap: 10px;">
+                            <select class="custom-select status-select" data-id="<?php echo $row['id']; ?>" data-original="<?php echo $row['availability']; ?>" style="min-width: 120px;">
+                                <option hidden value="" <?php echo ($row['availability'] == "") ? 'selected' : ''; ?>>
+                                    Choose
+                                </option>
+                                <option value="Available" <?php echo ($row['availability'] == "Available") ? 'selected' : ''; ?>>
+                                    Available
+                                </option>
+                                <option value="Not Available" <?php echo ($row['availability'] == "Not Available") ? 'selected' : ''; ?>>
+                                    Not Available
+                                </option>
+                            </select>
+                            <button type="button" onclick="updateAvailability(<?php echo $row['id']; ?>, 0, this)" style="background: none; border: none; color: green; font-size: 18px; cursor: pointer;">✓</button>
+                        </div>
                     </td>
                     <td>
                         <span class="badge <?php 
@@ -120,6 +165,71 @@ $result = mysqli_query($conn, $sql);
 <script src="assets/deskapp/src/plugins/datatables/js/dataTables.responsive.min.js"></script>
 <script src="assets/deskapp/src/plugins/datatables/js/responsive.bootstrap4.min.js"></script>
 <script>
+
+    function updateAvailability(id, idx, button) {
+    console.log('updateAvailability called with ID:', id);
+    
+    // Find the select element in the same row as the button
+    var row = button.closest('tr');
+    var statusSelect = row.querySelector('.status-select');
+    
+    if (!statusSelect) {
+        console.error('Status select not found for ID:', id);
+        return;
+    }
+    
+    var selectedStatus = statusSelect.value;
+    var originalStatus = statusSelect.getAttribute('data-original');
+    
+    console.log('Selected status:', selectedStatus);
+    console.log('Original status:', originalStatus);
+    
+    if(selectedStatus && selectedStatus !== originalStatus) {
+        // Create and submit form immediately
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'update_service_availability.php';
+        
+        var idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'id';
+        idInput.value = id;
+        
+        
+        var availabilityInput = document.createElement('input');
+        availabilityInput.type = 'hidden';
+        availabilityInput.name = 'availability';
+        availabilityInput.value = selectedStatus;
+        
+        var hotelIdInput = document.createElement('input');
+        hotelIdInput.type = 'hidden';
+        hotelIdInput.name = 'idx';
+        hotelIdInput.value = idx;
+        
+        var serviceInput = document.createElement('input');
+        serviceInput.type = 'hidden';
+        serviceInput.name = 'service';
+        serviceInput.value = "visa_data";
+        
+        var callbackInput = document.createElement('input');
+        callbackInput.type = 'hidden';
+        callbackInput.name = 'callback';
+        callbackInput.value = "visa_ticket_booking";
+        
+        form.appendChild(idInput);
+        form.appendChild(availabilityInput);
+        form.appendChild(hotelIdInput);
+        form.appendChild(serviceInput);
+        form.appendChild(callbackInput);
+        document.body.appendChild(form);
+        
+        form.submit();
+    } else if(selectedStatus === originalStatus) {
+        console.log('Availability unchanged, no update needed');
+    } else {
+        console.error('No status selected');
+    }
+}
     $('.data-table').DataTable({
         scrollCollapse: true,
         autoWidth: false,

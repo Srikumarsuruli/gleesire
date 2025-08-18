@@ -15,7 +15,49 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
 }
 
 // Fetch hotel cruise details
-$sql = "SELECT * FROM hotel_cruise_details ORDER BY created_at DESC";
+$sql = "SELECT 
+    t.id,
+    t.enquiry_id,
+    t.cost_sheet_number,
+    t.guest_name,
+    t.guest_address,
+    t.whatsapp_number,
+    t.tour_package,
+    t.currency,
+    t.nationality,
+    t.booking_status,
+    t.status,
+    t.created_at,
+    
+    acc.idx,
+    acc.supplier,
+    acc.boat_type,
+    acc.check_in,
+    acc.check_out,
+    acc.cruise_type,
+    acc.rate,
+    acc.extra,
+    acc.availability,
+    acc.total
+FROM tour_costings t
+JOIN JSON_TABLE(
+    t.cruise_data,
+    '$[*]' COLUMNS (
+        idx VARCHAR(255) PATH '$.idx',
+        supplier VARCHAR(255) PATH '$.supplier',
+        boat_type VARCHAR(255) PATH '$.boat_type',
+        check_in DATE PATH '$.check_in',
+        check_out DATE PATH '$.check_out',
+        cruise_type VARCHAR(255) PATH '$.cruise_type',
+        rate DECIMAL(10,2) PATH '$.rate',
+        extra INT PATH '$.extra',
+        availability VARCHAR(255) PATH '$.availability',
+        total DECIMAL(10,2) PATH '$.total'
+    )
+) AS acc
+WHERE JSON_CONTAINS(t.selected_services, '[\"cruise_hire\"]')
+ORDER BY t.created_at DESC;";
+
 $result = mysqli_query($conn, $sql);
 ?>
 
@@ -37,22 +79,20 @@ $result = mysqli_query($conn, $sql);
             <table class="data-table table stripe hover" style="width: 100%; min-width: 1800px;">
                 <thead>
                     <tr>
-                        <th style="min-width: 60px;">SL NO</th>
-                        <th style="min-width: 120px;">Cost Sheet Number</th>
-                        <th style="min-width: 100px;">Booking Date</th>
-                        <th style="min-width: 100px;">Checkin Date</th>
-                        <th style="min-width: 100px;">Check Out Date</th>
-                        <th style="min-width: 120px;">Destination</th>
-                        <th style="min-width: 200px;">Cruise Details</th>
-                        <th style="min-width: 120px;">Name</th>
-                        <th style="min-width: 120px;">Contact Number</th>
-                        <th style="min-width: 100px;">Department</th>
-                        <th style="min-width: 100px;">Adult Price</th>
-                        <th style="min-width: 100px;">Kids Price</th>
-                        <th style="min-width: 120px;">Kids Price Available</th>
-                        <th style="min-width: 140px;">Cancelation Availability</th>
-                        <th style="min-width: 120px;">Booking Status</th>
-                        <th style="min-width: 100px;">Actions</th>
+                        <th>SL NO</th>
+                        <th>Cost Sheet Number</th>
+                        <th>Booking Date</th>
+                        <th>Checkin Date</th>
+                        <th>Check Out Date</th>
+                        <th>SUPPLIER</th>
+                        <th>BOAT TYPE</th>
+                        <th>CRUISE TYPE</th>
+                        <th>RATE</th>
+                        <th>EXTRA</th>
+                        <th>TOTAL</th>
+                        <th>Cancelation Availability</th>
+                        <th>Booking Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
             <tbody>
@@ -64,34 +104,37 @@ $result = mysqli_query($conn, $sql);
                 <tr>
                     <td><?php echo $sl_no++; ?></td>
                     <td><?php echo htmlspecialchars($row['cost_sheet_number'] ?? ''); ?></td>
-                    <td><?php echo $row['booking_date'] ? date('d-m-Y', strtotime($row['booking_date'])) : ''; ?></td>
-                    <td><?php echo $row['checkin_date'] ? date('d-m-Y', strtotime($row['checkin_date'])) : ''; ?></td>
-                    <td><?php echo $row['checkout_date'] ? date('d-m-Y', strtotime($row['checkout_date'])) : ''; ?></td>
-                    <td><?php echo htmlspecialchars($row['destination']); ?></td>
-                    <td><?php echo htmlspecialchars($row['cruise_details']); ?></td>
-                    <td><?php echo htmlspecialchars($row['name']); ?></td>
-                    <td><?php echo htmlspecialchars($row['contact_number']); ?></td>
-                    <td><?php echo htmlspecialchars($row['department']); ?></td>
-                    <td>₹<?php echo number_format($row['adult_price'], 2); ?></td>
-                    <td>₹<?php echo number_format($row['kids_price'], 2); ?></td>
-                    <td>
-                        <span class="badge <?php echo ($row['kids_price_available'] ?? 'Available') == 'Available' ? 'badge-success' : 'badge-warning'; ?>">
-                            <?php echo $row['kids_price_available'] ?? 'Available'; ?>
-                        </span>
+                    <td><?php echo $row['created_at'] ? date('d-m-Y', strtotime($row['created_at'])) : ''; ?></td>
+                    <td><?php echo $row['check_in'] ? date('d-m-Y', strtotime($row['check_in'])) : ''; ?></td>
+                    <td><?php echo $row['check_out'] ? date('d-m-Y', strtotime($row['check_out'])) : ''; ?></td>
+                    <td><?php echo htmlspecialchars($row['supplier']); ?></td>
+                    <td><?php echo htmlspecialchars($row['boat_type']); ?></td>
+                    <td><?php echo htmlspecialchars($row['cruise_type']); ?></td>
+                    <td><?php echo htmlspecialchars($row['rate']); ?></td>
+                    <td><?php echo htmlspecialchars($row['extra']); ?></td>
+                    <td><?php echo htmlspecialchars($row['total']); ?></td>
+                     <td>
+                         <div style="display: flex; align-items: center; gap: 10px;">
+                            <select class="custom-select status-select" data-id="<?php echo $row['id']; ?>" data-original="<?php echo $row['availability']; ?>" style="min-width: 120px;">
+                                <option hidden value="" <?php echo ($row['availability'] == "") ? 'selected' : ''; ?>>
+                                    Choose
+                                </option>
+                                <option value="Available" <?php echo ($row['availability'] == "Available") ? 'selected' : ''; ?>>
+                                    Available
+                                </option>
+                                <option value="Not Available" <?php echo ($row['availability'] == "Not Available") ? 'selected' : ''; ?>>
+                                    Not Available
+                                </option>
+                            </select>
+                            <button type="button" onclick="updateAvailability(<?php echo $row['id']; ?>, <?php echo $row['idx']; ?>, this)" style="background: none; border: none; color: green; font-size: 18px; cursor: pointer;">✓</button>
+                        </div>
                     </td>
-                    <td>
-                        <span class="badge <?php echo ($row['cancelation_availability'] ?? 'Available') == 'Available' ? 'badge-success' : 'badge-warning'; ?>">
-                            <?php echo $row['cancelation_availability'] ?? 'Available'; ?>
-                        </span>
-                    </td>
-                    <td>
-                        <span class="badge <?php 
-                            $status = $row['booking_status'] ?? 'Booking Confirmed';
-                            echo $status == 'Booking Confirmed' ? 'badge-success' : ($status == 'Amendment' ? 'badge-warning' : 'badge-danger'); 
-                        ?>">
-                            <?php echo $status; ?>
-                        </span>
-                    </td>
+                        <td>
+                            <span class="badge <?php echo $row['booking_status'] == 'Booking Confirmed' ? 'badge-success' : ($row['booking_status'] == 'Amendment' ? 'badge-info' : 'badge-danger'); ?>">
+                                <?php echo $row['booking_status']; ?>
+                            </span>
+                        </td>
+                    
                     <td>
                         <a href="edit_hotel_cruise_detail.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-primary">
                             <i class="fa fa-edit"></i>
@@ -126,6 +169,71 @@ $result = mysqli_query($conn, $sql);
 <script src="assets/deskapp/src/plugins/datatables/js/dataTables.responsive.min.js"></script>
 <script src="assets/deskapp/src/plugins/datatables/js/responsive.bootstrap4.min.js"></script>
 <script>
+    function updateAvailability(id, idx, button) {
+    console.log('updateAvailability called with ID:', id);
+    
+    // Find the select element in the same row as the button
+    var row = button.closest('tr');
+    var statusSelect = row.querySelector('.status-select');
+    
+    if (!statusSelect) {
+        console.error('Status select not found for ID:', id);
+        return;
+    }
+    
+    var selectedStatus = statusSelect.value;
+    var originalStatus = statusSelect.getAttribute('data-original');
+    
+    console.log('Selected status:', selectedStatus);
+    console.log('Original status:', originalStatus);
+    
+    if(selectedStatus && selectedStatus !== originalStatus) {
+        // Create and submit form immediately
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'update_service_availability.php';
+        
+        var idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'id';
+        idInput.value = id;
+        
+        
+        var availabilityInput = document.createElement('input');
+        availabilityInput.type = 'hidden';
+        availabilityInput.name = 'availability';
+        availabilityInput.value = selectedStatus;
+        
+        var hotelIdInput = document.createElement('input');
+        hotelIdInput.type = 'hidden';
+        hotelIdInput.name = 'idx';
+        hotelIdInput.value = idx;
+        
+        var serviceInput = document.createElement('input');
+        serviceInput.type = 'hidden';
+        serviceInput.name = 'service';
+        serviceInput.value = "cruise_data";
+        
+        var callbackInput = document.createElement('input');
+        callbackInput.type = 'hidden';
+        callbackInput.name = 'callback';
+        callbackInput.value = "hotel_cruise_details";
+        
+        form.appendChild(idInput);
+        form.appendChild(availabilityInput);
+        form.appendChild(hotelIdInput);
+        form.appendChild(serviceInput);
+        form.appendChild(callbackInput);
+        document.body.appendChild(form);
+        
+        form.submit();
+    } else if(selectedStatus === originalStatus) {
+        console.log('Availability unchanged, no update needed');
+    } else {
+        console.error('No status selected');
+    }
+}
+
     $('.data-table').DataTable({
         scrollCollapse: true,
         autoWidth: false,
