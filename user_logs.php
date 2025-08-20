@@ -33,6 +33,10 @@ switch($filter) {
 $users_sql = "SELECT id, username FROM users ORDER BY username";
 $users_result = mysqli_query($conn, $users_sql);
 
+// Add device columns if they don't exist
+@mysqli_query($conn, "ALTER TABLE user_login_logs ADD COLUMN device_name VARCHAR(100) DEFAULT 'Unknown'");
+@mysqli_query($conn, "ALTER TABLE user_login_logs ADD COLUMN device_type VARCHAR(50) DEFAULT 'Unknown'");
+
 // Build query
 $sql = "SELECT l.*, u.username 
         FROM user_login_logs l 
@@ -147,6 +151,8 @@ function formatDuration($seconds) {
                     <th>Login Time</th>
                     <th>Logout Time</th>
                     <th>Duration</th>
+                    <th>Device Name</th>
+                    <th>Device Type</th>
                     <th>Location</th>
                     <th>Date</th>
                 </tr>
@@ -158,6 +164,8 @@ function formatDuration($seconds) {
                     <td><?php echo date('H:i:s', strtotime($row['login_time'])); ?></td>
                     <td><?php echo $row['logout_time'] ? date('H:i:s', strtotime($row['logout_time'])) : 'Active'; ?></td>
                     <td><?php echo formatDuration($row['session_duration']); ?></td>
+                    <td><?php echo htmlspecialchars($row['device_name'] ?? 'Unknown'); ?></td>
+                    <td><?php echo htmlspecialchars($row['device_type'] ?? 'Unknown'); ?></td>
                     <td>
                         <?php 
                         $city = $row['city'] ?? 'Not Available';

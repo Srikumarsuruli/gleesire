@@ -70,6 +70,33 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                             $ip_address = $_SERVER['REMOTE_ADDR'];
                             $user_agent = $_SERVER['HTTP_USER_AGENT'];
                             
+                            // Parse device information from user agent
+                            function parseDeviceInfo($user_agent) {
+                                $device_name = 'Unknown';
+                                $device_type = 'Unknown';
+                                
+                                // Mobile devices
+                                if (preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $user_agent)) {
+                                    $device_type = 'Mobile';
+                                    if (preg_match('/iPhone/i', $user_agent)) $device_name = 'iPhone';
+                                    elseif (preg_match('/iPad/i', $user_agent)) $device_name = 'iPad';
+                                    elseif (preg_match('/Android/i', $user_agent)) $device_name = 'Android Device';
+                                    elseif (preg_match('/BlackBerry/i', $user_agent)) $device_name = 'BlackBerry';
+                                    elseif (preg_match('/Windows Phone/i', $user_agent)) $device_name = 'Windows Phone';
+                                } else {
+                                    $device_type = 'Desktop';
+                                    if (preg_match('/Windows/i', $user_agent)) $device_name = 'Windows PC';
+                                    elseif (preg_match('/Macintosh|Mac OS X/i', $user_agent)) $device_name = 'Mac';
+                                    elseif (preg_match('/Linux/i', $user_agent)) $device_name = 'Linux PC';
+                                }
+                                
+                                return array('name' => $device_name, 'type' => $device_type);
+                            }
+                            
+                            $device_info = parseDeviceInfo($user_agent);
+                            $device_name = $device_info['name'];
+                            $device_type = $device_info['type'];
+                            
                             // Get location from IP with fallback
                             $location_data = @json_decode(file_get_contents("http://ip-api.com/json/{$ip_address}"), true);
                             if($location_data && $location_data['status'] == 'success') {
@@ -93,10 +120,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                     $row = mysqli_fetch_assoc($check_result);
                                     $_SESSION["current_login_id"] = $row['id'];
                                 } else {
-                                    // Create new session with location
-                                    $log_sql = "INSERT INTO user_login_logs (user_id, login_time, date, ip_address, country, city, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                                    // Add device columns if they don't exist
+                                    @mysqli_query($conn, "ALTER TABLE user_login_logs ADD COLUMN device_name VARCHAR(100) DEFAULT 'Unknown'");
+                                    @mysqli_query($conn, "ALTER TABLE user_login_logs ADD COLUMN device_type VARCHAR(50) DEFAULT 'Unknown'");
+                                    
+                                    // Create new session with location and device info
+                                    $log_sql = "INSERT INTO user_login_logs (user_id, login_time, date, ip_address, country, city, user_agent, device_name, device_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
                                     if($log_stmt = mysqli_prepare($conn, $log_sql)) {
-                                        mysqli_stmt_bind_param($log_stmt, "issssss", $id, $login_time, $login_date, $ip_address, $country, $city, $user_agent);
+                                        mysqli_stmt_bind_param($log_stmt, "issssssss", $id, $login_time, $login_date, $ip_address, $country, $city, $user_agent, $device_name, $device_type);
                                         mysqli_stmt_execute($log_stmt);
                                         $_SESSION["current_login_id"] = mysqli_insert_id($conn);
                                         mysqli_stmt_close($log_stmt);

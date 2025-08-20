@@ -279,6 +279,21 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                         </ul>
                     </li>
                     <?php endif; ?>
+                    <li class="dropdown">
+                        <a href="javascript:;" class="dropdown-toggle">
+                            <span class="micon bi bi-calculator"></span><span class="mtext">Accounts</span>
+                        </a>
+                        <ul class="submenu">
+                            <li><a href="under_construction.php?page=Booked Cost Sheets">Booked Cost Sheets</a></li>
+                            <li><a href="under_construction.php?page=Payment Received Receipts">Payment Received Receipts</a></li>
+                            <li><a href="under_construction.php?page=Transportation Payment Receipts">Transportation Payment Receipts</a></li>
+                            <li><a href="under_construction.php?page=Hotel & Resorts Payment Receipts">Hotel & Resorts Payment Receipts</a></li>
+                            <li><a href="under_construction.php?page=Cruise Payment Receipts">Cruise Payment Receipts</a></li>
+                            <li><a href="under_construction.php?page=Visa/Flight Payment Receipts">Visa/Flight Payment Receipts</a></li>
+                            <li><a href="under_construction.php?page=Hospital Payment Receipts">Hospital Payment Receipts</a></li>
+                            <li><a href="under_construction.php?page=Travel Insurance Payment Receipts">Travel Insurance Payment Receipts</a></li>
+                        </ul>
+                    </li>
                     <?php if(hasPrivilege('summary_report') || hasPrivilege('daily_movement_register') || hasPrivilege('user_activity_report') || hasPrivilege('department_report') || hasPrivilege('source_report') || hasPrivilege('user_performance_report') || hasPrivilege('package_performance_report') || hasPrivilege('marketing_performance_report') || $_SESSION["role_id"] == 1): ?>
                     <li class="dropdown">
                         <a href="javascript:;" class="dropdown-toggle">
