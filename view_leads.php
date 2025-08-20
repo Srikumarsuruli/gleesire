@@ -94,7 +94,7 @@ $base_sql = "SELECT DISTINCT e.*, u.full_name as attended_by_name, d.name as dep
         s.name as source_name, ac.name as campaign_name, ls.name as status_name,
         cl.enquiry_number, cl.travel_start_date, cl.travel_end_date, cl.travel_month, cl.night_day, cl.booking_confirmed,
         cl.adults_count, cl.children_count, cl.infants_count, cl.children_age_details, cl.lead_type,
-        lsm.status_name as lead_status, fm.full_name as file_manager_name,
+        cl.created_at as lead_date, lsm.status_name as lead_status, fm.full_name as file_manager_name,
         dest.name as destination_name,
         lsm.created_at as last_updated_date,
         CASE WHEN tc.enquiry_id IS NOT NULL THEN 1 ELSE 0 END as has_cost_sheet
@@ -175,23 +175,23 @@ if(!empty($search)) {
 if(!empty($date_filter)) {
     switch($date_filter) {
         case "today":
-            $sql .= " AND DATE(e.received_datetime) = CURDATE()";
+            $sql .= " AND DATE(cl.created_at) = CURDATE()";
             break;
         case "yesterday":
-            $sql .= " AND DATE(e.received_datetime) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)";
+            $sql .= " AND DATE(cl.created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)";
             break;
         case "this_week":
-            $sql .= " AND YEARWEEK(e.received_datetime) = YEARWEEK(NOW())";
+            $sql .= " AND YEARWEEK(cl.created_at) = YEARWEEK(NOW())";
             break;
         case "this_month":
-            $sql .= " AND MONTH(e.received_datetime) = MONTH(NOW()) AND YEAR(e.received_datetime) = YEAR(NOW())";
+            $sql .= " AND MONTH(cl.created_at) = MONTH(NOW()) AND YEAR(cl.created_at) = YEAR(NOW())";
             break;
         case "this_year":
-            $sql .= " AND YEAR(e.received_datetime) = YEAR(NOW())";
+            $sql .= " AND YEAR(cl.created_at) = YEAR(NOW())";
             break;
         case "custom":
             if(!empty($start_date) && !empty($end_date)) {
-                $sql .= " AND DATE(e.received_datetime) BETWEEN ? AND ?";
+                $sql .= " AND DATE(cl.created_at) BETWEEN ? AND ?";
                 $params[] = $start_date;
                 $params[] = $end_date;
                 $types .= "ss";
@@ -201,7 +201,7 @@ if(!empty($date_filter)) {
 }
 
 // Add order by clause - most recent leads first (latest date at top)
-$sql .= " ORDER BY DATE(e.received_datetime) DESC, TIME(e.received_datetime) DESC, e.id DESC";
+$sql .= " ORDER BY DATE(cl.created_at) DESC, TIME(cl.created_at) DESC, e.id DESC";
 
 // Execute the count query to get total number of leads
 $count_result = mysqli_query($conn, $count_sql);
@@ -481,7 +481,7 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
             <table class="data-table table stripe hover" style="width: 100%; min-width: 1200px;">
                 <thead>
                     <tr>
-                         <th style="min-width: 100px;">Lead Date</th>
+                        <th style="min-width: 100px;">Lead Date</th>
                         <th style="min-width: 120px;">Lead #</th>
                        
                         <th style="min-width: 120px;">Enquiry #</th>
@@ -504,7 +504,7 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
             <tbody>
                 <?php while($row = mysqli_fetch_assoc($result)): ?>
                 <tr data-id="<?php echo $row['id']; ?>" class="<?php echo (isset($_GET['highlight']) && $_GET['highlight'] == $row['id']) ? 'highlight-row' : ''; ?>">
-                 <td><?php echo isset($row['created_at']) ? date('d-m-Y H:i', strtotime($row['created_at'])) : date('d-m-Y H:i', strtotime($row['received_datetime'])); ?></td>   
+                 <td data-order="<?php echo date('Y-m-d H:i:s', strtotime($row['lead_date'])); ?>"><?php echo  date('d-m-Y H:i', strtotime($row['lead_date'])); ?></td>   
                 <td><?php echo htmlspecialchars($row['enquiry_number']); ?></td>
                     <td><?php echo htmlspecialchars($row['lead_number']); ?></td>
                     <td><?php echo htmlspecialchars($row['customer_name']); ?></td>
