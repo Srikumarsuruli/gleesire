@@ -377,8 +377,12 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="cost-file-header">
             <h1 class="cost-file-title">Create Sheet</h1>
             <p class="cost-file-subtitle">Cost Sheet No: <?php echo htmlspecialchars($cost_sheet_number); ?> | Reference: <?php echo htmlspecialchars($enquiry['enquiry_number'] ?? 'N/A'); ?> | Date: <?php echo date('d-m-Y'); ?></p>
-            <p  class="cost-file-subtitle">Quotation/Booking Date:<?php echo $enquiry['booking_date'] ? date('d-m-Y', strtotime($enquiry['booking_date'])) : 'N/A'; ?> | Enquiry Date: <?php echo $enquiry['enquiry_date'] ? date('d-m-Y', strtotime($enquiry['enquiry_date'])) : 'N/A'; ?></p>
-           
+            <p  class="cost-file-subtitle">
+                Quotation/Booking Date:<?php echo $enquiry['booking_date'] ? date('d-m-Y', strtotime($enquiry['booking_date'])) : 'N/A'; ?> | 
+                Enquiry Date: <?php echo $enquiry['enquiry_date'] ? date('d-m-Y', strtotime($enquiry['enquiry_date'])) : 'N/A'; ?> |
+                File Manager: <?php echo htmlspecialchars($enquiry['file_manager_name']); ?>
+            </p>
+            
         </div>
 
         <?php if(!empty($success_message)): ?>

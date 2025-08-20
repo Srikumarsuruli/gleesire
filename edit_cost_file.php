@@ -35,25 +35,27 @@ foreach($columns_to_add as $column => $definition) {
 }
 
 // Get cost file data
-$sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number, e.referral_code, e.created_at as lead_date,
-        s.name as source_name, dest.name as destination_name, fm.full_name as file_manager_name
+$sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number as enquiry_number, cl.enquiry_number as lead_number, e.referral_code, e.created_at as enquiry_date, cl.created_at as lead_date,
+        s.name as source_name, dest.name as destination_name, fm.full_name as file_manager_name, cl.night_day as night_day, cl.travel_start_date as travel_start_date, cl.travel_end_date as travel_end_date, dp.name as department_name
         FROM tour_costings tc 
         LEFT JOIN enquiries e ON tc.enquiry_id = e.id 
         LEFT JOIN sources s ON e.source_id = s.id
         LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id
         LEFT JOIN destinations dest ON cl.destination_id = dest.id
         LEFT JOIN users fm ON cl.file_manager_id = fm.id
+        LEFT JOIN departments dp ON e.department_id = dp.id
         WHERE tc.id = ?";
 
 if ($enquiry_id != 0){
-    $sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number, e.referral_code, e.created_at as lead_date,
-        s.name as source_name, dest.name as destination_name, fm.full_name as file_manager_name
+    $sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number as enquiry_number, cl.enquiry_number as lead_number, e.referral_code, e.created_at as enquiry_date, cl.created_at as lead_date,
+        s.name as source_name, dest.name as destination_name, fm.full_name as file_manager_name, cl.night_day as night_day, cl.travel_start_date as travel_start_date, cl.travel_end_date as travel_end_date, dp.name as department_name
         FROM tour_costings tc 
         LEFT JOIN enquiries e ON tc.enquiry_id = e.id 
         LEFT JOIN sources s ON e.source_id = s.id
         LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id
         LEFT JOIN destinations dest ON cl.destination_id = dest.id
         LEFT JOIN users fm ON cl.file_manager_id = fm.id
+        LEFT JOIN departments dp ON e.department_id = dp.id
         WHERE tc.enquiry_id = ?";
 }
 
@@ -289,6 +291,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
 $destinations_sql = "SELECT * FROM destinations ORDER BY name";
 $destinations = mysqli_query($conn, $destinations_sql);
 
+$accommodations_sql = "SELECT id,destination,hotel_name,room_category,cp,map_rate,eb_adult_cp,eb_adult_map,child_with_bed_cp,child_with_bed_map,child_without_bed_cp,child_without_bed_map FROM accommodation_details ORDER BY destination";
+$accommodations = mysqli_query($conn, $accommodations_sql);
+
+
 // Decode JSON data for form population
 $selected_services = json_decode($cost_data['selected_services'] ?? '[]', true);
 $visa_data = json_decode($cost_data['visa_data'] ?? '[]', true);
@@ -315,6 +321,12 @@ $total_received = floatval($payment_data['total_received']);
 $payment_data['balance_amount'] = $package_cost - $total_received;
 ?>
 
+<style>
+    .table thead th{
+        text-wrap: nowrap;
+    }
+</style>
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <link rel="stylesheet" href="cost_file_styles.css">
@@ -329,6 +341,12 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                 Reference: <?php echo htmlspecialchars($cost_data['customer_name']); ?> | 
                 Last Updated: <?php echo date('d-m-Y H:i', strtotime($cost_data['updated_at'])); ?>
             </p>
+            <p class="cost-file-subtitle">
+                Enquiry No: <?php echo htmlspecialchars($cost_data['enquiry_number']); ?> | 
+                Enquiry Date: <?php echo date('d-m-Y H:i', strtotime($cost_data['enquiry_date'])); ?> | 
+                File Manager: <?php echo htmlspecialchars($cost_data['file_manager_name']); ?>
+            </p>
+            
             <div style="margin-top: 20px;">
                 <a href="view_payment_receipts.php?id=<?php echo $cost_file_id; ?>" class="btn btn-sm btn-info">
                     <i class="fa fa-credit-card"></i> View Payment Details
@@ -379,9 +397,23 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                         <span class="info-label">Lead Number:</span>
                         <span class="info-value"><?php echo htmlspecialchars($cost_data['lead_number'] ?? 'N/A'); ?></span>
                     </div>
+                    
                     <div class="info-row">
                         <span class="info-label">Lead Date:</span>
                         <span class="info-value"><?php echo $cost_data['lead_date'] ? date('d-m-Y', strtotime($cost_data['lead_date'])) : 'N/A'; ?></span>
+                        
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Lead Department:</span>
+                        <span class="info-value"><?php echo htmlspecialchars($cost_data['department_name'] ?? 'N/A'); ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Night/Day:</span>
+                        <span class="info-value"><?php echo htmlspecialchars($cost_data['night_day'] ?? 'N/A'); ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Travel Period:</span>
+                        <span class="info-value"><?php echo date('d-m-Y', strtotime($cost_data['travel_start_date'])) ?? 'N/A'; ?> To <?php echo date('d-m-Y', strtotime($cost_data['travel_end_date'])) ?? 'N/A'; ?></span>
                     </div>
                 </div>
 
@@ -726,6 +758,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <th>CHECK-OUT</th>
                                 <th>ROOM TYPE</th>
                                 <th>ROOMS NO</th>
+                                <th>MEAL PLAN</th>
                                 <th>ROOMS RATE</th>
                                 <th>EXTRA ADULT NO</th>
                                 <th>EXTRA ADULT RATE</th>
@@ -734,7 +767,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <th>CHILD NO BED NO</th>
                                 <th>CHILD NO BED RATE</th>
                                 <th>NIGHTS</th>
-                                <th>MEAL PLAN</th>
+                                
                                 <th>TOTAL</th>
                             </tr>
                         </thead>
@@ -745,8 +778,13 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][destination]">
                                             <option value="">Select Destination</option>
-                                            <?php mysqli_data_seek($destinations, 0); while($dest = mysqli_fetch_assoc($destinations)): ?>
-                                                <option value="<?php echo htmlspecialchars($dest['name']); ?>" <?php echo ($accom['destination'] == $dest['name']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($dest['name']); ?></option>
+                                            <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): ?>
+                                                <option 
+                                                    value="<?php echo htmlspecialchars($dest['destination']); ?>" 
+                                                    <?php echo ($accom['destination'] == $dest['destination']) ? 'selected' : ''; ?>
+                                                >
+                                                    <?php echo htmlspecialchars($dest['destination']); ?>
+                                                </option>
                                             <?php endwhile; ?>
                                         </select>
                                         <input type="hidden" name="accommodation[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
@@ -754,10 +792,20 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][hotel]">
                                             <option value="">Select Hotel</option>
-                                            <option value="ABAAM CHELSEA" <?php echo ($accom['hotel'] == 'ABAAM CHELSEA') ? 'selected' : ''; ?>>ABAAM CHELSEA</option>
-                                            <option value="ABAD ATRIUM KOCHI" <?php echo ($accom['hotel'] == 'ABAD ATRIUM KOCHI') ? 'selected' : ''; ?>>ABAD ATRIUM KOCHI</option>
-                                            <option value="TAJ MALABAR" <?php echo ($accom['hotel'] == 'TAJ MALABAR') ? 'selected' : ''; ?>>TAJ MALABAR</option>
-                                            <option value="VIVANTA MARINE DRIVE" <?php echo ($accom['hotel'] == 'VIVANTA MARINE DRIVE') ? 'selected' : ''; ?>>VIVANTA MARINE DRIVE</option>
+                                            <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): 
+                                                
+                                                if ($accom['destination'] == $dest['destination']):
+                                            ?>
+                                                <option 
+                                                    value="<?php echo htmlspecialchars($dest['hotel_name']); ?>" 
+                                                    <?php echo ($accom['hotel'] == $dest['hotel_name']) ? 'selected' : ''; ?>
+                                                >
+                                                    <?php echo htmlspecialchars($dest['hotel_name']); ?>
+                                                </option>
+                                            <?php 
+                                                endif;
+                                                endwhile; 
+                                            ?>
                                         </select>
                                     </td>
                                     <td><input type="date" class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][check_in]" value="<?php echo $accom['check_in'] ?? ''; ?>"></td>
@@ -772,6 +820,13 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                         </select>
                                     </td>
                                     <td><input type="number" class="form-control form-control-sm accom-rooms-no" name="accommodation[<?php echo $index; ?>][rooms_no]" data-row="<?php echo $index; ?>" value="<?php echo $accom['rooms_no'] ?? '0'; ?>" onchange="calculateAccommodationTotal(<?php echo $index; ?>)"></td>
+                                    <td>
+                                        <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][meal_plan]">
+                                            <option value="">Select Meal Plan</option>
+                                            <option value="cp" <?php echo ($accom['meal_plan'] == 'cp') ? 'selected' : ''; ?>>CP</option>
+                                            <option value="map" <?php echo ($accom['meal_plan'] == 'map') ? 'selected' : ''; ?>>MAP</option>
+                                        </select>
+                                    </td>
                                     <td><input type="number" class="form-control form-control-sm accom-rooms-rate" name="accommodation[<?php echo $index; ?>][rooms_rate]" data-row="<?php echo $index; ?>" value="<?php echo $accom['rooms_rate'] ?? '0'; ?>" onchange="calculateAccommodationTotal(<?php echo $index; ?>)"></td>
                                     <td><input type="number" class="form-control form-control-sm accom-extra-adult-no" name="accommodation[<?php echo $index; ?>][extra_adult_no]" data-row="<?php echo $index; ?>" value="<?php echo $accom['extra_adult_no'] ?? '0'; ?>" onchange="calculateAccommodationTotal(<?php echo $index; ?>)"></td>
                                     <td><input type="number" class="form-control form-control-sm accom-extra-adult-rate" name="accommodation[<?php echo $index; ?>][extra_adult_rate]" data-row="<?php echo $index; ?>" value="<?php echo $accom['extra_adult_rate'] ?? '0'; ?>" onchange="calculateAccommodationTotal(<?php echo $index; ?>)"></td>
@@ -780,15 +835,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td><input type="number" class="form-control form-control-sm accom-child-no-bed-no" name="accommodation[<?php echo $index; ?>][child_no_bed_no]" data-row="<?php echo $index; ?>" value="<?php echo $accom['child_no_bed_no'] ?? '0'; ?>" onchange="calculateAccommodationTotal(<?php echo $index; ?>)"></td>
                                     <td><input type="number" class="form-control form-control-sm accom-child-no-bed-rate" name="accommodation[<?php echo $index; ?>][child_no_bed_rate]" data-row="<?php echo $index; ?>" value="<?php echo $accom['child_no_bed_rate'] ?? '0'; ?>" onchange="calculateAccommodationTotal(<?php echo $index; ?>)"></td>
                                     <td><input type="number" class="form-control form-control-sm accom-nights" name="accommodation[<?php echo $index; ?>][nights]" data-row="<?php echo $index; ?>" value="<?php echo $accom['nights'] ?? '0'; ?>" onchange="calculateAccommodationTotal(<?php echo $index; ?>)"></td>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][meal_plan]">
-                                            <option value="">Select Meal Plan</option>
-                                            <option value="Room Only" <?php echo ($accom['meal_plan'] == 'Room Only') ? 'selected' : ''; ?>>Room Only</option>
-                                            <option value="Bed and Breakfast" <?php echo ($accom['meal_plan'] == 'Bed and Breakfast') ? 'selected' : ''; ?>>Bed and Breakfast</option>
-                                            <option value="Half Board" <?php echo ($accom['meal_plan'] == 'Half Board') ? 'selected' : ''; ?>>Half Board</option>
-                                            <option value="All-Inclusive" <?php echo ($accom['meal_plan'] == 'All-Inclusive') ? 'selected' : ''; ?>>All-Inclusive</option>
-                                        </select>
-                                    </td>
+                                    
                                     <td><input type="text" class="form-control form-control-sm accom-total" name="accommodation[<?php echo $index; ?>][total]" data-row="<?php echo $index; ?>" value="<?php echo $accom['total'] ?? '0.00'; ?>" readonly style="background: #f0f8ff; font-weight: bold;"></td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -1370,6 +1417,183 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
 
 <script src="edit_cost_file_agent_package.js?v=<?php echo time(); ?>"></script>
 <script>
+
+let accommodationRowCount = 1;
+function addAccommodationRow() {
+    const tbody = document.getElementById('accommodation-tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>
+            <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][destination]" onchange="updateHotels(this, ${accommodationRowCount})">
+                <option value="">Select Destination</option>
+                <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): ?>
+                    <option 
+                        value="<?php echo htmlspecialchars($dest['destination']); ?>" 
+                        <?php echo ($accom['destination'] == $dest['destination']) ? 'selected' : ''; ?>
+                    >
+                        <?php echo htmlspecialchars($dest['destination']); ?>
+                    </option>
+                <?php endwhile; ?>
+            </select>
+            <input type="hidden" name="accommodation[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
+        </td>
+        <td>
+            <select class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][hotel]" onchange="updateRoomTypes(this, ${accommodationRowCount})" disabled>
+                <option value="">Select Hotel</option>
+            </select>
+        </td>
+        <td><input type="date" class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][check_in]"></td>
+        <td><input type="date" class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][check_out]"></td>
+        <td>
+            <select class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][room_type]" onchange="updateRates(this, ${accommodationRowCount})" disabled>
+                <option value="">Select Room Type</option>
+            </select>
+        </td>
+         
+        <td><input type="number" class="form-control form-control-sm accom-rooms-no" name="accommodation[${accommodationRowCount}][rooms_no]" data-row="${accommodationRowCount}" value="0" onchange="calculateAccommodationTotal(${accommodationRowCount})"></td>
+        <td>
+            <select class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][meal_plan]" onchange="updateRates(this, ${accommodationRowCount})">
+                <option value="">Select Meal Plan</option>
+                <option value="cp" selected>CP</option>
+                <option value="map">MAP</option>
+            </select>
+        </td>
+        <td><input type="number" class="form-control form-control-sm accom-rooms-rate" name="accommodation[${accommodationRowCount}][rooms_rate]" data-row="${accommodationRowCount}" value="0" readonly></td>
+        <td><input type="number" class="form-control form-control-sm accom-extra-adult-no" name="accommodation[${accommodationRowCount}][extra_adult_no]" data-row="${accommodationRowCount}" value="0" onchange="calculateAccommodationTotal(${accommodationRowCount})"></td>
+        <td><input type="number" class="form-control form-control-sm accom-extra-adult-rate" name="accommodation[${accommodationRowCount}][extra_adult_rate]" data-row="${accommodationRowCount}" value="0" readonly></td>
+        <td><input type="number" class="form-control form-control-sm accom-extra-child-no" name="accommodation[${accommodationRowCount}][extra_child_no]" data-row="${accommodationRowCount}" value="0" onchange="calculateAccommodationTotal(${accommodationRowCount})"></td>
+        <td><input type="number" class="form-control form-control-sm accom-extra-child-rate" name="accommodation[${accommodationRowCount}][extra_child_rate]" data-row="${accommodationRowCount}" value="0" readonly></td>
+        <td><input type="number" class="form-control form-control-sm accom-child-no-bed-no" name="accommodation[${accommodationRowCount}][child_no_bed_no]" data-row="${accommodationRowCount}" value="0" onchange="calculateAccommodationTotal(${accommodationRowCount})"></td>
+        <td><input type="number" class="form-control form-control-sm accom-child-no-bed-rate" name="accommodation[${accommodationRowCount}][child_no_bed_rate]" data-row="${accommodationRowCount}" value="0" readonly></td>
+        <td><input type="number" class="form-control form-control-sm accom-nights" name="accommodation[${accommodationRowCount}][nights]" data-row="${accommodationRowCount}" value="0" onchange="calculateAccommodationTotal(${accommodationRowCount})"></td>
+       
+        <td><input type="text" class="form-control form-control-sm accom-total" name="accommodation[${accommodationRowCount}][total]" data-row="${accommodationRowCount}" readonly style="background: #f0f8ff; font-weight: bold;"></td>
+    `;
+    tbody.appendChild(newRow);
+    accommodationRowCount++;
+}
+
+// Update hotels based on selected destination
+function updateHotels(destinationSelect, rowIndex) {
+    const hotelSelect = destinationSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[hotel]"]');
+    const roomTypeSelect = destinationSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[room_type]"]');
+    const mealPlanSelect = destinationSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[meal_plan]"]');
+    
+    hotelSelect.disabled = !destinationSelect.value;
+    roomTypeSelect.disabled = true;
+    mealPlanSelect.disabled = true;
+    
+    if(destinationSelect.value) {
+        // AJAX call to get hotels for selected destination
+        fetch(`get_data_model.php?data_model=accommodation&destination=${destinationSelect.value}`)
+            .then(response => response.json())
+            .then(res => {
+                hotelSelect.innerHTML = '<option value="">Select Hotel</option>';
+                res.data.forEach(hotel => {
+                    hotelSelect.innerHTML += `<option value="${hotel.hotel_name}">${hotel.hotel_name}</option>`;
+                });
+            });
+
+            updateRates(destinationSelect, rowIndex)
+    }
+}
+
+// Update room types based on selected hotel
+function updateRoomTypes(hotelSelect, rowIndex) {
+    const destinationSelect = hotelSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[destination]"]');
+
+    const roomTypeSelect = hotelSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[room_type]"]');
+    const mealPlanSelect = hotelSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[meal_plan]"]');
+    
+    roomTypeSelect.disabled = !hotelSelect.value;
+    mealPlanSelect.disabled = true;
+    
+    if(hotelSelect.value) {
+        // AJAX call to get room types for selected hotel
+        fetch(`get_data_model.php?data_model=accommodation&destination=${destinationSelect.value}&hotel_name=${hotelSelect.value}`)
+            .then(response => response.json())
+            .then(res => {
+                roomTypeSelect.innerHTML = '<option value="">Select Room Type</option>';
+                res.data.forEach(type => {
+                    roomTypeSelect.innerHTML += `<option value="${type.room_category}">${type.room_category}</option>`;
+                });
+                
+                updateRates(hotelSelect, rowIndex)
+            });
+    }
+
+
+}
+
+// Update rates based on selected room type
+function updateRates(parentSelect, rowIndex) {
+    const desctinationSelect = parentSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[destination]"]');
+    const hotelSelect = parentSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[hotel]"]');
+    const mealTypeSelect = parentSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[meal_plan]"]');
+    const _roomTypeSelect = parentSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[room_type]"]');
+    
+    const roomRateSelect = parentSelect.closest('tr').querySelector('input[name^="accommodation"][name$="[rooms_rate]"]');
+    const extraAdultRateSelect = parentSelect.closest('tr').querySelector('input[name^="accommodation"][name$="[extra_adult_rate]"]');
+    const extraChildRateSelect = parentSelect.closest('tr').querySelector('input[name^="accommodation"][name$="[extra_child_rate]"]');
+    const childNoBedRateSelect = parentSelect.closest('tr').querySelector('input[name^="accommodation"][name$="[child_no_bed_rate]"]');
+    
+    console.log(roomRateSelect, 'roomRateSelect');
+    
+    
+    if(desctinationSelect.value && hotelSelect.value && _roomTypeSelect.value) {
+        console.log(roomRateSelect , extraAdultRateSelect , extraChildRateSelect, childNoBedRateSelect);
+        
+        fetch(`get_data_model.php?data_model=accommodation&destination=${desctinationSelect.value}&hotel_name=${hotelSelect.value}&room_category=${_roomTypeSelect.value}`)
+            .then(response => response.json())
+            .then(res => {
+
+                if(res.data && res.data.length){
+                    let {
+                        cp, 
+                        map_rate,
+
+                        eb_adult_cp,
+                        eb_adult_map,
+                        
+                        child_with_bed_cp,
+                        child_with_bed_map,
+                        
+                        child_without_bed_cp,
+                        child_without_bed_map
+                    } = res.data[0]
+
+                    if(mealTypeSelect.value == 'cp'){
+                        roomRateSelect.value = cp
+                        extraAdultRateSelect.value = eb_adult_cp
+                        extraChildRateSelect.value = child_with_bed_cp
+                        childNoBedRateSelect.value = child_without_bed_cp
+                    }
+                    else if(mealTypeSelect.value == 'map'){
+                        roomRateSelect.value = map_rate
+                        extraAdultRateSelect.value = eb_adult_map
+                        extraChildRateSelect.value = child_with_bed_map
+                        childNoBedRateSelect.value = child_without_bed_map
+                    }
+
+                }
+                
+            });
+    }
+}
+
+// Update rates when meal plan changes
+function updateMealPlanRates(mealPlanSelect, rowIndex) {
+    if(mealPlanSelect.value) {
+        // AJAX call to get updated rates for selected meal plan
+        fetch(`get_meal_plan_rates.php?meal_plan_id=${mealPlanSelect.value}`)
+            .then(response => response.json())
+            .then(rates => {
+                // Update rate inputs with meal plan adjusted values
+                calculateAccommodationTotal(rowIndex);
+            });
+    }
+}
+
 // Confirmation popup for new version creation
 function confirmNewVersion(event) {
     event.preventDefault();
