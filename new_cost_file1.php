@@ -367,35 +367,607 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
 <link rel="stylesheet" href="cost_file_styles.css">
+<style>
+
+.cost-file-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin: 20px auto;
+    max-width: 1200px;
+}
+
+.cost-file-header {
+    background: linear-gradient(135deg, #4facfe 0%, #3b3b3b 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+    position: relative;
+}
+
+.cost-file-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="1" fill="white" opacity="0.1"/><circle cx="10" cy="90" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+}
+
+.cost-file-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.cost-file-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-top: 10px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    padding: 40px;
+}
+
+.info-card {
+    background: #f8f9ff;
+    border-radius: 15px;
+    padding: 5px;
+    border-left: 5px solid #4facfe;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.info-card h5 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.info-row .form-control {
+    max-width: 200px;
+    height: 32px;
+    font-size: 0.85rem;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.info-value {
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.services-section {
+    background: #fff;
+    margin: 0 40px 40px;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    max-height: 600px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.services-section::-webkit-scrollbar {
+    width: 8px;
+}
+
+.services-section::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.services-section::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+.services-section::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+.services-section h5 {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    margin: -30px -30px 20px -30px;
+    padding: 20px 30px;
+    border-bottom: 2px solid #f0f0f0;
+    border-radius: 15px 15px 0 0;
+}
+
+.services-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0px;
+    margin-top: 25px;
+    padding: 10px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.service-item {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 8px 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 210px;
+    position: relative;
+    overflow: hidden;
+}
+
+.service-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.5s;
+}
+
+.service-item:hover::before {
+    left: 100%;
+}
+
+.service-item:hover {
+    border-color: #4facfe;
+    background: #f0f8ff;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(79, 172, 254, 0.1);
+}
+
+.service-item.selected {
+    background: linear-gradient(135deg, #03a9b8 0%, #242424 100%);
+    color: white;
+    border-color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);
+}
+
+.service-icon-small {
+    font-size: 1.2rem;
+    width: 20px;
+    text-align: center;
+}
+
+.service-text {
+    font-weight: 600;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.table {
+    font-size: 0.85rem;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.table .form-control {
+    max-width: none;
+    width: 100%;
+    height: 35px;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#accommodation-section .form-control {
+    height: 38px;
+    font-size: 0.95rem;
+    padding: 0.6rem;
+    min-width: 80px;
+}
+
+#accommodation-section .table th {
+    font-size: 0.85rem;
+    padding: 0.75rem 0.5rem;
+    white-space: nowrap;
+}
+
+#accommodation-section .table td {
+    padding: 0.6rem 0.4rem;
+}
+
+#transportation-section .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+#transportation-section .table {
+    min-width: 1200px;
+    white-space: nowrap;
+}
+
+#transportation-section .table th:nth-child(1) { min-width: 60px; }
+#transportation-section .table th:nth-child(2) { min-width: 150px; }
+#transportation-section .table th:nth-child(3) { min-width: 120px; }
+#transportation-section .table th:nth-child(4) { min-width: 100px; }
+#transportation-section .table th:nth-child(5) { min-width: 80px; }
+#transportation-section .table th:nth-child(6) { min-width: 80px; }
+#transportation-section .table th:nth-child(7) { min-width: 100px; }
+#transportation-section .table th:nth-child(8) { min-width: 100px; }
+#transportation-section .table th:nth-child(9) { min-width: 120px; }
+#transportation-section .table th:nth-child(10) { min-width: 100px; }
+
+#transportation-section .form-control {
+    font-size: 0.9rem;
+    padding: 0.4rem;
+    height: 36px;
+}
+
+#cruise-hire-section .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+#cruise-hire-section .table {
+    min-width: 1000px;
+    white-space: nowrap;
+}
+
+#cruise-hire-section .table th:nth-child(1) { min-width: 60px; }
+#cruise-hire-section .table th:nth-child(2) { min-width: 150px; }
+#cruise-hire-section .table th:nth-child(3) { min-width: 120px; }
+#cruise-hire-section .table th:nth-child(4) { min-width: 130px; }
+#cruise-hire-section .table th:nth-child(5) { min-width: 150px; }
+#cruise-hire-section .table th:nth-child(6) { min-width: 150px; }
+#cruise-hire-section .table th:nth-child(7) { min-width: 100px; }
+#cruise-hire-section .table th:nth-child(8) { min-width: 100px; }
+#cruise-hire-section .table th:nth-child(9) { min-width: 100px; }
+
+#cruise-hire-section .form-control {
+    font-size: 0.9rem;
+    padding: 0.4rem;
+    height: 36px;
+}
+
+#extras-section .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+#extras-section .table {
+    min-width: 800px;
+    white-space: nowrap;
+}
+
+#extras-section .table th:nth-child(1) { min-width: 150px; }
+#extras-section .table th:nth-child(2) { min-width: 180px; }
+#extras-section .table th:nth-child(3) { min-width: 120px; }
+#extras-section .table th:nth-child(4) { min-width: 120px; }
+#extras-section .table th:nth-child(5) { min-width: 120px; }
+
+#extras-section .form-control {
+    font-size: 0.9rem;
+    padding: 0.4rem;
+    height: 36px;
+}
+
+.table-responsive {
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    max-height: 450px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.table-responsive::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f8f9fa;
+    border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #4facfe;
+    border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #3b9ae1;
+}
+
+.table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #f8f9fa !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.action-buttons {
+    text-align: center;
+    padding: 40px;
+    background: #f8f9fa;
+}
+
+.btn-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 15px 40px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    margin: 0 10px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-modern:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-secondary-modern {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}
+
+.btn-secondary-modern:hover {
+    box-shadow: 0 10px 25px rgba(108, 117, 125, 0.3);
+}
+
+@keyframes shine {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
+}
+
+.alert-modern {
+    border: none;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 40px;
+    font-weight: 500;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+}
+
+@media (max-width: 768px) {
+    .cost-file-title {
+        font-size: 2rem;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+    
+    .services-list {
+        grid-template-columns: 1fr;
+        gap: 0px;
+    }
+    
+    .service-item {
+        min-width: auto;
+        padding: 15px 20px;
+    }
+    
+    .services-section {
+        margin: 0 20px 20px;
+        padding: 20px;
+        max-height: 500px;
+    }
+    
+    .services-section h5 {
+        margin: -20px -20px 15px -20px;
+        padding: 15px 20px;
+    }
+    
+    .table-responsive {
+        max-height: 350px;
+    }
+    
+    .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .info-row .form-control {
+        max-width: 100%;
+        width: 100%;
+    }
+    
+    .payment-summary-container {
+        flex-direction: column;
+    }
+}
+
+/* Popup Styles */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.popup-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: 90%;
+    animation: popupSlideIn 0.3s ease;
+}
+
+.popup-content.success {
+    border-top: 5px solid #28a745;
+}
+
+.popup-content.error {
+    border-top: 5px solid #dc3545;
+}
+
+.popup-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.popup-content.success .popup-icon {
+    color: #28a745;
+}
+
+.popup-content.error .popup-icon {
+    color: #dc3545;
+}
+
+.popup-content h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.popup-content p {
+    margin: 0 0 20px 0;
+    color: #666;
+    line-height: 1.5;
+}
+
+.btn-popup {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-popup:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+@keyframes popupSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+</style>
 
 <div class="cost-file-container">
     <div class="cost-file-card">
         <div class="cost-file-header">
-            <h1 class="cost-file-title">Create Sheet</h1>
+            <h1 class="cost-file-title">Cost File</h1>
             <p class="cost-file-subtitle">Cost Sheet No: <?php echo htmlspecialchars($cost_sheet_number); ?> | Reference: <?php echo htmlspecialchars($enquiry['enquiry_number'] ?? 'N/A'); ?> | Date: <?php echo date('d-m-Y'); ?></p>
             <p  class="cost-file-subtitle">Quotation/Booking Date:<?php echo $enquiry['booking_date'] ? date('d-m-Y', strtotime($enquiry['booking_date'])) : 'N/A'; ?> | Enquiry Date: <?php echo $enquiry['enquiry_date'] ? date('d-m-Y', strtotime($enquiry['enquiry_date'])) : 'N/A'; ?></p>
-           
         </div>
 
         <?php if(!empty($success_message)): ?>
-            <div class="alert alert-success">
-                <i class="fa fa-check-circle"></i>
-                <?php echo $success_message; ?>
-            </div>
+            <div class="alert alert-success alert-modern"><?php echo $success_message; ?></div>
         <?php endif; ?>
         
         <?php if(!empty($error_message)): ?>
-            <div class="alert alert-danger">
-                <i class="fa fa-exclamation-circle"></i>
-                <?php echo $error_message; ?>
+            <div class="alert alert-danger alert-modern"><?php echo $error_message; ?></div>
+        <?php endif; ?>
+        
+        <!-- Success/Error Popup -->
+        <?php if(isset($show_success_popup)): ?>
+        <div id="success-popup" class="popup-overlay">
+            <div class="popup-content success">
+                <i class="fa fa-check-circle popup-icon"></i>
+                <h3>Success!</h3>
+                <p>Cost file has been saved successfully to the database.</p>
+                <button onclick="closePopup('success-popup')" class="btn-popup">OK</button>
             </div>
+        </div>
+        <?php endif; ?>
+        
+        <?php if(isset($show_error_popup)): ?>
+        <div id="error-popup" class="popup-overlay">
+            <div class="popup-content error">
+                <i class="fa fa-exclamation-triangle popup-icon"></i>
+                <h3>Error!</h3>
+                <p><?php echo htmlspecialchars($error_message); ?></p>
+                <button onclick="closePopup('error-popup')" class="btn-popup">OK</button>
+            </div>
+        </div>
         <?php endif; ?>
 
-        <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"] . "?id=" . $enquiry_id); ?>" enctype="multipart/form-data">
+        <form method="post" id="cost-file-form" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"] . "?id=" . $enquiry_id); ?>" enctype="multipart/form-data">
             <div class="info-grid">
                 <!-- Customer Information -->
                 <div class="info-card">
@@ -696,7 +1268,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
 
                 <!-- Passenger Information -->
-                <div class="info-card">
+                <div class="info-card" style="    width: 60%;">
                     <h5><i class="icon-copy fa fa-users"></i> Number of PAX</h5>
                     <div class="info-row">
                         <span class="info-label">Adults:</span>
@@ -721,51 +1293,52 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     </div>
                     
                 </div>
-                <div class="info-card" style="">
+                 <div class="info-card" style="">
                     <h5><i class="icon-copy fa fa-cogs"></i> Select Services</h5>
                     <div class="services-list">
-                        <div class="service-item" onclick="toggleService(this, 'visa_flight')">
-                            <i class="fa fa-plane service-icon-small"></i>
-                            <span class="service-text">VISA / FLIGHT BOOKING</span>
-                            <input type="checkbox" name="services[]" value="visa_flight" style="display: none;">
-                        </div>
-                    
-                        <div class="service-item" onclick="toggleService(this, 'accommodation')">
-                            <i class="fa fa-bed service-icon-small"></i>
-                            <span class="service-text">ACCOMMODATION</span>
-                            <input type="checkbox" name="services[]" value="accommodation" style="display: none;">
-                        </div>
-                    
-                        <div class="service-item" onclick="toggleService(this, 'transportation')">
-                            <i class="fa fa-car service-icon-small"></i>
-                            <span class="service-text">TRANSPORTATION</span>
-                            <input type="checkbox" name="services[]" value="transportation" style="display: none;">
-                        </div>
-                    
-                        <div class="service-item" onclick="toggleService(this, 'cruise_hire')">
-                            <i class="fa fa-ship service-icon-small"></i>
-                            <span class="service-text">CRUISE HIRE</span>
-                            <input type="checkbox" name="services[]" value="cruise_hire" style="display: none;">
-                        </div>
-                    
-                        <div class="service-item" onclick="toggleService(this, 'extras')">
-                            <i class="fa fa-plus service-icon-small"></i>
-                            <span class="service-text">EXTRAS/MISCELLANEOUS</span>
-                            <input type="checkbox" name="services[]" value="extras" style="display: none;">
-                        </div>
-                    
-                        <div class="service-item" onclick="toggleService(this, 'travel_insurance')">
-                            <i class="fa fa-shield service-icon-small"></i>
-                            <span class="service-text">TRAVEL INSURANCE</span>
-                            <input type="checkbox" name="services[]" value="travel_insurance" style="display: none;">
-                        </div>
-                    
-                        <div class="service-item" onclick="toggleService(this, 'agent_package')">
-                            <i class="fa fa-briefcase service-icon-small"></i>
-                            <span class="service-text">AGENT PACKAGE SERVICE</span>
-                            <input type="checkbox" name="services[]" value="agent_package" style="display: none;">
-                        </div>
+                    <div class="service-item" onclick="toggleService(this, 'visa_flight')">
+                        <i class="fa fa-plane service-icon-small"></i>
+                        <span class="service-text">VISA / FLIGHT BOOKING</span>
+                        <input type="checkbox" name="services[]" value="visa_flight" style="display: none;">
                     </div>
+                    
+                    <div class="service-item" onclick="toggleService(this, 'accommodation')">
+                        <i class="fa fa-bed service-icon-small"></i>
+                        <span class="service-text">ACCOMMODATION</span>
+                        <input type="checkbox" name="services[]" value="accommodation" style="display: none;">
+                    </div>
+                    
+                    <div class="service-item" onclick="toggleService(this, 'transportation')">
+                        <i class="fa fa-car service-icon-small"></i>
+                        <span class="service-text">TRANSPORTATION</span>
+                        <input type="checkbox" name="services[]" value="transportation" style="display: none;">
+                    </div>
+                    
+                    <div class="service-item" onclick="toggleService(this, 'cruise_hire')">
+                        <i class="fa fa-ship service-icon-small"></i>
+                        <span class="service-text">CRUISE HIRE</span>
+                        <input type="checkbox" name="services[]" value="cruise_hire" style="display: none;">
+                    </div>
+                    
+                    <div class="service-item" onclick="toggleService(this, 'extras')">
+                        <i class="fa fa-plus service-icon-small"></i>
+                        <span class="service-text">EXTRAS/MISCELLANEOUS</span>
+                        <input type="checkbox" name="services[]" value="extras" style="display: none;">
+                    </div>
+                    
+                    <div class="service-item" onclick="toggleService(this, 'travel_insurance')">
+                        <i class="fa fa-shield service-icon-small"></i>
+                        <span class="service-text">TRAVEL INSURANCE</span>
+                        <input type="checkbox" name="services[]" value="travel_insurance" style="display: none;">
+                    </div>
+                    
+                    <div class="service-item" onclick="toggleService(this, 'agent_package')">
+                        <i class="fa fa-briefcase service-icon-small"></i>
+                        <span class="service-text">AGENT PACKAGE SERVICE</span>
+                        <input type="checkbox" name="services[]" value="agent_package" style="display: none;">
+                    </div>
+                </div>
+                </div>
                 </div>
             </div>
 
@@ -922,10 +1495,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <!-- ACCOMMODATION Section -->
             <div id="accommodation-section" class="services-section" style="display: none;">
-                <h5>
-                    <i class="icon-copy fa fa-bed"></i>ACCOMMODATION
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addAccommodationRow()"><i class="fa fa-plus"></i> Add Hotel</button>
-                </h5>
+                <h5><i class="icon-copy fa fa-bed"></i> ACCOMMODATION</h5>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
                         <thead>
@@ -1074,6 +1644,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                             </tr>
                         </tfoot>
                     </table>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addAccommodationRow()"><i class="fa fa-plus"></i> Add Hotel</button>
                 </div>
             </div>
 

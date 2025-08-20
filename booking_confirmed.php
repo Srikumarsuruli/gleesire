@@ -304,7 +304,7 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                                                     <i class="dw dw-eye"></i> View
                                                 </a> -->
                                                 <a class="dropdown-item" href="view_cost_file.php?id=<?php echo $row['cost_sheet_id']; ?>">
-                                                    <i class="dw dw-eye"></i> View
+                                                    <i class="dw dw-eye"></i> View Cost Sheet
                                                 </a>
                                                 <!-- <a class="dropdown-item" href="edit_enquiry.php?id=<?php echo $row['id']; ?>">
                                                     <i class="dw dw-edit2"></i> Edit
@@ -315,11 +315,11 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                                                 <a class="dropdown-item" href="comments.php?id=<?php echo $row['id']; ?>&type=booking">
                                                     <i class="dw dw-chat"></i> Comments
                                                 </a>
-                                                <?php if(hasPrivilege('new_cost_file')): ?>
+                                                <!-- <?php if(hasPrivilege('new_cost_file')): ?>
                                                 <a class="dropdown-item" href="new_cost_file.php?id=<?php echo $row['id']; ?>">
                                                     <i class="dw dw-file"></i> Cost File
                                                 </a>
-                                                <?php endif; ?>
+                                                <?php endif; ?> -->
                                             </div>
                                         </div>
                                             

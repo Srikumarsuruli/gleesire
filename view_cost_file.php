@@ -360,7 +360,54 @@ if (isset($cost_data['enquiry_id'])) {
                 <?php if(!empty($visa_data)): ?>
                 <div class="service-summary-card">
                     <h6><i class="fas fa-plane"></i> Visa/Flight Details</h6>
-                    <p><?php echo count($visa_data); ?> item(s) configured</p>
+                    <div class="table-responsive" style="margin-bottom: 18px;">
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr>
+                                    <th>S. NO</th>
+                                    <th>SECTOR</th>
+                                    <th>SUPPLIER</th>
+                                    <th>TRAVEL DATE</th>
+                                    <th>PASSENGERS</th>
+                                    <th>RATE PER PERSON</th>
+                                    <th>ROE</th>
+                                    <th>TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody id="visa-details-tbody">
+                                <?php if (!empty($visa_data) && is_array($visa_data)): ?>
+                                    <?php foreach ($visa_data as $index => $visa): ?>
+                                    <tr>
+                                        <td><?php echo $index + 1; ?></td>
+                                        <td><?php echo htmlspecialchars($visa['sector'] ?? ''); ?></td>
+                                        <td><?php echo htmlspecialchars($visa['supplier'] ?? ''); ?></td>
+                                        <td><?php echo $visa['travel_date'] ?? ''; ?></td>
+                                        <td><?php echo $visa['passengers'] ?? '0'; ?></td>
+                                        <td><?php echo $visa['rate_per_person'] ?? '0'; ?></td>
+                                        <td><?php echo $visa['roe'] ?? '1'; ?></td>
+                                        <td><?php echo $visa['total'] ?? '0.00'; ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="7" class="text-right"><strong>TOTAL VISA COST:</strong></td>
+                                    <td>
+                                        <?php 
+                                            $total_visa_cost = 0;
+                                            if (!empty($visa_data) && is_array($visa_data)) {
+                                                foreach ($visa_data as $visa) {
+                                                    $total_visa_cost += floatval($visa['total'] ?? 0);
+                                                }
+                                            }
+                                            echo number_format($total_visa_cost, 2);
+                                        ?>
+                                    </td>                           
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
                 <?php endif; ?>
 
