@@ -13,9 +13,135 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     }
 }
 
-$sql = "SELECT * FROM accommodation_details ORDER BY created_at DESC";
-$result = mysqli_query($conn, $sql);
+// Filter variables
+$destination_filter = $room_category_filter = $price_from = $price_to = $validity_from = $validity_to = "";
+
+// Process filter form submission
+if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["filter"])) {
+    $destination_filter = !empty($_POST["destination_filter"]) ? $_POST["destination_filter"] : "";
+    $room_category_filter = !empty($_POST["room_category_filter"]) ? $_POST["room_category_filter"] : "";
+    $price_from = !empty($_POST["price_from"]) ? $_POST["price_from"] : "";
+    $price_to = !empty($_POST["price_to"]) ? $_POST["price_to"] : "";
+    $validity_from = !empty($_POST["validity_from"]) ? $_POST["validity_from"] : "";
+    $validity_to = !empty($_POST["validity_to"]) ? $_POST["validity_to"] : "";
+}
+
+// Build SQL query with filters
+$sql = "SELECT * FROM accommodation_details WHERE 1=1";
+$params = array();
+$types = "";
+
+if(!empty($destination_filter)) {
+    $sql .= " AND destination LIKE ?";
+    $params[] = "%" . $destination_filter . "%";
+    $types .= "s";
+}
+
+if(!empty($room_category_filter)) {
+    $sql .= " AND room_category LIKE ?";
+    $params[] = "%" . $room_category_filter . "%";
+    $types .= "s";
+}
+
+if(!empty($price_from)) {
+    $sql .= " AND cp >= ?";
+    $params[] = $price_from;
+    $types .= "d";
+}
+
+if(!empty($price_to)) {
+    $sql .= " AND cp <= ?";
+    $params[] = $price_to;
+    $types .= "d";
+}
+
+if(!empty($validity_from)) {
+    $sql .= " AND validity_from >= ?";
+    $params[] = $validity_from;
+    $types .= "s";
+}
+
+if(!empty($validity_to)) {
+    $sql .= " AND validity_to <= ?";
+    $params[] = $validity_to;
+    $types .= "s";
+}
+
+$sql .= " ORDER BY created_at DESC";
+
+// Execute query
+if(!empty($params)) {
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, $types, ...$params);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+} else {
+    $result = mysqli_query($conn, $sql);
+}
+
+// Get unique destinations for filter dropdown
+$destinations_sql = "SELECT DISTINCT destination FROM accommodation_details ORDER BY destination";
+$destinations_result = mysqli_query($conn, $destinations_sql);
+
+// Get unique room categories for filter dropdown
+$room_categories_sql = "SELECT DISTINCT room_category FROM accommodation_details ORDER BY room_category";
+$room_categories_result = mysqli_query($conn, $room_categories_sql);
 ?>
+
+<!-- Filter Section -->
+<div class="card-box mb-30">
+    <div class="pd-20">
+        <h4 class="text-blue h4">Filters</h4>
+    </div>
+    <div class="pb-20 pd-20">
+        <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" id="filter-form">
+            <div class="filter-row">
+                <div class="form-group">
+                    <label>Destination</label>
+                    <select class="custom-select" name="destination_filter">
+                        <option value="">All Destinations</option>
+                        <?php while($dest = mysqli_fetch_assoc($destinations_result)): ?>
+                            <option value="<?php echo htmlspecialchars($dest['destination']); ?>" <?php echo ($destination_filter == $dest['destination']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($dest['destination']); ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Room Category</label>
+                    <select class="custom-select" name="room_category_filter">
+                        <option value="">All Categories</option>
+                        <?php while($cat = mysqli_fetch_assoc($room_categories_result)): ?>
+                            <option value="<?php echo htmlspecialchars($cat['room_category']); ?>" <?php echo ($room_category_filter == $cat['room_category']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($cat['room_category']); ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Price From (₹)</label>
+                    <input type="number" class="form-control" name="price_from" value="<?php echo htmlspecialchars($price_from); ?>" placeholder="Min Price">
+                </div>
+                <div class="form-group">
+                    <label>Price To (₹)</label>
+                    <input type="number" class="form-control" name="price_to" value="<?php echo htmlspecialchars($price_to); ?>" placeholder="Max Price">
+                </div>
+                <div class="form-group">
+                    <label>Valid From</label>
+                    <input type="date" class="form-control" name="validity_from" value="<?php echo htmlspecialchars($validity_from); ?>">
+                </div>
+                <div class="form-group">
+                    <label>Valid To</label>
+                    <input type="date" class="form-control" name="validity_to" value="<?php echo htmlspecialchars($validity_to); ?>">
+                </div>
+                <div class="filter-buttons">
+                    <button type="submit" name="filter" class="btn btn-primary">Apply Filters</button>
+                    <a href="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" class="btn btn-secondary">Reset</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 
 <div class="card-box mb-30">
     <div class="pd-20">
@@ -39,6 +165,8 @@ $result = mysqli_query($conn, $sql);
                         <th style="min-width: 100px;">Destination</th>
                         <th style="min-width: 120px;">Hotel Name</th>
                         <th style="min-width: 100px;">Room Category</th>
+                        <th style="min-width: 100px;">Validity From</th>
+                        <th style="min-width: 100px;">Validity To</th>
                         <th style="min-width: 80px;">CP</th>
                         <th style="min-width: 80px;">MAP</th>
                         <th style="min-width: 100px;">EB Adult CP</th>
@@ -51,8 +179,6 @@ $result = mysqli_query($conn, $sql);
                         <th style="min-width: 100px;">Meal Type</th>
                         <th style="min-width: 100px;">Adult Meal Charges</th>
                         <th style="min-width: 100px;">Child Meal Price</th>
-                        <th style="min-width: 100px;">Validity From</th>
-                        <th style="min-width: 100px;">Validity To</th>
                         <th style="min-width: 120px;">Remark</th>
                         <th style="min-width: 80px;">Status</th>
                         <th style="min-width: 100px;">Actions</th>
@@ -69,6 +195,8 @@ $result = mysqli_query($conn, $sql);
                     <td><?php echo htmlspecialchars($row['destination']); ?></td>
                     <td><?php echo htmlspecialchars($row['hotel_name']); ?></td>
                     <td><?php echo htmlspecialchars($row['room_category']); ?></td>
+                    <td><?php echo date('d-m-Y', strtotime($row['validity_from'])); ?></td>
+                    <td><?php echo date('d-m-Y', strtotime($row['validity_to'])); ?></td>
                     <td>₹<?php echo number_format($row['cp'], 2); ?></td>
                     <td>₹<?php echo number_format($row['map_rate'], 2); ?></td>
                     <td>₹<?php echo number_format($row['eb_adult_cp'], 2); ?></td>
@@ -81,8 +209,6 @@ $result = mysqli_query($conn, $sql);
                     <td><?php echo htmlspecialchars($row['meal_type']); ?></td>
                     <td>₹<?php echo number_format($row['meal_charges'], 2); ?></td>
                     <td>₹<?php echo number_format($row['child_meal_price'] ?? 0, 2); ?></td>
-                    <td><?php echo date('d-m-Y', strtotime($row['validity_from'])); ?></td>
-                    <td><?php echo date('d-m-Y', strtotime($row['validity_to'])); ?></td>
                     <td><?php echo htmlspecialchars($row['remark']); ?></td>
                     <td>
                         <?php 
@@ -141,5 +267,33 @@ $result = mysqli_query($conn, $sql);
         },
     });
 </script>
+
+<!-- Include filter styles -->
+<link rel="stylesheet" href="assets/css/filter-styles.css">
+
+<style>
+.filter-row {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+    flex-wrap: nowrap;
+}
+
+.form-group {
+    min-width: 120px;
+    flex: 1;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: end;
+    white-space: nowrap;
+}
+
+.filter-buttons .btn {
+    height: 48px;
+}
+</style>
 
 <?php require_once "includes/footer.php"; ?>

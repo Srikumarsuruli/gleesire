@@ -331,11 +331,10 @@ $url_string = !empty($url_params) ? "&" . implode("&", $url_params) : "";
                     <th>Mobile</th>
                     <th>File Manager</th>
                     <th>Destinations</th>
-                    <th>Last Updated</th>
                     <th>Campaign</th>
-                    <th>Attended By</th>
                     <th>Status</th>
-                    
+                    <th>Attended By</th>
+                    <th>Last Updated</th>
                     <th class="datatable-nosort">Actions</th>
                 </tr>
             </thead>
@@ -349,9 +348,7 @@ $url_string = !empty($url_params) ? "&" . implode("&", $url_params) : "";
                             <td><?php echo htmlspecialchars($row['mobile_number']); ?></td>
                             <td><?php echo htmlspecialchars($row['file_manager_name'] ?? 'Not Assigned'); ?></td>
                             <td><?php echo htmlspecialchars($row['destination_name'] ?? 'N/A'); ?></td>
-                            <td><?php echo date('d-m-Y H:i', strtotime($row['last_updated'])); ?></td>
                             <td><?php echo htmlspecialchars($row['campaign_name'] ?? 'N/A'); ?></td>
-                            <td><?php echo htmlspecialchars($row['attended_by_name']); ?></td>
                             <td>
                                 <div style="display: flex; align-items: center; gap: 10px;">
                                     <select class="custom-select status-select" data-id="<?php echo $row['id']; ?>" data-original="<?php echo $row['status_id']; ?>" style="min-width: 120px;">
@@ -365,6 +362,8 @@ $url_string = !empty($url_params) ? "&" . implode("&", $url_params) : "";
                                     <button type="button" onclick="updateStatus(<?php echo $row['id']; ?>, this)" style="background: none; border: none; color: green; font-size: 18px; cursor: pointer;">✓</button>
                                 </div>
                             </td>
+                            <td><?php echo htmlspecialchars($row['attended_by_name']); ?></td>
+                            <td><?php echo date('d-m-Y H:i', strtotime($row['last_updated'])); ?></td>
                             <td>
                                 <div class="dropdown">
                                     <a class="btn btn-link font-24 p-0 line-height-1 no-arrow dropdown-toggle" href="#" role="button" data-toggle="dropdown">
