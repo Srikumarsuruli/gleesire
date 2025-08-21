@@ -87,12 +87,15 @@ if(!empty($status_id)) {
 
 if(!empty($search)) {
     $search_term = "%" . $search . "%";
-    $base_sql .= " AND (e.lead_number LIKE ? OR e.customer_name LIKE ? OR e.mobile_number LIKE ? OR e.email LIKE ?)";
+    $base_sql .= " AND (e.lead_number LIKE ? OR e.customer_name LIKE ? OR e.mobile_number LIKE ? OR e.email LIKE ? OR fm.full_name LIKE ? OR dest.name LIKE ? OR ac.name LIKE ?)";
     $params[] = $search_term;
     $params[] = $search_term;
     $params[] = $search_term;
     $params[] = $search_term;
-    $types .= "ssss";
+    $params[] = $search_term;
+    $params[] = $search_term;
+    $params[] = $search_term;
+    $types .= "sssssss";
 }
 
 if(!empty($enquiry_type)) {
@@ -148,7 +151,55 @@ if(!empty($status_id)) {
     $count_sql .= " AND e.status_id = ?";
 }
 if(!empty($search)) {
-    $count_sql .= " AND (e.lead_number LIKE ? OR e.customer_name LIKE ? OR e.mobile_number LIKE ? OR e.email LIKE ?)";
+    // For count query, we need to join the same tables to search in file manager, destinations, and campaigns
+    $count_sql = "SELECT COUNT(*) FROM enquiries e 
+                  LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id
+                  LEFT JOIN users fm ON cl.file_manager_id = fm.id
+                  LEFT JOIN destinations dest ON cl.destination_id = dest.id
+                  LEFT JOIN ad_campaigns ac ON e.ad_campaign_id = ac.id
+                  WHERE 1=1";
+    
+    // Re-add all the WHERE conditions for count query with joins
+    if(!isAdmin()) {
+        $current_user_id = $_SESSION['id'] ?? $_SESSION['user_id'] ?? null;
+        if($current_user_id) {
+            $count_sql .= " AND e.attended_by = ?";
+        }
+    }
+    if(!empty($attended_by)) {
+        $count_sql .= " AND e.attended_by = ?";
+    }
+    if(!empty($status_id)) {
+        $count_sql .= " AND e.status_id = ?";
+    }
+    $count_sql .= " AND (e.lead_number LIKE ? OR e.customer_name LIKE ? OR e.mobile_number LIKE ? OR e.email LIKE ? OR fm.full_name LIKE ? OR dest.name LIKE ? OR ac.name LIKE ?)";
+    if(!empty($enquiry_type)) {
+        $count_sql .= " AND e.enquiry_type = ?";
+    }
+    if(!empty($date_filter)) {
+        switch($date_filter) {
+            case "today":
+                $count_sql .= " AND DATE(e.received_datetime) = CURDATE()";
+                break;
+            case "yesterday":
+                $count_sql .= " AND DATE(e.received_datetime) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)";
+                break;
+            case "this_week":
+                $count_sql .= " AND YEARWEEK(e.received_datetime) = YEARWEEK(NOW())";
+                break;
+            case "this_month":
+                $count_sql .= " AND MONTH(e.received_datetime) = MONTH(NOW()) AND YEAR(e.received_datetime) = YEAR(NOW())";
+                break;
+            case "this_year":
+                $count_sql .= " AND YEAR(e.received_datetime) = YEAR(NOW())";
+                break;
+            case "custom":
+                if(!empty($start_date) && !empty($end_date)) {
+                    $count_sql .= " AND DATE(e.received_datetime) BETWEEN ? AND ?";
+                }
+                break;
+        }
+    }
 }
 if(!empty($enquiry_type)) {
     $count_sql .= " AND e.enquiry_type = ?";
@@ -274,7 +325,7 @@ $url_string = !empty($url_params) ? "&" . implode("&", $url_params) : "";
                 </div>
                 <div class="form-group">
                     <label for="search-filter">Search</label>
-                    <input type="text" class="form-control" id="search-filter" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Enquiry #, Name, Mobile, Email">
+                    <input type="text" class="form-control" id="search-filter" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Enquiry #, Name, Mobile, Email, File Manager, Destinations, Campaign">
                 </div>
                 
                 <div class="form-group">
