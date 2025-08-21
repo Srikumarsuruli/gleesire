@@ -294,6 +294,15 @@ $destinations = mysqli_query($conn, $destinations_sql);
 $accommodations_sql = "SELECT id,destination,hotel_name,room_category,cp,map_rate,eb_adult_cp,eb_adult_map,child_with_bed_cp,child_with_bed_map,child_without_bed_cp,child_without_bed_map FROM accommodation_details ORDER BY destination";
 $accommodations = mysqli_query($conn, $accommodations_sql);
 
+$transport_sql = "SELECT id,destination,company_name,vehicle,daily_rent,rate_per_km FROM transport_details WHERE status = 'Active' ORDER BY destination";
+$transport_details = mysqli_query($conn, $transport_sql);
+
+$agent_sql = "SELECT id,destination,supplier,supplier_name FROM travel_agents WHERE status = 'Active' ORDER BY destination";
+$agent_details = mysqli_query($conn, $agent_sql);
+
+$hospital_sql = "SELECT id,destination,hospital_name FROM hospital_details WHERE status = 'Active' ORDER BY destination";
+$hospital_details = mysqli_query($conn, $hospital_sql);
+
 
 // Decode JSON data for form population
 $selected_services = json_decode($cost_data['selected_services'] ?? '[]', true);
@@ -320,12 +329,6 @@ $package_cost = floatval($cost_data['package_cost']);
 $total_received = floatval($payment_data['total_received']);
 $payment_data['balance_amount'] = $package_cost - $total_received;
 ?>
-
-<style>
-    .table thead th{
-        text-wrap: nowrap;
-    }
-</style>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -776,7 +779,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <?php foreach ($accommodation_data as $index => $accom): ?>
                                 <tr>
                                     <td>
-                                        <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][destination]">
+                                        <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][destination]" onchange="updateHotels(this, <?php echo $index; ?>, <?php echo $accom['hotel']; ?>)">
                                             <option value="">Select Destination</option>
                                             <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): ?>
                                                 <option 
@@ -790,38 +793,20 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                         <input type="hidden" name="accommodation[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
                                     </td>
                                     <td>
-                                        <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][hotel]">
+                                        <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][hotel]" onchange="updateRoomTypes(this, <?php echo $index; ?>, <?php echo $accom['room_type']; ?>)">
                                             <option value="">Select Hotel</option>
-                                            <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): 
-                                                
-                                                if ($accom['destination'] == $dest['destination']):
-                                            ?>
-                                                <option 
-                                                    value="<?php echo htmlspecialchars($dest['hotel_name']); ?>" 
-                                                    <?php echo ($accom['hotel'] == $dest['hotel_name']) ? 'selected' : ''; ?>
-                                                >
-                                                    <?php echo htmlspecialchars($dest['hotel_name']); ?>
-                                                </option>
-                                            <?php 
-                                                endif;
-                                                endwhile; 
-                                            ?>
                                         </select>
                                     </td>
                                     <td><input type="date" class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][check_in]" value="<?php echo $accom['check_in'] ?? ''; ?>"></td>
                                     <td><input type="date" class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][check_out]" value="<?php echo $accom['check_out'] ?? ''; ?>"></td>
                                     <td>
-                                        <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][room_type]">
+                                        <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][room_type]" onchange="updateRates(this, <?php echo $index; ?>)">
                                             <option value="">Select Room Type</option>
-                                            <option value="Single Room" <?php echo ($accom['room_type'] == 'Single Room') ? 'selected' : ''; ?>>Single Room</option>
-                                            <option value="Double Room" <?php echo ($accom['room_type'] == 'Double Room') ? 'selected' : ''; ?>>Double Room</option>
-                                            <option value="Suite" <?php echo ($accom['room_type'] == 'Suite') ? 'selected' : ''; ?>>Suite</option>
-                                            <option value="Villa" <?php echo ($accom['room_type'] == 'Villa') ? 'selected' : ''; ?>>Villa</option>
                                         </select>
                                     </td>
                                     <td><input type="number" class="form-control form-control-sm accom-rooms-no" name="accommodation[<?php echo $index; ?>][rooms_no]" data-row="<?php echo $index; ?>" value="<?php echo $accom['rooms_no'] ?? '0'; ?>" onchange="calculateAccommodationTotal(<?php echo $index; ?>)"></td>
                                     <td>
-                                        <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][meal_plan]">
+                                        <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][meal_plan]" onchange="updateRates(this, <?php echo $index; ?>)">
                                             <option value="">Select Meal Plan</option>
                                             <option value="cp" <?php echo ($accom['meal_plan'] == 'cp') ? 'selected' : ''; ?>>CP</option>
                                             <option value="map" <?php echo ($accom['meal_plan'] == 'map') ? 'selected' : ''; ?>>MAP</option>
@@ -842,35 +827,40 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             <?php else: ?>
                                 <tr>
                                     <td>
-                                        <select class="form-control form-control-sm" name="accommodation[0][destination]">
+                                        <select class="form-control form-control-sm" name="accommodation[0][destination]" onchange="updateHotels(this, 0)">
                                             <option value="">Select Destination</option>
-                                            <?php mysqli_data_seek($destinations, 0); while($dest = mysqli_fetch_assoc($destinations)): ?>
-                                                <option value="<?php echo htmlspecialchars($dest['name']); ?>"><?php echo htmlspecialchars($dest['name']); ?></option>
+                                            <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): ?>
+                                                <option 
+                                                    value="<?php echo htmlspecialchars($dest['destination']); ?>" 
+                                                >
+                                                    <?php echo htmlspecialchars($dest['destination']); ?>
+                                                </option>
                                             <?php endwhile; ?>
                                         </select>
                                         <input type="hidden" name="accommodation[0][idx]" value="0">
                                     </td>
                                     <td>
-                                        <select class="form-control form-control-sm" name="accommodation[0][hotel]">
+                                        <select class="form-control form-control-sm" name="accommodation[0]" onchange="updateRoomTypes(this, 0)">
                                             <option value="">Select Hotel</option>
-                                            <option value="ABAAM CHELSEA">ABAAM CHELSEA</option>
-                                            <option value="ABAD ATRIUM KOCHI">ABAD ATRIUM KOCHI</option>
-                                            <option value="TAJ MALABAR">TAJ MALABAR</option>
-                                            <option value="VIVANTA MARINE DRIVE">VIVANTA MARINE DRIVE</option>
                                         </select>
                                     </td>
                                     <td><input type="date" class="form-control form-control-sm" name="accommodation[0][check_in]"></td>
                                     <td><input type="date" class="form-control form-control-sm" name="accommodation[0][check_out]"></td>
                                     <td>
-                                        <select class="form-control form-control-sm" name="accommodation[0][room_type]">
+                                        <select class="form-control form-control-sm" name="accommodation[0][room_type]" onchange="updateRates(this, 0)">
                                             <option value="">Select Room Type</option>
-                                            <option value="Single Room">Single Room</option>
-                                            <option value="Double Room">Double Room</option>
-                                            <option value="Suite">Suite</option>
-                                            <option value="Villa">Villa</option>
                                         </select>
                                     </td>
-                                    <td><input type="number" class="form-control form-control-sm accom-rooms-no" name="accommodation[0][rooms_no]" data-row="0" value="0" onchange="calculateAccommodationTotal(0)"></td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm accom-rooms-no" name="accommodation[0][rooms_no]" data-row="0" value="0" onchange="calculateAccommodationTotal(0)">
+                                    </td>
+                                    <td>
+                                        <select class="form-control form-control-sm" name="accommodation[0][meal_plan]" onchange="updateRates(this, 0)">
+                                            <option value="">Select Meal Plan</option>
+                                            <option value="cp">CP</option>
+                                            <option value="map">MAP</option>
+                                        </select>
+                                    </td>
                                     <td><input type="number" class="form-control form-control-sm accom-rooms-rate" name="accommodation[0][rooms_rate]" data-row="0" value="0" onchange="calculateAccommodationTotal(0)"></td>
                                     <td><input type="number" class="form-control form-control-sm accom-extra-adult-no" name="accommodation[0][extra_adult_no]" data-row="0" value="0" onchange="calculateAccommodationTotal(0)"></td>
                                     <td><input type="number" class="form-control form-control-sm accom-extra-adult-rate" name="accommodation[0][extra_adult_rate]" data-row="0" value="0" onchange="calculateAccommodationTotal(0)"></td>
@@ -879,15 +869,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td><input type="number" class="form-control form-control-sm accom-child-no-bed-no" name="accommodation[0][child_no_bed_no]" data-row="0" value="0" onchange="calculateAccommodationTotal(0)"></td>
                                     <td><input type="number" class="form-control form-control-sm accom-child-no-bed-rate" name="accommodation[0][child_no_bed_rate]" data-row="0" value="0" onchange="calculateAccommodationTotal(0)"></td>
                                     <td><input type="number" class="form-control form-control-sm accom-nights" name="accommodation[0][nights]" data-row="0" value="0" onchange="calculateAccommodationTotal(0)"></td>
-                                    <td>
-                                        <select class="form-control form-control-sm" name="accommodation[0][meal_plan]">
-                                            <option value="">Select Meal Plan</option>
-                                            <option value="Room Only">Room Only</option>
-                                            <option value="Bed and Breakfast">Bed and Breakfast</option>
-                                            <option value="Half Board">Half Board</option>
-                                            <option value="All-Inclusive">All-Inclusive</option>
-                                        </select>
-                                    </td>
+                                    
                                     <td><input type="text" class="form-control form-control-sm accom-total" name="accommodation[0][total]" data-row="0" readonly style="background: #f0f8ff; font-weight: bold;"></td>
                                 </tr>
                             <?php endif; ?>
@@ -930,26 +912,24 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <tr>
                                     <td><?php echo $index + 1; ?></td>
                                     <td>
-                                        <input type="text" class="form-control form-control-sm" name="transportation[<?php echo $index; ?>][supplier]" value="<?php echo htmlspecialchars($trans['supplier'] ?? ''); ?>" placeholder="Supplier Name">
+                                        <select class="form-control form-control-sm" name="transportation[<?php echo $index; ?>][supplier]" onchange="updateTransportVehicles(this, <?php echo $index; ?>, '<?php echo $trans['car_type'] ?? ''; ?>')">
+                                            <option value="">Select Supplier</option>
+                                            <?php mysqli_data_seek($transport_details, 0); while($transport = mysqli_fetch_assoc($transport_details)): ?>
+                                                <option value="<?php echo htmlspecialchars($transport['company_name']); ?>" <?php echo ($trans['supplier'] == $transport['company_name']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($transport['company_name']); ?></option>
+                                            <?php endwhile; ?>
+                                        </select>
                                         <input type="hidden" name="transportation[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
                                     </td>
                                     <td>
-                                        <select class="form-control form-control-sm" name="transportation[<?php echo $index; ?>][car_type]">
+                                        <select class="form-control form-control-sm" name="transportation[<?php echo $index; ?>][car_type]" onchange="updateTransportRates(this, <?php echo $index; ?>)" data-selected="<?php echo htmlspecialchars($trans['car_type'] ?? ''); ?>">
                                             <option value="">Select Car Type</option>
-                                            <option value="Sedan" <?php echo ($trans['car_type'] == 'Sedan') ? 'selected' : ''; ?>>Sedan</option>
-                                            <option value="SUV" <?php echo ($trans['car_type'] == 'SUV') ? 'selected' : ''; ?>>SUV</option>
-                                            <option value="Hatchback" <?php echo ($trans['car_type'] == 'Hatchback') ? 'selected' : ''; ?>>Hatchback</option>
-                                            <option value="Luxury Car" <?php echo ($trans['car_type'] == 'Luxury Car') ? 'selected' : ''; ?>>Luxury Car</option>
-                                            <option value="Mini Bus" <?php echo ($trans['car_type'] == 'Mini Bus') ? 'selected' : ''; ?>>Mini Bus</option>
-                                            <option value="Bus" <?php echo ($trans['car_type'] == 'Bus') ? 'selected' : ''; ?>>Bus</option>
-                                            <option value="Tempo Traveller" <?php echo ($trans['car_type'] == 'Tempo Traveller') ? 'selected' : ''; ?>>Tempo Traveller</option>
                                         </select>
                                     </td>
-                                    <td><input type="number" class="form-control form-control-sm trans-daily-rent" name="transportation[<?php echo $index; ?>][daily_rent]" data-row="<?php echo $index; ?>" value="<?php echo $trans['daily_rent'] ?? '0'; ?>" onchange="calculateTransportationTotal(<?php echo $index; ?>)" placeholder="0"></td>
+                                    <td><input type="number" class="form-control form-control-sm trans-daily-rent" name="transportation[<?php echo $index; ?>][daily_rent]" data-row="<?php echo $index; ?>" value="<?php echo $trans['daily_rent'] ?? '0'; ?>" onchange="calculateTransportationTotal(<?php echo $index; ?>)" placeholder="0" readonly></td>
                                     <td><input type="number" class="form-control form-control-sm trans-days" name="transportation[<?php echo $index; ?>][days]" data-row="<?php echo $index; ?>" value="<?php echo $trans['days'] ?? '2'; ?>" onchange="calculateTransportationTotal(<?php echo $index; ?>)" placeholder="2"></td>
                                     <td><input type="number" class="form-control form-control-sm trans-km" name="transportation[<?php echo $index; ?>][km]" data-row="<?php echo $index; ?>" value="<?php echo $trans['km'] ?? '0'; ?>" onchange="calculateTransportationTotal(<?php echo $index; ?>)" placeholder="0"></td>
                                     <td><input type="number" class="form-control form-control-sm trans-extra-km" name="transportation[<?php echo $index; ?>][extra_km]" data-row="<?php echo $index; ?>" value="<?php echo $trans['extra_km'] ?? '0'; ?>" onchange="calculateTransportationTotal(<?php echo $index; ?>)" placeholder="0"></td>
-                                    <td><input type="number" class="form-control form-control-sm trans-price-per-km" name="transportation[<?php echo $index; ?>][price_per_km]" data-row="<?php echo $index; ?>" value="<?php echo $trans['price_per_km'] ?? '0'; ?>" onchange="calculateTransportationTotal(<?php echo $index; ?>)" placeholder="0"></td>
+                                    <td><input type="number" class="form-control form-control-sm trans-price-per-km" name="transportation[<?php echo $index; ?>][price_per_km]" data-row="<?php echo $index; ?>" value="<?php echo $trans['price_per_km'] ?? '0'; ?>" onchange="calculateTransportationTotal(<?php echo $index; ?>)" placeholder="0" readonly></td>
                                     <td><input type="number" class="form-control form-control-sm trans-toll" name="transportation[<?php echo $index; ?>][toll]" data-row="<?php echo $index; ?>" value="<?php echo $trans['toll'] ?? '0'; ?>" onchange="calculateTransportationTotal(<?php echo $index; ?>)" placeholder="0"></td>
                                     <td><input type="text" class="form-control form-control-sm trans-total" name="transportation[<?php echo $index; ?>][total]" data-row="<?php echo $index; ?>" value="<?php echo $trans['total'] ?? '0.00'; ?>" readonly style="background: #f0f8ff; font-weight: bold;"></td>
                                 </tr>
@@ -958,26 +938,24 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <tr>
                                     <td>1</td>
                                     <td>
-                                        <input type="text" class="form-control form-control-sm" name="transportation[0][supplier]" placeholder="Supplier Name">
+                                        <select class="form-control form-control-sm" name="transportation[0][supplier]" onchange="updateTransportVehicles(this, 0)">
+                                            <option value="">Select Supplier</option>
+                                            <?php mysqli_data_seek($transport_details, 0); while($transport = mysqli_fetch_assoc($transport_details)): ?>
+                                                <option value="<?php echo htmlspecialchars($transport['company_name']); ?>"><?php echo htmlspecialchars($transport['company_name']); ?></option>
+                                            <?php endwhile; ?>
+                                        </select>
                                         <input type="hidden" name="transportation[0][idx]" value="0">
                                     </td>
                                     <td>
-                                        <select class="form-control form-control-sm" name="transportation[0][car_type]">
+                                        <select class="form-control form-control-sm" name="transportation[0][car_type]" onchange="updateTransportRates(this, 0)" disabled>
                                             <option value="">Select Car Type</option>
-                                            <option value="Sedan">Sedan</option>
-                                            <option value="SUV">SUV</option>
-                                            <option value="Hatchback">Hatchback</option>
-                                            <option value="Luxury Car">Luxury Car</option>
-                                            <option value="Mini Bus">Mini Bus</option>
-                                            <option value="Bus">Bus</option>
-                                            <option value="Tempo Traveller">Tempo Traveller</option>
                                         </select>
                                     </td>
-                                    <td><input type="number" class="form-control form-control-sm trans-daily-rent" name="transportation[0][daily_rent]" data-row="0" value="0" onchange="calculateTransportationTotal(0)" placeholder="0"></td>
+                                    <td><input type="number" class="form-control form-control-sm trans-daily-rent" name="transportation[0][daily_rent]" data-row="0" value="0" onchange="calculateTransportationTotal(0)" placeholder="0" readonly></td>
                                     <td><input type="number" class="form-control form-control-sm trans-days" name="transportation[0][days]" data-row="0" value="2" onchange="calculateTransportationTotal(0)" placeholder="2"></td>
                                     <td><input type="number" class="form-control form-control-sm trans-km" name="transportation[0][km]" data-row="0" value="0" onchange="calculateTransportationTotal(0)" placeholder="0"></td>
                                     <td><input type="number" class="form-control form-control-sm trans-extra-km" name="transportation[0][extra_km]" data-row="0" value="0" onchange="calculateTransportationTotal(0)" placeholder="0"></td>
-                                    <td><input type="number" class="form-control form-control-sm trans-price-per-km" name="transportation[0][price_per_km]" data-row="0" value="0" onchange="calculateTransportationTotal(0)" placeholder="0"></td>
+                                    <td><input type="number" class="form-control form-control-sm trans-price-per-km" name="transportation[0][price_per_km]" data-row="0" value="0" onchange="calculateTransportationTotal(0)" placeholder="0" readonly></td>
                                     <td><input type="number" class="form-control form-control-sm trans-toll" name="transportation[0][toll]" data-row="0" value="0" onchange="calculateTransportationTotal(0)" placeholder="0"></td>
                                     <td><input type="text" class="form-control form-control-sm trans-total" name="transportation[0][total]" data-row="0" readonly style="background: #f0f8ff; font-weight: bold;"></td>
                                 </tr>
@@ -1118,15 +1096,19 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <?php foreach ($agent_package_data as $index => $package): ?>
                                 <tr>
                                     <td>
-                                        <select class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][destination]">
+                                        <select class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][destination]" onchange="updateAgentSupplier(this, <?php echo $index; ?>, <?php echo $package['agent_supplier']; ?> )">
                                             <option value="">Select Destination</option>
-                                            <?php mysqli_data_seek($destinations, 0); while($dest = mysqli_fetch_assoc($destinations)): ?>
-                                                <option value="<?php echo htmlspecialchars($dest['name']); ?>" <?php echo ($package['destination'] == $dest['name']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($dest['name']); ?></option>
+                                            <?php mysqli_data_seek($agent_details, 0); while($agent = mysqli_fetch_assoc($agent_details)): ?>
+                                                <option value="<?php echo htmlspecialchars($agent['destination']); ?>" <?php echo ($package['agent_supplier'] == $agent['destination']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($agent['destination']); ?></option>
                                             <?php endwhile; ?>
                                         </select>
                                         <input type="hidden" name="agent_package[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
                                     </td>
-                                    <td><input type="text" class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][agent_supplier]" value="<?php echo htmlspecialchars($package['agent_supplier'] ?? ''); ?>" placeholder="Agent/Supplier" style="width: 120px;"></td>
+                                    <td>
+                                        <select class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][agent_supplier]" style="width: 120px;">
+                                            <option value="">Select Agent/Supplier</option>
+                                        </select>
+                                    </td>
                                     <td><input type="date" class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][start_date]" value="<?php echo $package['start_date'] ?? ''; ?>"></td>
                                     <td><input type="date" class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][end_date]" value="<?php echo $package['end_date'] ?? ''; ?>"></td>
                                     <td><input type="number" class="form-control form-control-sm agent-adult-count" name="agent_package[<?php echo $index; ?>][adult_count]" data-row="<?php echo $index; ?>" value="<?php echo $package['adult_count'] ?? $cost_data['adults_count'] ?? 0; ?>" style="width: 70px;" onchange="calculateAgentPackageTotal(<?php echo $index; ?>)"></td>
@@ -1141,15 +1123,20 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             <?php else: ?>
                                 <tr>
                                     <td>
-                                        <select class="form-control form-control-sm" name="agent_package[0][destination]">
+                                        <select class="form-control form-control-sm" name="agent_package[0][destination]" onchange="updateAgentSupplier(this, 0)">
                                             <option value="">Select Destination</option>
-                                            <?php mysqli_data_seek($destinations, 0); while($dest = mysqli_fetch_assoc($destinations)): ?>
-                                                <option value="<?php echo htmlspecialchars($dest['name']); ?>"><?php echo htmlspecialchars($dest['name']); ?></option>
+                                             <?php mysqli_data_seek($agent_details, 0); while($agent = mysqli_fetch_assoc($agent_details)): ?>
+                                                <option value="<?php echo htmlspecialchars($agent['destination']); ?>" ><?php echo htmlspecialchars($agent['destination']); ?></option>
                                             <?php endwhile; ?>
                                         </select>
                                         <input type="hidden" name="agent_package[0][idx]" value="0">
                                     </td>
-                                    <td><input type="text" class="form-control form-control-sm" name="agent_package[0][agent_supplier]" placeholder="Agent/Supplier" style="width: 120px;"></td>
+                                    <td>
+                                        <select class="form-control form-control-sm" name="agent_package[0][agent_supplier]" style="width: 120px;" disabled>
+                                            <option value="">Select Agent/Supplier</option>
+                                           
+                                        </select>
+                                    </td>
                                     <td><input type="date" class="form-control form-control-sm" name="agent_package[0][start_date]" value="<?php echo $cost_data['travel_start_date'] ?? ''; ?>"></td>
                                     <td><input type="date" class="form-control form-control-sm" name="agent_package[0][end_date]" value="<?php echo $cost_data['travel_end_date'] ?? ''; ?>"></td>
                                     <td><input type="number" class="form-control form-control-sm agent-adult-count" name="agent_package[0][adult_count]" data-row="0" value="<?php echo $cost_data['adults_count'] ?? 0; ?>" style="width: 70px;" onchange="calculateAgentPackageTotal(0)"></td>
@@ -1201,18 +1188,33 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <?php foreach ($medical_tourism_data as $index => $package): ?>
                                 <tr>
                                     <td>
-                                        <input type="text" class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][place]" value="<?php echo htmlspecialchars($package['place'] ?? ''); ?>" placeholder="Place" style="width: 120px;">
+                                        <select class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][place]" onchange="updateHospitals(this, <?php echo $index; ?>, '<?php echo $package['hospital'] ?? ''; ?>')" style="width: 120px;">
+                                            <option value="">Select Place</option>
+                                            <?php mysqli_data_seek($hospital_details, 0); while($hospital = mysqli_fetch_assoc($hospital_details)): ?>
+                                                <option value="<?php echo htmlspecialchars($hospital['destination']); ?>" <?php echo ($package['place'] == $hospital['destination']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($hospital['destination']); ?></option>
+                                            <?php endwhile; ?>
+                                        </select>
                                         <input type="hidden" name="medical_tourisms[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
                                     </td>
                                     <td><input type="date" class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][treatment_date]" value="<?php echo $package['treatment_date'] ?? ''; ?>"></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][hospital]" value="<?php echo htmlspecialchars($package['hospital'] ?? ''); ?>" placeholder="Hospital" style="width: 120px;"></td>
+                                    <td>
+                                        <select class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][hospital]" style="width: 120px;" data-selected="<?php echo htmlspecialchars($package['hospital'] ?? ''); ?>">
+                                            <option value="">Select Hospital</option>
+                                        </select>
+                                    </td>
                                     <td>
                                         <select class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][treatment_type]">
                                            <option value="">Select type</option>
                                            <option value="Type 1" >Type 1</option>
                                         </select>
                                     </td>
-                                    <td><input type="text" class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][op_ip]" value="<?php echo $package['op_ip'] ?? ""; ?>" style="width: 70px;"></td>
+                                    <td>
+                                        <select class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][op_ip]">
+                                           <option value="">Select type</option>
+                                           <option value="IP" <?php echo $package['op_ip'] == 'IP' ? 'selected':'' ?>  >IP</option>
+                                           <option value="OP" <?php echo $package['op_ip'] == 'OP' ? 'selected':'' ?>   >OP</option>
+                                        </select>
+                                    </td>
                                     <td><input type="number" class="form-control form-control-sm medical-tourism-net" name="medical_tourisms[<?php echo $index; ?>][net]" data-row="<?php echo $index; ?>" value="<?php echo $package['net'] ?? 0; ?>" style="width: 100px;" onchange="calculateMedicalTourismTotal(<?php echo $index; ?>)"></td>
                                     <td><input type="number" class="form-control form-control-sm medical-tourism-tds" name="medical_tourisms[<?php echo $index; ?>][tds]" data-row="<?php echo $index; ?>" value="<?php echo $package['tds'] ?? 0; ?>" style="width: 70px;" onchange="calculateMedicalTourismTotal(<?php echo $index; ?>)"></td>
                                     <td><input type="number" class="form-control form-control-sm medical-tourism-other_expenses" name="medical_tourisms[<?php echo $index; ?>][other_expenses]" data-row="<?php echo $index; ?>" value="<?php echo $package['other_expenses'] ?? 0; ?>" style="width: 100px;" onchange="calculateMedicalTourismTotal(<?php echo $index; ?>)"></td>
@@ -1223,18 +1225,33 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             <?php else: ?>
                                 <tr>
                                     <td>
-                                        <input type="text" class="form-control form-control-sm" name="medical_tourisms[0][place]" placeholder="Place" style="width: 120px;">
+                                        <select class="form-control form-control-sm" name="medical_tourisms[0][place]" onchange="updateHospitals(this, 0)" style="width: 120px;">
+                                            <option value="">Select Place</option>
+                                            <?php mysqli_data_seek($hospital_details, 0); while($hospital = mysqli_fetch_assoc($hospital_details)): ?>
+                                                <option value="<?php echo htmlspecialchars($hospital['destination']); ?>"><?php echo htmlspecialchars($hospital['destination']); ?></option>
+                                            <?php endwhile; ?>
+                                        </select>
                                         <input type="hidden" name="medical_tourisms[0][idx]" value="0">
                                     </td>
                                     <td><input type="date" class="form-control form-control-sm" name="medical_tourisms[0][treatment_date]" value="<?php echo $cost_data['treatment_date'] ?? ''; ?>"></td>
-                                    <td><input type="text" class="form-control form-control-sm" name="medical_tourisms[0][hospital]" placeholder="Hospital Name" style="width: 120px;"></td>
+                                    <td>
+                                        <select class="form-control form-control-sm" name="medical_tourisms[0][hospital]" style="width: 120px;" disabled>
+                                            <option value="">Select Hospital</option>
+                                        </select>
+                                    </td>
                                     <td>
                                         <select class="form-control form-control-sm" name="medical_tourisms[0][treatment_type]">
                                            <option value="">Select type</option>
                                            <option value="Type 1" >Type 1</option>
                                         </select>
                                     </td>
-                                    <td><input type="text" class="form-control form-control-sm" name="medical_tourisms[0][op_ip]" value="" style="width: 70px;"></td>
+                                    <td>
+                                        <select class="form-control form-control-sm" name="medical_tourisms[0][op_ip]">
+                                           <option value="">Select type</option>
+                                           <option value="IP" >IP</option>
+                                           <option value="OP" >OP</option>
+                                        </select>
+                                    </td>
                                     <td><input type="number" class="form-control form-control-sm medical-tourism-net" name="medical_tourisms[0][net]" data-row="0" value="0" style="width: 100px;" onchange="calculateMedicalTourismTotal(0)"></td>
                                     <td><input type="number" class="form-control form-control-sm medical-tourism-tds" name="medical_tourisms[0][tds]" data-row="0" value="0" style="width: 70px;" onchange="calculateMedicalTourismTotal(0)"></td>
                                     <td><input type="number" class="form-control form-control-sm medical-tourism-other_expenses" name="medical_tourisms[0][other_expenses]" data-row="0" value="0" style="width: 100px;" onchange="calculateMedicalTourismTotal(0)"></td>
@@ -1418,8 +1435,8 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
 <script src="edit_cost_file_agent_package.js?v=<?php echo time(); ?>"></script>
 <script>
 
-let accommodationRowCount = 1;
-function addAccommodationRow() {
+    let accommodationRowCount = 1;
+    function addAccommodationRow() {
     const tbody = document.getElementById('accommodation-tbody');
     const newRow = document.createElement('tr');
     newRow.innerHTML = `
@@ -1471,17 +1488,18 @@ function addAccommodationRow() {
     `;
     tbody.appendChild(newRow);
     accommodationRowCount++;
-}
+    }
 
-// Update hotels based on selected destination
-function updateHotels(destinationSelect, rowIndex) {
+
+    // Update hotels based on selected destination
+    function updateHotels(destinationSelect, rowIndex, value) {
     const hotelSelect = destinationSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[hotel]"]');
     const roomTypeSelect = destinationSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[room_type]"]');
     const mealPlanSelect = destinationSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[meal_plan]"]');
     
     hotelSelect.disabled = !destinationSelect.value;
-    roomTypeSelect.disabled = true;
-    mealPlanSelect.disabled = true;
+    // roomTypeSelect.disabled = true;
+    // mealPlanSelect.disabled = true;
     
     if(destinationSelect.value) {
         // AJAX call to get hotels for selected destination
@@ -1490,549 +1508,701 @@ function updateHotels(destinationSelect, rowIndex) {
             .then(res => {
                 hotelSelect.innerHTML = '<option value="">Select Hotel</option>';
                 res.data.forEach(hotel => {
-                    hotelSelect.innerHTML += `<option value="${hotel.hotel_name}">${hotel.hotel_name}</option>`;
+                    hotelSelect.innerHTML += `<option value="${hotel.hotel_name}" ${value == hotel.hotel_name ? 'selected': ''}>${hotel.hotel_name}</option>`;
                 });
             });
 
             updateRates(destinationSelect, rowIndex)
     }
-}
+    }
 
-// Update room types based on selected hotel
-function updateRoomTypes(hotelSelect, rowIndex) {
-    const destinationSelect = hotelSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[destination]"]');
+    // Update room types based on selected hotel
+    function updateRoomTypes(hotelSelect, rowIndex, value) {
+        const destinationSelect = hotelSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[destination]"]');
 
-    const roomTypeSelect = hotelSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[room_type]"]');
-    const mealPlanSelect = hotelSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[meal_plan]"]');
-    
-    roomTypeSelect.disabled = !hotelSelect.value;
-    mealPlanSelect.disabled = true;
-    
-    if(hotelSelect.value) {
-        // AJAX call to get room types for selected hotel
-        fetch(`get_data_model.php?data_model=accommodation&destination=${destinationSelect.value}&hotel_name=${hotelSelect.value}`)
-            .then(response => response.json())
-            .then(res => {
-                roomTypeSelect.innerHTML = '<option value="">Select Room Type</option>';
-                res.data.forEach(type => {
-                    roomTypeSelect.innerHTML += `<option value="${type.room_category}">${type.room_category}</option>`;
+        const roomTypeSelect = hotelSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[room_type]"]');
+        const mealPlanSelect = hotelSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[meal_plan]"]');
+
+        roomTypeSelect.disabled = !hotelSelect.value;
+        // mealPlanSelect.disabled = true;
+
+        if(hotelSelect.value) {
+            // AJAX call to get room types for selected hotel
+            fetch(`get_data_model.php?data_model=accommodation&destination=${destinationSelect.value}&hotel_name=${hotelSelect.value}`)
+                .then(response => response.json())
+                .then(res => {
+                    roomTypeSelect.innerHTML = '<option value="">Select Room Type</option>';
+                    res.data.forEach(type => {
+                        roomTypeSelect.innerHTML += `<option value="${type.room_category}" ${value == type.room_category ? 'selected': ''}>${type.room_category}</option>`;
+                    });
+
+                    updateRates(hotelSelect, rowIndex)
                 });
-                
-                updateRates(hotelSelect, rowIndex)
-            });
+        }
+
+
     }
 
+    // Update rates based on selected room type
+    function updateRates(parentSelect, rowIndex) {
+        const desctinationSelect = parentSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[destination]"]');
+        const hotelSelect = parentSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[hotel]"]');
+        const mealTypeSelect = parentSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[meal_plan]"]');
+        const _roomTypeSelect = parentSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[room_type]"]');
 
-}
+        const roomRateSelect = parentSelect.closest('tr').querySelector('input[name^="accommodation"][name$="[rooms_rate]"]');
+        const extraAdultRateSelect = parentSelect.closest('tr').querySelector('input[name^="accommodation"][name$="[extra_adult_rate]"]');
+        const extraChildRateSelect = parentSelect.closest('tr').querySelector('input[name^="accommodation"][name$="[extra_child_rate]"]');
+        const childNoBedRateSelect = parentSelect.closest('tr').querySelector('input[name^="accommodation"][name$="[child_no_bed_rate]"]');
 
-// Update rates based on selected room type
-function updateRates(parentSelect, rowIndex) {
-    const desctinationSelect = parentSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[destination]"]');
-    const hotelSelect = parentSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[hotel]"]');
-    const mealTypeSelect = parentSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[meal_plan]"]');
-    const _roomTypeSelect = parentSelect.closest('tr').querySelector('select[name^="accommodation"][name$="[room_type]"]');
-    
-    const roomRateSelect = parentSelect.closest('tr').querySelector('input[name^="accommodation"][name$="[rooms_rate]"]');
-    const extraAdultRateSelect = parentSelect.closest('tr').querySelector('input[name^="accommodation"][name$="[extra_adult_rate]"]');
-    const extraChildRateSelect = parentSelect.closest('tr').querySelector('input[name^="accommodation"][name$="[extra_child_rate]"]');
-    const childNoBedRateSelect = parentSelect.closest('tr').querySelector('input[name^="accommodation"][name$="[child_no_bed_rate]"]');
-    
-    console.log(roomRateSelect, 'roomRateSelect');
-    
-    
-    if(desctinationSelect.value && hotelSelect.value && _roomTypeSelect.value) {
-        console.log(roomRateSelect , extraAdultRateSelect , extraChildRateSelect, childNoBedRateSelect);
-        
-        fetch(`get_data_model.php?data_model=accommodation&destination=${desctinationSelect.value}&hotel_name=${hotelSelect.value}&room_category=${_roomTypeSelect.value}`)
-            .then(response => response.json())
-            .then(res => {
 
-                if(res.data && res.data.length){
-                    let {
-                        cp, 
-                        map_rate,
+        if(desctinationSelect.value && hotelSelect.value && _roomTypeSelect.value) {
+            console.log(roomRateSelect , extraAdultRateSelect , extraChildRateSelect, childNoBedRateSelect);
 
-                        eb_adult_cp,
-                        eb_adult_map,
-                        
-                        child_with_bed_cp,
-                        child_with_bed_map,
-                        
-                        child_without_bed_cp,
-                        child_without_bed_map
-                    } = res.data[0]
+            fetch(`get_data_model.php?data_model=accommodation&destination=${desctinationSelect.value}&hotel_name=${hotelSelect.value}&room_category=${_roomTypeSelect.value}`)
+                .then(response => response.json())
+                .then(res => {
 
-                    if(mealTypeSelect.value == 'cp'){
-                        roomRateSelect.value = cp
-                        extraAdultRateSelect.value = eb_adult_cp
-                        extraChildRateSelect.value = child_with_bed_cp
-                        childNoBedRateSelect.value = child_without_bed_cp
-                    }
-                    else if(mealTypeSelect.value == 'map'){
-                        roomRateSelect.value = map_rate
-                        extraAdultRateSelect.value = eb_adult_map
-                        extraChildRateSelect.value = child_with_bed_map
-                        childNoBedRateSelect.value = child_without_bed_map
+                    if(res.data && res.data.length){
+                        let {
+                            cp, 
+                            map_rate,
+
+                            eb_adult_cp,
+                            eb_adult_map,
+
+                            child_with_bed_cp,
+                            child_with_bed_map,
+
+                            child_without_bed_cp,
+                            child_without_bed_map
+                        } = res.data[0]
+
+                        if(mealTypeSelect.value == 'cp'){
+                            roomRateSelect.value = cp
+                            extraAdultRateSelect.value = eb_adult_cp
+                            extraChildRateSelect.value = child_with_bed_cp
+                            childNoBedRateSelect.value = child_without_bed_cp
+                        }
+                        else if(mealTypeSelect.value == 'map'){
+                            roomRateSelect.value = map_rate
+                            extraAdultRateSelect.value = eb_adult_map
+                            extraChildRateSelect.value = child_with_bed_map
+                            childNoBedRateSelect.value = child_without_bed_map
+                        }
+
                     }
 
-                }
-                
-            });
+                });
+        }
     }
-}
 
-// Update rates when meal plan changes
-function updateMealPlanRates(mealPlanSelect, rowIndex) {
-    if(mealPlanSelect.value) {
-        // AJAX call to get updated rates for selected meal plan
-        fetch(`get_meal_plan_rates.php?meal_plan_id=${mealPlanSelect.value}`)
-            .then(response => response.json())
-            .then(rates => {
-                // Update rate inputs with meal plan adjusted values
-                calculateAccommodationTotal(rowIndex);
-            });
+    // Update rates when meal plan changes
+    function updateMealPlanRates(mealPlanSelect, rowIndex) {
+        if(mealPlanSelect.value) {
+            // AJAX call to get updated rates for selected meal plan
+            fetch(`get_meal_plan_rates.php?meal_plan_id=${mealPlanSelect.value}`)
+                .then(response => response.json())
+                .then(rates => {
+                    // Update rate inputs with meal plan adjusted values
+                    calculateAccommodationTotal(rowIndex);
+                });
+        }
     }
-}
 
-// Confirmation popup for new version creation
-function confirmNewVersion(event) {
-    event.preventDefault();
-    if (confirm("Do you want to create the new version?")) {
-        document.getElementById('cost-file-form').submit();
-        return true;
-    } else {
-        return false;
+    let transportationRowCount = 1;
+    function addTransportationRow() {
+        const tbody = document.getElementById('transportation-tbody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td>${transportationRowCount + 1}</td>
+            <td>
+                <select class="form-control form-control-sm" name="transportation[${transportationRowCount}][supplier]" onchange="updateTransportVehicles(this, ${transportationRowCount})">
+                    <option value="">Select Supplier</option>
+                    <?php mysqli_data_seek($transport_details, 0); while($transport = mysqli_fetch_assoc($transport_details)): ?>
+                        <option value="<?php echo htmlspecialchars($transport['company_name']); ?>"><?php echo htmlspecialchars($transport['company_name']); ?></option>
+                    <?php endwhile; ?>
+                </select>
+                <input type="hidden" name="transportation[${transportationRowCount}][idx]" value="${transportationRowCount}">
+            </td>
+            <td>
+                <select class="form-control form-control-sm" name="transportation[${transportationRowCount}][car_type]" onchange="updateTransportRates(this, ${transportationRowCount})" disabled>
+                    <option value="">Select Car Type</option>
+                </select>
+            </td>
+            <td><input type="number" class="form-control form-control-sm trans-daily-rent" name="transportation[${transportationRowCount}][daily_rent]" data-row="${transportationRowCount}" value="0" onchange="calculateTransportationTotal(${transportationRowCount})" placeholder="0" readonly></td>
+            <td><input type="number" class="form-control form-control-sm trans-days" name="transportation[${transportationRowCount}][days]" data-row="${transportationRowCount}" value="2" onchange="calculateTransportationTotal(${transportationRowCount})" placeholder="2"></td>
+            <td><input type="number" class="form-control form-control-sm trans-km" name="transportation[${transportationRowCount}][km]" data-row="${transportationRowCount}" value="0" onchange="calculateTransportationTotal(${transportationRowCount})" placeholder="0"></td>
+            <td><input type="number" class="form-control form-control-sm trans-extra-km" name="transportation[${transportationRowCount}][extra_km]" data-row="${transportationRowCount}" value="0" onchange="calculateTransportationTotal(${transportationRowCount})" placeholder="0"></td>
+            <td><input type="number" class="form-control form-control-sm trans-price-per-km" name="transportation[${transportationRowCount}][price_per_km]" data-row="${transportationRowCount}" value="0" onchange="calculateTransportationTotal(${transportationRowCount})" placeholder="0" readonly></td>
+            <td><input type="number" class="form-control form-control-sm trans-toll" name="transportation[${transportationRowCount}][toll]" data-row="${transportationRowCount}" value="0" onchange="calculateTransportationTotal(${transportationRowCount})" placeholder="0"></td>
+            <td><input type="text" class="form-control form-control-sm trans-total" name="transportation[${transportationRowCount}][total]" data-row="${transportationRowCount}" readonly style="background: #f0f8ff; font-weight: bold;"></td>
+        `;
+        tbody.appendChild(newRow);
+        transportationRowCount++;
     }
-}
-function confirmCostSheet(event) {
-    event.preventDefault();
-    if (confirm("Do you want to confirm this version?")) {
+    // Update transport vehicles based on selected supplier
+    function updateTransportVehicles(supplierSelect, rowIndex, selectedVehicle) {
+        const vehicleSelect = supplierSelect.closest('tr').querySelector('select[name^="transportation"][name$="[car_type]"]');
+        const dailyRentInput = supplierSelect.closest('tr').querySelector('input[name^="transportation"][name$="[daily_rent]"]');
+        const pricePerKmInput = supplierSelect.closest('tr').querySelector('input[name^="transportation"][name$="[price_per_km]"]');
 
-        // add a text input and set name as confirm and value as 1, at last append to the below form
-        const confirmInput = document.createElement('input');
-        confirmInput.type = 'number';
-        confirmInput.name = 'confirmed';
-        confirmInput.value = '1';
-        document.getElementById('cost-file-form').appendChild(confirmInput);
-        
-        document.getElementById('cost-file-form').submit();        
-        return true;
-    } else {
-        return false;
+        vehicleSelect.disabled = !supplierSelect.value;
+
+        if(supplierSelect.value) {
+            // AJAX call to get vehicles for selected supplier
+            fetch(`get_data_model.php?data_model=transportation&company_name=${supplierSelect.value}`)
+                .then(response => response.json())
+                .then(res => {
+                    vehicleSelect.innerHTML = '<option value="">Select Car Type</option>';
+                    res.data.forEach(transport => {
+                        vehicleSelect.innerHTML += `<option value="${transport.vehicle}" ${selectedVehicle == transport.vehicle ? 'selected': ''}>${transport.vehicle}</option>`;
+                    });
+
+                    // If there's a selected vehicle, update rates
+                    if(selectedVehicle) {
+                        updateTransportRates(vehicleSelect, rowIndex);
+                    }
+                });
+        }
     }
-}
 
-// Include necessary JavaScript functions
-function toggleService(item, serviceName) {
-    const checkbox = item.querySelector('input[type="checkbox"]');
-    const isSelected = item.classList.contains('selected');
-    
-    if (isSelected) {
-        item.classList.remove('selected');
-        checkbox.checked = false;
-        const sectionId = serviceName.replace('_', '-') + '-section';
-        const section = document.getElementById(sectionId);
-        if (section) section.style.display = 'none';
-    } else {
-        item.classList.add('selected');
-        checkbox.checked = true;
-        const sectionId = serviceName.replace('_', '-') + '-section';
-        const section = document.getElementById(sectionId);
-        if (section) section.style.display = 'block';
+    // Update transport rates based on selected vehicle
+    function updateTransportRates(vehicleSelect, rowIndex) {
+        const supplierSelect = vehicleSelect.closest('tr').querySelector('select[name^="transportation"][name$="[supplier]"]');
+        const dailyRentInput = vehicleSelect.closest('tr').querySelector('input[name^="transportation"][name$="[daily_rent]"]');
+        const pricePerKmInput = vehicleSelect.closest('tr').querySelector('input[name^="transportation"][name$="[price_per_km]"]');
+
+        if(supplierSelect.value && vehicleSelect.value) {
+            // AJAX call to get rates for selected supplier and vehicle
+            fetch(`get_data_model.php?data_model=transportation&company_name=${supplierSelect.value}&vehicle=${vehicleSelect.value}`)
+                .then(response => response.json())
+                .then(res => {
+                    if(res.data && res.data.length > 0) {
+                        const transport = res.data[0];
+                        dailyRentInput.value = transport.daily_rent || 0;
+                        pricePerKmInput.value = transport.rate_per_km || 0;
+
+                        // Recalculate total
+                        calculateTransportationTotal(rowIndex);
+                    }
+                });
+        }
     }
-}
 
-function addConnectingFlight(type) {
-    document.getElementById(type + '-connecting').style.display = 'table-row';
-}
+    // Confirmation popup for new version creation
+    function confirmNewVersion(event) {
+        event.preventDefault();
+        if (confirm("Do you want to create the new version?")) {
+            document.getElementById('cost-file-form').submit();
+            return true;
+        } else {
+            return false;
+        }
+    }
+    function confirmCostSheet(event) {
+        event.preventDefault();
+        if (confirm("Do you want to confirm this version?")) {
 
-function removeConnectingFlight(type) {
-    document.getElementById(type + '-connecting').style.display = 'none';
-}
+            // add a text input and set name as confirm and value as 1, at last append to the below form
+            const confirmInput = document.createElement('input');
+            confirmInput.type = 'number';
+            confirmInput.name = 'confirmed';
+            confirmInput.value = '1';
+            document.getElementById('cost-file-form').appendChild(confirmInput);
 
-function calculateVisaTotal(row) {
-    const passengers = parseFloat(document.querySelector(`.visa-passengers[data-row="${row}"]`).value) || 0;
-    const rate = parseFloat(document.querySelector(`.visa-rate[data-row="${row}"]`).value) || 0;
-    const total = passengers * rate;
-    document.querySelector(`.visa-total[data-row="${row}"]`).value = total.toFixed(2);
-    calculateVisaGrandTotal();
-}
+            document.getElementById('cost-file-form').submit();        
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-function calculateVisaGrandTotal() {
-    let grandTotal = 0;
-    document.querySelectorAll('.visa-total').forEach(input => {
-        grandTotal += parseFloat(input.value) || 0;
-    });
-    document.getElementById('visa-grand-total').value = grandTotal.toFixed(2);
-}
+    // Include necessary JavaScript functions
+    function toggleService(item, serviceName) {
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        const isSelected = item.classList.contains('selected');
 
-function calculateSummary() {
-    const totalExpense = parseFloat(document.getElementById('summary-total-expense').value) || 0;
-    
-    // Check if package cost has been manually entered
-    const packageCostInput = document.getElementById('package-cost');
-    const packageCost = parseFloat(packageCostInput.value) || 0;
-    
-    if (packageCost > 0) {
-        // If package cost is already set, calculate markup from it
-        calculateFromPackageCost();
-    } else {
-        // Otherwise calculate markup from percentage
-        const markupPercentage = parseFloat(document.getElementById('markup-percentage').value) || 0;
-        const markupAmount = (totalExpense * markupPercentage) / 100;
-        document.getElementById('markup-amount').value = markupAmount.toFixed(2);
-        document.getElementById('markup-percent-display').textContent = markupPercentage + '%';
-        
-        // Calculate tax based on tax percentage
+        if (isSelected) {
+            item.classList.remove('selected');
+            checkbox.checked = false;
+            const sectionId = serviceName.replace('_', '-') + '-section';
+            const section = document.getElementById(sectionId);
+            if (section) section.style.display = 'none';
+        } else {
+            item.classList.add('selected');
+            checkbox.checked = true;
+            const sectionId = serviceName.replace('_', '-') + '-section';
+            const section = document.getElementById(sectionId);
+            if (section) section.style.display = 'block';
+        }
+    }
+
+    function addConnectingFlight(type) {
+        document.getElementById(type + '-connecting').style.display = 'table-row';
+    }
+
+    function removeConnectingFlight(type) {
+        document.getElementById(type + '-connecting').style.display = 'none';
+    }
+
+    function calculateVisaTotal(row) {
+        const passengers = parseFloat(document.querySelector(`.visa-passengers[data-row="${row}"]`).value) || 0;
+        const rate = parseFloat(document.querySelector(`.visa-rate[data-row="${row}"]`).value) || 0;
+        const total = passengers * rate;
+        document.querySelector(`.visa-total[data-row="${row}"]`).value = total.toFixed(2);
+        calculateVisaGrandTotal();
+    }
+
+    function calculateVisaGrandTotal() {
+        let grandTotal = 0;
+        document.querySelectorAll('.visa-total').forEach(input => {
+            grandTotal += parseFloat(input.value) || 0;
+        });
+        document.getElementById('visa-grand-total').value = grandTotal.toFixed(2);
+    }
+
+    function calculateSummary() {
+        const totalExpense = parseFloat(document.getElementById('summary-total-expense').value) || 0;
+
+        // Check if package cost has been manually entered
+        const packageCostInput = document.getElementById('package-cost');
+        const packageCost = parseFloat(packageCostInput.value) || 0;
+
+        if (packageCost > 0) {
+            // If package cost is already set, calculate markup from it
+            calculateFromPackageCost();
+        } else {
+            // Otherwise calculate markup from percentage
+            const markupPercentage = parseFloat(document.getElementById('markup-percentage').value) || 0;
+            const markupAmount = (totalExpense * markupPercentage) / 100;
+            document.getElementById('markup-amount').value = markupAmount.toFixed(2);
+            document.getElementById('markup-percent-display').textContent = markupPercentage + '%';
+
+            // Calculate tax based on tax percentage
+            const taxPercentage = parseFloat(document.getElementById('tax-percentage').value) || 0;
+            let taxAmount = 0;
+
+            // Calculate subtotal (expense + markup)
+            const subtotal = totalExpense + markupAmount;
+
+            if (taxPercentage === 5) {
+                // For 5% tax, apply to the full subtotal
+                taxAmount = (subtotal * taxPercentage) / 100;
+            } else {
+                // For other tax rates, apply only to the markup amount
+                taxAmount = (markupAmount * taxPercentage) / 100;
+            }
+
+            document.getElementById('tax-amount').value = taxAmount.toFixed(2);
+
+            // Calculate package cost (expense + markup + tax)
+            const newPackageCost = subtotal + taxAmount;
+            packageCostInput.value = newPackageCost.toFixed(2);
+
+            // Calculate converted amount
+            const currencyRate = parseFloat(document.getElementById('currency-rate').value) || 1;
+            const convertedAmount = newPackageCost / currencyRate;
+            document.getElementById('converted-amount').value = convertedAmount.toFixed(2);
+        }
+
+        // Update payment calculations
+        updatePaymentTotals();
+    }
+
+    // Function to update payment totals
+    function updatePaymentTotals() {
+        const paymentAmount = parseFloat(document.querySelector('input[name="payment_amount"]').value) || 0;
+        const packageCost = parseFloat(document.getElementById('package-cost').value) || 0;
+
+        // Always update total received to match payment amount
+        const totalReceivedInput = document.querySelector('input[name="total_received"]');
+        if (totalReceivedInput) {
+            totalReceivedInput.value = paymentAmount.toFixed(2);
+        }
+
+        // Update balance amount (package cost - total received)
+        const balanceAmountInput = document.querySelector('input[name="balance_amount"]');
+        if (balanceAmountInput) {
+            const balanceAmount = packageCost - paymentAmount;
+            balanceAmountInput.value = balanceAmount.toFixed(2);
+        }
+    }
+
+    // Function to calculate values when package cost is manually entered
+    function calculateFromPackageCost() {
+        const packageCost = parseFloat(document.getElementById('package-cost').value) || 0;
+        const totalExpense = parseFloat(document.getElementById('summary-total-expense').value) || 0;
         const taxPercentage = parseFloat(document.getElementById('tax-percentage').value) || 0;
+
+        // Calculate markup amount based on package cost and total expense
+        const markupAmount = packageCost - totalExpense;
+        document.getElementById('markup-amount').value = markupAmount.toFixed(2);
+
+        // Calculate and update markup percentage
+        let markupPercentage = 0;
+        if (totalExpense > 0) {
+            markupPercentage = (markupAmount / totalExpense) * 100;
+            document.getElementById('markup-percentage').value = markupPercentage.toFixed(2);
+            document.getElementById('markup-percent-display').textContent = markupPercentage.toFixed(2) + '%';
+        }
+
+        // Calculate tax amount based on tax percentage
         let taxAmount = 0;
-        
-        // Calculate subtotal (expense + markup)
-        const subtotal = totalExpense + markupAmount;
-        
         if (taxPercentage === 5) {
-            // For 5% tax, apply to the full subtotal
-            taxAmount = (subtotal * taxPercentage) / 100;
+            // For 5% tax, apply to the full package cost
+            taxAmount = (packageCost * taxPercentage) / 100;
         } else {
             // For other tax rates, apply only to the markup amount
             taxAmount = (markupAmount * taxPercentage) / 100;
         }
-        
         document.getElementById('tax-amount').value = taxAmount.toFixed(2);
-        
-        // Calculate package cost (expense + markup + tax)
-        const newPackageCost = subtotal + taxAmount;
-        packageCostInput.value = newPackageCost.toFixed(2);
-        
-        // Calculate converted amount
-        const currencyRate = parseFloat(document.getElementById('currency-rate').value) || 1;
-        const convertedAmount = newPackageCost / currencyRate;
-        document.getElementById('converted-amount').value = convertedAmount.toFixed(2);
+
+        // Update payment calculations
+        updatePaymentTotals();
     }
-    
-    // Update payment calculations
-    updatePaymentTotals();
-}
 
-// Function to update payment totals
-function updatePaymentTotals() {
-    const paymentAmount = parseFloat(document.querySelector('input[name="payment_amount"]').value) || 0;
-    const packageCost = parseFloat(document.getElementById('package-cost').value) || 0;
-    
-    // Always update total received to match payment amount
-    const totalReceivedInput = document.querySelector('input[name="total_received"]');
-    if (totalReceivedInput) {
-        totalReceivedInput.value = paymentAmount.toFixed(2);
+    // Currency symbol mapping
+    const currencySymbols = {
+        'USD': '$', 'EUR': '€', 'GBP': '£', 'INR': '₹', 'BHD': 'BD',
+        'KWD': 'KD', 'OMR': 'OMR', 'QAR': 'QR', 'SAR': 'SR', 'AED': 'AED', 'GCC': 'GCC',
+        'THB': '฿', 'STD': 'Db', 'SGD': 'S$', 'RM': 'RM'
+    };
+
+    function updateCurrencySymbols() {
+        const selectedCurrency = document.getElementById('currency-selector').value;
+        document.getElementById('selected-currency').textContent = selectedCurrency;
     }
-    
-    // Update balance amount (package cost - total received)
-    const balanceAmountInput = document.querySelector('input[name="balance_amount"]');
-    if (balanceAmountInput) {
-        const balanceAmount = packageCost - paymentAmount;
-        balanceAmountInput.value = balanceAmount.toFixed(2);
+
+    // Add calculation functions for all services
+    function calculateAccommodationTotal(row) {
+        const roomsNo = parseFloat(document.querySelector(`.accom-rooms-no[data-row="${row}"]`).value) || 0;
+        const roomsRate = parseFloat(document.querySelector(`.accom-rooms-rate[data-row="${row}"]`).value) || 0;
+        const extraAdultNo = parseFloat(document.querySelector(`.accom-extra-adult-no[data-row="${row}"]`).value) || 0;
+        const extraAdultRate = parseFloat(document.querySelector(`.accom-extra-adult-rate[data-row="${row}"]`).value) || 0;
+        const extraChildNo = parseFloat(document.querySelector(`.accom-extra-child-no[data-row="${row}"]`).value) || 0;
+        const extraChildRate = parseFloat(document.querySelector(`.accom-extra-child-rate[data-row="${row}"]`).value) || 0;
+        const childNoBedNo = parseFloat(document.querySelector(`.accom-child-no-bed-no[data-row="${row}"]`).value) || 0;
+        const childNoBedRate = parseFloat(document.querySelector(`.accom-child-no-bed-rate[data-row="${row}"]`).value) || 0;
+        const nights = parseFloat(document.querySelector(`.accom-nights[data-row="${row}"]`).value) || 0;
+
+        const rowTotal = ((roomsNo * roomsRate) + 
+                         (extraAdultNo * extraAdultRate) + 
+                         (extraChildNo * extraChildRate) + 
+                         (childNoBedNo * childNoBedRate)) * nights;
+
+        document.querySelector(`.accom-total[data-row="${row}"]`).value = rowTotal.toFixed(2);
+        calculateAccommodationGrandTotal();
     }
-}
 
-// Function to calculate values when package cost is manually entered
-function calculateFromPackageCost() {
-    const packageCost = parseFloat(document.getElementById('package-cost').value) || 0;
-    const totalExpense = parseFloat(document.getElementById('summary-total-expense').value) || 0;
-    const taxPercentage = parseFloat(document.getElementById('tax-percentage').value) || 0;
-    
-    // Calculate markup amount based on package cost and total expense
-    const markupAmount = packageCost - totalExpense;
-    document.getElementById('markup-amount').value = markupAmount.toFixed(2);
-    
-    // Calculate and update markup percentage
-    let markupPercentage = 0;
-    if (totalExpense > 0) {
-        markupPercentage = (markupAmount / totalExpense) * 100;
-        document.getElementById('markup-percentage').value = markupPercentage.toFixed(2);
-        document.getElementById('markup-percent-display').textContent = markupPercentage.toFixed(2) + '%';
+    function calculateAccommodationGrandTotal() {
+        let grandTotal = 0;
+        document.querySelectorAll('.accom-total').forEach(input => {
+            grandTotal += parseFloat(input.value) || 0;
+        });
+        document.getElementById('accommodation-grand-total').value = grandTotal.toFixed(2);
     }
-    
-    // Calculate tax amount based on tax percentage
-    let taxAmount = 0;
-    if (taxPercentage === 5) {
-        // For 5% tax, apply to the full package cost
-        taxAmount = (packageCost * taxPercentage) / 100;
-    } else {
-        // For other tax rates, apply only to the markup amount
-        taxAmount = (markupAmount * taxPercentage) / 100;
+
+    function calculateTransportationTotal(row) {
+        const dailyRent = parseFloat(document.querySelector(`.trans-daily-rent[data-row="${row}"]`).value) || 0;
+        const days = parseFloat(document.querySelector(`.trans-days[data-row="${row}"]`).value) || 0;
+        const extraKm = parseFloat(document.querySelector(`.trans-extra-km[data-row="${row}"]`).value) || 0;
+        const pricePerKm = parseFloat(document.querySelector(`.trans-price-per-km[data-row="${row}"]`).value) || 0;
+        const toll = parseFloat(document.querySelector(`.trans-toll[data-row="${row}"]`).value) || 0;
+
+        const total = (dailyRent * days) + (extraKm * pricePerKm) + toll;
+
+        document.querySelector(`.trans-total[data-row="${row}"]`).value = total.toFixed(2);
+        calculateTransportationGrandTotal();
     }
-    document.getElementById('tax-amount').value = taxAmount.toFixed(2);
-    
-    // Update payment calculations
-    updatePaymentTotals();
-}
 
-// Currency symbol mapping
-const currencySymbols = {
-    'USD': '$', 'EUR': '€', 'GBP': '£', 'INR': '₹', 'BHD': 'BD',
-    'KWD': 'KD', 'OMR': 'OMR', 'QAR': 'QR', 'SAR': 'SR', 'AED': 'AED', 'GCC': 'GCC',
-    'THB': '฿', 'STD': 'Db', 'SGD': 'S$', 'RM': 'RM'
-};
-
-function updateCurrencySymbols() {
-    const selectedCurrency = document.getElementById('currency-selector').value;
-    document.getElementById('selected-currency').textContent = selectedCurrency;
-}
-
-// Add calculation functions for all services
-function calculateAccommodationTotal(row) {
-    const roomsNo = parseFloat(document.querySelector(`.accom-rooms-no[data-row="${row}"]`).value) || 0;
-    const roomsRate = parseFloat(document.querySelector(`.accom-rooms-rate[data-row="${row}"]`).value) || 0;
-    const extraAdultNo = parseFloat(document.querySelector(`.accom-extra-adult-no[data-row="${row}"]`).value) || 0;
-    const extraAdultRate = parseFloat(document.querySelector(`.accom-extra-adult-rate[data-row="${row}"]`).value) || 0;
-    const extraChildNo = parseFloat(document.querySelector(`.accom-extra-child-no[data-row="${row}"]`).value) || 0;
-    const extraChildRate = parseFloat(document.querySelector(`.accom-extra-child-rate[data-row="${row}"]`).value) || 0;
-    const childNoBedNo = parseFloat(document.querySelector(`.accom-child-no-bed-no[data-row="${row}"]`).value) || 0;
-    const childNoBedRate = parseFloat(document.querySelector(`.accom-child-no-bed-rate[data-row="${row}"]`).value) || 0;
-    const nights = parseFloat(document.querySelector(`.accom-nights[data-row="${row}"]`).value) || 0;
-    
-    const rowTotal = ((roomsNo * roomsRate) + 
-                     (extraAdultNo * extraAdultRate) + 
-                     (extraChildNo * extraChildRate) + 
-                     (childNoBedNo * childNoBedRate)) * nights;
-    
-    document.querySelector(`.accom-total[data-row="${row}"]`).value = rowTotal.toFixed(2);
-    calculateAccommodationGrandTotal();
-}
-
-function calculateAccommodationGrandTotal() {
-    let grandTotal = 0;
-    document.querySelectorAll('.accom-total').forEach(input => {
-        grandTotal += parseFloat(input.value) || 0;
-    });
-    document.getElementById('accommodation-grand-total').value = grandTotal.toFixed(2);
-}
-
-function calculateTransportationTotal(row) {
-    const dailyRent = parseFloat(document.querySelector(`.trans-daily-rent[data-row="${row}"]`).value) || 0;
-    const days = parseFloat(document.querySelector(`.trans-days[data-row="${row}"]`).value) || 0;
-    const extraKm = parseFloat(document.querySelector(`.trans-extra-km[data-row="${row}"]`).value) || 0;
-    const pricePerKm = parseFloat(document.querySelector(`.trans-price-per-km[data-row="${row}"]`).value) || 0;
-    const toll = parseFloat(document.querySelector(`.trans-toll[data-row="${row}"]`).value) || 0;
-    
-    const total = (dailyRent * days) + (extraKm * pricePerKm) + toll;
-    
-    document.querySelector(`.trans-total[data-row="${row}"]`).value = total.toFixed(2);
-    calculateTransportationGrandTotal();
-}
-
-function calculateTransportationGrandTotal() {
-    let grandTotal = 0;
-    document.querySelectorAll('.trans-total').forEach(input => {
-        grandTotal += parseFloat(input.value) || 0;
-    });
-    document.getElementById('transportation-grand-total').value = grandTotal.toFixed(2);
-}
-
-function calculateCruiseTotal(row) {
-    const rate = parseFloat(document.querySelector(`.cruise-rate[data-row="${row}"]`).value) || 0;
-    const extra = parseFloat(document.querySelector(`.cruise-extra[data-row="${row}"]`).value) || 0;
-    const total = rate + extra;
-    document.querySelector(`.cruise-total[data-row="${row}"]`).value = total.toFixed(2);
-    calculateCruiseGrandTotal();
-}
-
-function calculateCruiseGrandTotal() {
-    let grandTotal = 0;
-    document.querySelectorAll('.cruise-total').forEach(input => {
-        grandTotal += parseFloat(input.value) || 0;
-    });
-    document.getElementById('cruise-grand-total').value = grandTotal.toFixed(2);
-}
-
-function calculateExtrasTotal(row) {
-    const amount = parseFloat(document.querySelector(`.extras-amount[data-row="${row}"]`).value) || 0;
-    const extra = parseFloat(document.querySelector(`.extras-extra[data-row="${row}"]`).value) || 0;
-    const total = amount + extra;
-    document.querySelector(`.extras-total[data-row="${row}"]`).value = total.toFixed(2);
-    calculateExtrasGrandTotal();
-}
-
-function calculateExtrasGrandTotal() {
-    let grandTotal = 0;
-    document.querySelectorAll('.extras-total').forEach(input => {
-        grandTotal += parseFloat(input.value) || 0;
-    });
-    document.getElementById('extras-grand-total').value = grandTotal.toFixed(2);
-}
-
-let visaRowCount = <?php echo count($visa_data); ?>;
-function addVisaRow() {
-    const tbody = document.getElementById('visa-details-tbody');
-    const newRow = document.createElement('tr');
-    newRow.innerHTML = `
-        <td>${visaRowCount + 1}</td>
-        <td><input type="text" class="form-control form-control-sm" name="visa[${visaRowCount}][sector]" placeholder="Sector"></td>
-        <td><input type="text" class="form-control form-control-sm" name="visa[${visaRowCount}][supplier]" placeholder="Supplier"></td>
-        <td><input type="date" class="form-control form-control-sm" name="visa[${visaRowCount}][travel_date]"></td>
-        <td><input type="number" class="form-control form-control-sm visa-passengers" name="visa[${visaRowCount}][passengers]" data-row="${visaRowCount}" value="0" onchange="calculateVisaTotal(${visaRowCount})"></td>
-        <td><input type="number" class="form-control form-control-sm visa-rate" name="visa[${visaRowCount}][rate_per_person]" data-row="${visaRowCount}" value="0" onchange="calculateVisaTotal(${visaRowCount})"></td>
-        <td><input type="number" class="form-control form-control-sm" name="visa[${visaRowCount}][roe]" value="1" step="0.01"></td>
-        <td><input type="text" class="form-control form-control-sm visa-total" name="visa[${visaRowCount}][total]" data-row="${visaRowCount}" readonly></td>
-    `;
-    tbody.appendChild(newRow);
-    visaRowCount++;
-}
-
-// Calculate total PAX
-function calculateTotalPax() {
-    const adults = parseInt(document.querySelector('input[name="adults_count"]').value) || 0;
-    const children = parseInt(document.querySelector('input[name="children_count"]').value) || 0;
-    const infants = parseInt(document.querySelector('input[name="infants_count"]').value) || 0;
-    const total = adults + children + infants;
-    document.getElementById('total-pax').value = total;
-}
-
-// Agent Package calculations
-function calculateAgentPackageTotal(row) {
-    const adultCount = parseFloat(document.querySelector(`.agent-adult-count[data-row="${row}"]`).value) || 0;
-    const adultPrice = parseFloat(document.querySelector(`.agent-adult-price[data-row="${row}"]`).value) || 0;
-    const childCount = parseFloat(document.querySelector(`.agent-child-count[data-row="${row}"]`).value) || 0;
-    const childPrice = parseFloat(document.querySelector(`.agent-child-price[data-row="${row}"]`).value) || 0;
-    const infantCount = parseFloat(document.querySelector(`.agent-infant-count[data-row="${row}"]`).value) || 0;
-    const infantPrice = parseFloat(document.querySelector(`.agent-infant-price[data-row="${row}"]`).value) || 0;
-    
-    const total = (adultCount * adultPrice) + (childCount * childPrice) + (infantCount * infantPrice);
-    
-    document.querySelector(`.agent-package-total[data-row="${row}"]`).value = total.toFixed(2);
-    calculateAgentPackageGrandTotal();
-}
-
-function calculateMedicalTourismTotal(row) {
-
-    const netValue = parseFloat(document.querySelector(`.medical-tourism-net[data-row="${row}"]`).value) || 0;
-    const tdsValue = parseFloat(document.querySelector(`.medical-tourism-tds[data-row="${row}"]`).value) || 0;
-    const otherExpenses = parseFloat(document.querySelector(`.medical-tourism-other_expenses[data-row="${row}"]`).value) || 0;
-    const GST = 18
-    
-   
-    let total_expenses = netValue + tdsValue + otherExpenses
-    let total_tax = total_expenses * GST / 100
-    let total = total_expenses + total_tax
-    
-    document.querySelector(`.medical-tourism-total[data-row="${row}"]`).value = total.toFixed(2);
-    calculateMedicalTourismGrandTotal();
-}
-
-function calculateMedicalTourismGrandTotal() {
-    let grandTotal = 0;
-    document.querySelectorAll('.medical-tourism-total').forEach(input => {
-        grandTotal += parseFloat(input.value) || 0;
-    });
-    document.getElementById('medical-tourism-grand-total').value = grandTotal.toFixed(2);
-}
-
-function calculateAgentPackageGrandTotal() {
-    let grandTotal = 0;
-    document.querySelectorAll('.agent-package-total').forEach(input => {
-        grandTotal += parseFloat(input.value) || 0;
-    });
-    document.getElementById('agent-package-grand-total').value = grandTotal.toFixed(2);
-}
-
-function addAgentPackageRow() {
-    const tbody = document.getElementById('agent-package-tbody');
-    const rows = tbody.querySelectorAll('tr');
-    const newIndex = rows.length;
-    
-    // Get current PAX counts
-    const adultsCount = document.querySelector('input[name="adults_count"]').value || 0;
-    const childrenCount = document.querySelector('input[name="children_count"]').value || 0;
-    const infantsCount = document.querySelector('input[name="infants_count"]').value || 0;
-    
-    const newRow = document.createElement('tr');
-    
-    // Get destinations for dropdown
-    const destinationsSelect = document.querySelector('select[name="agent_package[0][destination]"]');
-    let destinationsOptions = '';
-    if (destinationsSelect) {
-        destinationsOptions = destinationsSelect.innerHTML;
+    function calculateTransportationGrandTotal() {
+        let grandTotal = 0;
+        document.querySelectorAll('.trans-total').forEach(input => {
+            grandTotal += parseFloat(input.value) || 0;
+        });
+        document.getElementById('transportation-grand-total').value = grandTotal.toFixed(2);
     }
-    
-    newRow.innerHTML = `
-        <td>
-            <select class="form-control form-control-sm" name="agent_package[${newIndex}][destination]">
-                ${destinationsOptions}
-            </select>
-        </td>
-        <td><input type="text" class="form-control form-control-sm" name="agent_package[${newIndex}][agent_supplier]" placeholder="Agent/Supplier" style="width: 120px;"></td>
-        <td><input type="date" class="form-control form-control-sm" name="agent_package[${newIndex}][start_date]"></td>
-        <td><input type="date" class="form-control form-control-sm" name="agent_package[${newIndex}][end_date]"></td>
-        <td><input type="number" class="form-control form-control-sm agent-adult-count" name="agent_package[${newIndex}][adult_count]" data-row="${newIndex}" value="${adultsCount}" style="width: 70px;" onchange="calculateAgentPackageTotal(${newIndex})"></td>
-        <td><input type="number" class="form-control form-control-sm agent-adult-price" name="agent_package[${newIndex}][adult_price]" data-row="${newIndex}" value="0" style="width: 100px;" onchange="calculateAgentPackageTotal(${newIndex})"></td>
-        <td><input type="number" class="form-control form-control-sm agent-child-count" name="agent_package[${newIndex}][child_count]" data-row="${newIndex}" value="${childrenCount}" style="width: 70px;" onchange="calculateAgentPackageTotal(${newIndex})"></td>
-        <td><input type="number" class="form-control form-control-sm agent-child-price" name="agent_package[${newIndex}][child_price]" data-row="${newIndex}" value="0" style="width: 100px;" onchange="calculateAgentPackageTotal(${newIndex})"></td>
-        <td><input type="number" class="form-control form-control-sm agent-infant-count" name="agent_package[${newIndex}][infant_count]" data-row="${newIndex}" value="${infantsCount}" style="width: 70px;" onchange="calculateAgentPackageTotal(${newIndex})"></td>
-        <td><input type="number" class="form-control form-control-sm agent-infant-price" name="agent_package[${newIndex}][infant_price]" data-row="${newIndex}" value="0" style="width: 100px;" onchange="calculateAgentPackageTotal(${newIndex})"></td>
-        <td><input type="text" class="form-control form-control-sm agent-package-total" name="agent_package[${newIndex}][total]" data-row="${newIndex}" readonly style="background: #f0f8ff; font-weight: bold; width: 120px;"></td>
-    `;
-    
-    tbody.appendChild(newRow);
-}
 
-function addMedicalTourismRow() {
-    const tbody = document.getElementById('medical-tourism-tbody');
-    const rows = tbody.querySelectorAll('tr');
-    const newIndex = rows.length;
-    
-    const newRow = document.createElement('tr');
-    
-    newRow.innerHTML = `
-        <td>
-            <input type="text" class="form-control form-control-sm" name="medical_tourisms[${newIndex}][place]" placeholder="Place" style="width: 120px;">
-            <input type="hidden" name="medical_tourisms[${newIndex}][idx]" value="${newIndex}">
-        </td>
-        <td><input type="date" class="form-control form-control-sm" name="medical_tourisms[${newIndex}][treatment_date]" value=""></td>
-        <td><input type="text" class="form-control form-control-sm" name="medical_tourisms[${newIndex}][hospital]" placeholder="Hospital" style="width: 120px;"></td>
-        <td>
-            <select class="form-control form-control-sm" name="medical_tourisms[${newIndex}][treatment_type]">
-               <option value="">Select type</option>
-               <option value="Type 1" >Type 1</option>
-            </select>
-        </td>
-        <td><input type="text" class="form-control form-control-sm" name="medical_tourisms[${newIndex}][op_ip]" value="" style="width: 70px;"></td>
-        <td><input type="number" class="form-control form-control-sm medical-tourism-net" name="medical_tourisms[${newIndex}][net]" data-row="${newIndex}" value="0" style="width: 100px;" onchange="calculateMedicalTourismTotal(${newIndex})"></td>
-        <td><input type="number" class="form-control form-control-sm medical-tourism-tds" name="medical_tourisms[${newIndex}][tds]" data-row="${newIndex}" value="0" style="width: 70px;" onchange="calculateMedicalTourismTotal(${newIndex})"></td>
-        <td><input type="number" class="form-control form-control-sm medical-tourism-other_expenses" name="medical_tourisms[${newIndex}][other_expenses]" data-row="${newIndex}" value="0" style="width: 100px;" onchange="calculateMedicalTourismTotal(${newIndex})"></td>
-        <td>18%</td>
-        <td><input type="text" class="form-control form-control-sm medical-tourism-total" name="medical_tourisms[${newIndex}][total]" data-row="${newIndex}" readonly style="background: #f0f8ff; font-weight: bold; width: 120px;"></td>
-    `;
-    
-    tbody.appendChild(newRow);
-}
-
-// Add event listeners for PAX calculation
-document.addEventListener('DOMContentLoaded', function() {
-    // Add change listeners to PAX inputs
-    document.querySelectorAll('input[name="adults_count"], input[name="children_count"], input[name="infants_count"]').forEach(input => {
-        input.addEventListener('change', calculateTotalPax);
-        input.addEventListener('input', calculateTotalPax);
-    });
-    
-    // Add payment amount change listener
-    const paymentAmountInput = document.querySelector('input[name="payment_amount"]');
-    if (paymentAmountInput) {
-        paymentAmountInput.addEventListener('change', updatePaymentTotals);
-        paymentAmountInput.addEventListener('input', updatePaymentTotals);
+    function calculateCruiseTotal(row) {
+        const rate = parseFloat(document.querySelector(`.cruise-rate[data-row="${row}"]`).value) || 0;
+        const extra = parseFloat(document.querySelector(`.cruise-extra[data-row="${row}"]`).value) || 0;
+        const total = rate + extra;
+        document.querySelector(`.cruise-total[data-row="${row}"]`).value = total.toFixed(2);
+        calculateCruiseGrandTotal();
     }
+
+    function calculateCruiseGrandTotal() {
+        let grandTotal = 0;
+        document.querySelectorAll('.cruise-total').forEach(input => {
+            grandTotal += parseFloat(input.value) || 0;
+        });
+        document.getElementById('cruise-grand-total').value = grandTotal.toFixed(2);
+    }
+
+    function calculateExtrasTotal(row) {
+        const amount = parseFloat(document.querySelector(`.extras-amount[data-row="${row}"]`).value) || 0;
+        const extra = parseFloat(document.querySelector(`.extras-extra[data-row="${row}"]`).value) || 0;
+        const total = amount + extra;
+        document.querySelector(`.extras-total[data-row="${row}"]`).value = total.toFixed(2);
+        calculateExtrasGrandTotal();
+    }
+
+    function calculateExtrasGrandTotal() {
+        let grandTotal = 0;
+        document.querySelectorAll('.extras-total').forEach(input => {
+            grandTotal += parseFloat(input.value) || 0;
+        });
+        document.getElementById('extras-grand-total').value = grandTotal.toFixed(2);
+    }
+
+    let visaRowCount = <?php echo count($visa_data); ?>;
+    function addVisaRow() {
+        const tbody = document.getElementById('visa-details-tbody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td>${visaRowCount + 1}</td>
+            <td><input type="text" class="form-control form-control-sm" name="visa[${visaRowCount}][sector]" placeholder="Sector"></td>
+            <td><input type="text" class="form-control form-control-sm" name="visa[${visaRowCount}][supplier]" placeholder="Supplier"></td>
+            <td><input type="date" class="form-control form-control-sm" name="visa[${visaRowCount}][travel_date]"></td>
+            <td><input type="number" class="form-control form-control-sm visa-passengers" name="visa[${visaRowCount}][passengers]" data-row="${visaRowCount}" value="0" onchange="calculateVisaTotal(${visaRowCount})"></td>
+            <td><input type="number" class="form-control form-control-sm visa-rate" name="visa[${visaRowCount}][rate_per_person]" data-row="${visaRowCount}" value="0" onchange="calculateVisaTotal(${visaRowCount})"></td>
+            <td><input type="number" class="form-control form-control-sm" name="visa[${visaRowCount}][roe]" value="1" step="0.01"></td>
+            <td><input type="text" class="form-control form-control-sm visa-total" name="visa[${visaRowCount}][total]" data-row="${visaRowCount}" readonly></td>
+        `;
+        tbody.appendChild(newRow);
+        visaRowCount++;
+    }
+
+    // Calculate total PAX
+    function calculateTotalPax() {
+        const adults = parseInt(document.querySelector('input[name="adults_count"]').value) || 0;
+        const children = parseInt(document.querySelector('input[name="children_count"]').value) || 0;
+        const infants = parseInt(document.querySelector('input[name="infants_count"]').value) || 0;
+        const total = adults + children + infants;
+        document.getElementById('total-pax').value = total;
+    }
+
+    // Agent Package calculations
+    function calculateAgentPackageTotal(row) {
+        const adultCount = parseFloat(document.querySelector(`.agent-adult-count[data-row="${row}"]`).value) || 0;
+        const adultPrice = parseFloat(document.querySelector(`.agent-adult-price[data-row="${row}"]`).value) || 0;
+        const childCount = parseFloat(document.querySelector(`.agent-child-count[data-row="${row}"]`).value) || 0;
+        const childPrice = parseFloat(document.querySelector(`.agent-child-price[data-row="${row}"]`).value) || 0;
+        const infantCount = parseFloat(document.querySelector(`.agent-infant-count[data-row="${row}"]`).value) || 0;
+        const infantPrice = parseFloat(document.querySelector(`.agent-infant-price[data-row="${row}"]`).value) || 0;
+
+        const total = (adultCount * adultPrice) + (childCount * childPrice) + (infantCount * infantPrice);
+
+        document.querySelector(`.agent-package-total[data-row="${row}"]`).value = total.toFixed(2);
+        calculateAgentPackageGrandTotal();
+    }
+
+    function calculateMedicalTourismTotal(row) {
+
+        const netValue = parseFloat(document.querySelector(`.medical-tourism-net[data-row="${row}"]`).value) || 0;
+        const tdsValue = parseFloat(document.querySelector(`.medical-tourism-tds[data-row="${row}"]`).value) || 0;
+        const otherExpenses = parseFloat(document.querySelector(`.medical-tourism-other_expenses[data-row="${row}"]`).value) || 0;
+        const GST = 18
+
     
-    // Initialize calculations
-    calculateTotalPax();
-    calculateVisaGrandTotal();
-    calculateAccommodationGrandTotal();
-    calculateTransportationGrandTotal();
-    calculateCruiseGrandTotal();
-    calculateExtrasGrandTotal();
-    calculateSummary();
-    updateCurrencySymbols();
-    
-    // Update payment totals on page load
-    updatePaymentTotals();
-});
+        let total_expenses = netValue + tdsValue + otherExpenses
+        let total_tax = total_expenses * GST / 100
+        let total = total_expenses + total_tax
+
+        document.querySelector(`.medical-tourism-total[data-row="${row}"]`).value = total.toFixed(2);
+        calculateMedicalTourismGrandTotal();
+    }
+
+    function calculateMedicalTourismGrandTotal() {
+        let grandTotal = 0;
+        document.querySelectorAll('.medical-tourism-total').forEach(input => {
+            grandTotal += parseFloat(input.value) || 0;
+        });
+        document.getElementById('medical-tourism-grand-total').value = grandTotal.toFixed(2);
+    }
+
+    function calculateAgentPackageGrandTotal() {
+        let grandTotal = 0;
+        document.querySelectorAll('.agent-package-total').forEach(input => {
+            grandTotal += parseFloat(input.value) || 0;
+        });
+        document.getElementById('agent-package-grand-total').value = grandTotal.toFixed(2);
+    }
+
+    function addAgentPackageRow() {
+        const tbody = document.getElementById('agent-package-tbody');
+        const rows = tbody.querySelectorAll('tr');
+        const newIndex = rows.length;
+
+        // Get current PAX counts
+        const adultsCount = document.querySelector('input[name="adults_count"]').value || 0;
+        const childrenCount = document.querySelector('input[name="children_count"]').value || 0;
+        const infantsCount = document.querySelector('input[name="infants_count"]').value || 0;
+
+        const newRow = document.createElement('tr');
+
+        // Get destinations for dropdown
+        const destinationsSelect = document.querySelector('select[name="agent_package[0][destination]"]');
+        let destinationsOptions = '';
+        if (destinationsSelect) {
+            destinationsOptions = destinationsSelect.innerHTML;
+        }
+
+        newRow.innerHTML = `
+            <td>
+                <select class="form-control form-control-sm" name="agent_package[${newIndex}][destination]" onchange="updateAgentSupplier(this, ${newIndex})">
+                    ${destinationsOptions}
+                </select>
+            </td>
+            <td>
+                <select class="form-control form-control-sm" name="agent_package[${newIndex}][agent_supplier]" style="width: 120px;" disabled>
+                    <option value="">Select Agent/Supplier</option>
+                </select>
+            </td>
+            <td><input type="date" class="form-control form-control-sm" name="agent_package[${newIndex}][start_date]"></td>
+            <td><input type="date" class="form-control form-control-sm" name="agent_package[${newIndex}][end_date]"></td>
+            <td><input type="number" class="form-control form-control-sm agent-adult-count" name="agent_package[${newIndex}][adult_count]" data-row="${newIndex}" value="${adultsCount}" style="width: 70px;" onchange="calculateAgentPackageTotal(${newIndex})"></td>
+            <td><input type="number" class="form-control form-control-sm agent-adult-price" name="agent_package[${newIndex}][adult_price]" data-row="${newIndex}" value="0" style="width: 100px;" onchange="calculateAgentPackageTotal(${newIndex})"></td>
+            <td><input type="number" class="form-control form-control-sm agent-child-count" name="agent_package[${newIndex}][child_count]" data-row="${newIndex}" value="${childrenCount}" style="width: 70px;" onchange="calculateAgentPackageTotal(${newIndex})"></td>
+            <td><input type="number" class="form-control form-control-sm agent-child-price" name="agent_package[${newIndex}][child_price]" data-row="${newIndex}" value="0" style="width: 100px;" onchange="calculateAgentPackageTotal(${newIndex})"></td>
+            <td><input type="number" class="form-control form-control-sm agent-infant-count" name="agent_package[${newIndex}][infant_count]" data-row="${newIndex}" value="${infantsCount}" style="width: 70px;" onchange="calculateAgentPackageTotal(${newIndex})"></td>
+            <td><input type="number" class="form-control form-control-sm agent-infant-price" name="agent_package[${newIndex}][infant_price]" data-row="${newIndex}" value="0" style="width: 100px;" onchange="calculateAgentPackageTotal(${newIndex})"></td>
+            <td><input type="text" class="form-control form-control-sm agent-package-total" name="agent_package[${newIndex}][total]" data-row="${newIndex}" readonly style="background: #f0f8ff; font-weight: bold; width: 120px;"></td>
+        `;
+
+        tbody.appendChild(newRow);
+    }
+    function updateAgentSupplier(destinationSelect, rowIndex, value) {
+        const supplierSelect = destinationSelect.closest('tr').querySelector('select[name^="agent_package"][name$="[agent_supplier]"]');
+
+        supplierSelect.disabled = !destinationSelect.value;
+
+
+        if(destinationSelect.value) {
+            // AJAX call to get hotels for selected destination
+            fetch(`get_data_model.php?data_model=agent_package&destination=${destinationSelect.value}`)
+                .then(response => response.json())
+                .then(res => {
+                    supplierSelect.innerHTML = '<option value="">Select Agent/Supplier</option>';
+                    res.data.forEach(item => {
+                        supplierSelect.innerHTML += `<option value="${item.supplier}" ${value == item.supplier ? 'selected': ''}>${item.supplier}</option>`;
+                    });
+                });
+        }
+    }
+
+    function addMedicalTourismRow() {
+        const tbody = document.getElementById('medical-tourism-tbody');
+        const rows = tbody.querySelectorAll('tr');
+        const newIndex = rows.length;
+
+        const newRow = document.createElement('tr');
+
+        newRow.innerHTML = `
+            <td>
+                <select class="form-control form-control-sm" name="medical_tourisms[${newIndex}][place]" onchange="updateHospitals(this, ${newIndex})" style="width: 120px;">
+                    <option value="">Select Place</option>
+                    <?php mysqli_data_seek($hospital_details, 0); while($hospital = mysqli_fetch_assoc($hospital_details)): ?>
+                        <option value="<?php echo htmlspecialchars($hospital['destination']); ?>"><?php echo htmlspecialchars($hospital['destination']); ?></option>
+                    <?php endwhile; ?>
+                </select>
+                <input type="hidden" name="medical_tourisms[${newIndex}][idx]" value="${newIndex}">
+            </td>
+            <td><input type="date" class="form-control form-control-sm" name="medical_tourisms[${newIndex}][treatment_date]" value=""></td>
+            <td>
+                <select class="form-control form-control-sm" name="medical_tourisms[${newIndex}][hospital]" style="width: 120px;" disabled>
+                    <option value="">Select Hospital</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control form-control-sm" name="medical_tourisms[${newIndex}][treatment_type]">
+                   <option value="">Select type</option>
+                   <option value="Type 1" >Type 1</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control form-control-sm" name="medical_tourisms[${newIndex}][op_ip]">
+                   <option value="">Select type</option>
+                   <option value="IP" >IP</option>
+                   <option value="OP" >OP</option>
+                </select>
+            </td>
+            <td><input type="number" class="form-control form-control-sm medical-tourism-net" name="medical_tourisms[${newIndex}][net]" data-row="${newIndex}" value="0" style="width: 100px;" onchange="calculateMedicalTourismTotal(${newIndex})"></td>
+            <td><input type="number" class="form-control form-control-sm medical-tourism-tds" name="medical_tourisms[${newIndex}][tds]" data-row="${newIndex}" value="0" style="width: 70px;" onchange="calculateMedicalTourismTotal(${newIndex})"></td>
+            <td><input type="number" class="form-control form-control-sm medical-tourism-other_expenses" name="medical_tourisms[${newIndex}][other_expenses]" data-row="${newIndex}" value="0" style="width: 100px;" onchange="calculateMedicalTourismTotal(${newIndex})"></td>
+            <td>18%</td>
+            <td><input type="text" class="form-control form-control-sm medical-tourism-total" name="medical_tourisms[${newIndex}][total]" data-row="${newIndex}" readonly style="background: #f0f8ff; font-weight: bold; width: 120px;"></td>
+        `;
+                    
+        tbody.appendChild(newRow);
+    }
+
+    // Add event listeners for PAX calculation
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add change listeners to PAX inputs
+        document.querySelectorAll('input[name="adults_count"], input[name="children_count"], input[name="infants_count"]').forEach(input => {
+            input.addEventListener('change', calculateTotalPax);
+            input.addEventListener('input', calculateTotalPax);
+        });
+
+        // Add payment amount change listener
+        const paymentAmountInput = document.querySelector('input[name="payment_amount"]');
+        if (paymentAmountInput) {
+            paymentAmountInput.addEventListener('change', updatePaymentTotals);
+            paymentAmountInput.addEventListener('input', updatePaymentTotals);
+        }
+
+        // Initialize calculations
+        calculateTotalPax();
+        calculateVisaGrandTotal();
+        calculateAccommodationGrandTotal();
+        calculateTransportationGrandTotal();
+        calculateCruiseGrandTotal();
+        calculateExtrasGrandTotal();
+        calculateSummary();
+        updateCurrencySymbols();
+
+        // Initialize transportation dropdowns for existing rows
+        document.querySelectorAll('select[name^="transportation"][name$="[supplier]"]').forEach((supplierSelect, index) => {
+            if(supplierSelect.value) {
+                const vehicleSelect = supplierSelect.closest('tr').querySelector('select[name^="transportation"][name$="[car_type]"]');
+                const selectedVehicle = vehicleSelect.getAttribute('data-selected') || '';
+                updateTransportVehicles(supplierSelect, index, selectedVehicle);
+            }
+        });
+
+        // Initialize medical tourism dropdowns for existing rows
+        document.querySelectorAll('select[name^="medical_tourisms"][name$="[place]"]').forEach((placeSelect, index) => {
+            if(placeSelect.value) {
+                const hospitalSelect = placeSelect.closest('tr').querySelector('select[name^="medical_tourisms"][name$="[hospital]"]');
+                const selectedHospital = hospitalSelect.getAttribute('data-selected') || '';
+                updateHospitals(placeSelect, index, selectedHospital);
+            }
+        });
+
+        // Update payment totals on page load
+        updatePaymentTotals();
+    });
+
+    // Update hospitals based on selected place for medical tourism
+    function updateHospitals(placeSelect, rowIndex, selectedHospital) {
+        const hospitalSelect = placeSelect.closest('tr').querySelector('select[name^="medical_tourisms"][name$="[hospital]"]');
+
+        hospitalSelect.disabled = !placeSelect.value;
+
+        if(placeSelect.value) {
+            // AJAX call to get hospitals for selected place
+            fetch(`get_data_model.php?data_model=medical_tourism&destination=${placeSelect.value}`)
+                .then(response => response.json())
+                .then(res => {
+                    hospitalSelect.innerHTML = '<option value="">Select Hospital</option>';
+                    res.data.forEach(hospital => {
+                        hospitalSelect.innerHTML += `<option value="${hospital.hospital_name}" ${selectedHospital == hospital.hospital_name ? 'selected': ''}>${hospital.hospital_name}</option>`;
+                    });
+                });
+        }
+    }
 </script>
 
 <?php

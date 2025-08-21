@@ -35,6 +35,15 @@
     box-sizing: border-box;
 }
 
+.table thead th {
+    min-width: 100px;
+    text-wrap: nowrap;
+}
+
+.table thead th {
+    text-wrap: nowrap;
+}
+
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background-color: var(--gray-50);

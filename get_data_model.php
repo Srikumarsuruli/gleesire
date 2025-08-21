@@ -66,6 +66,138 @@ try {
             }
 
         }
+        elseif($data_model == "transportation"){
+
+            // Filters
+            $destination = isset($_GET['destination']) ? $_GET['destination'] : '';
+            $company_name = isset($_GET['company_name']) ? $_GET['company_name'] : '';
+            $vehicle = isset($_GET['vehicle']) ? $_GET['vehicle'] : '';
+
+            $sql = "SELECT * FROM transport_details WHERE status = 'Active'";
+            $values = array();
+
+            if(!empty($destination)) {
+                $sql .= " AND destination = ?";
+                $values[] = $destination;
+            }
+
+            if(!empty($company_name)) {
+                $sql .= " AND company_name LIKE ?";
+                $values[] = "%$company_name%";
+            }
+
+            if(!empty($vehicle)) {
+                $sql .= " AND vehicle = ?";
+                $values[] = $vehicle;
+            }
+
+            if($sql_stmt = mysqli_prepare($conn, $sql)) {
+                if(count($values) > 0) {
+                    mysqli_stmt_bind_param($sql_stmt, str_repeat('s', count($values)), ...$values);
+                }
+                mysqli_stmt_execute($sql_stmt);
+                $result = mysqli_stmt_get_result($sql_stmt);
+                
+                // Convert result to array
+                $data = array();
+                while($row = mysqli_fetch_assoc($result)) {
+                    $data[] = $row;
+                }
+
+                $response = array(
+                    'success' => true,
+                    'data' => $data
+                );
+
+                echo json_encode($response);
+                mysqli_stmt_close($sql_stmt);
+            }
+
+        }
+        elseif($data_model == "agent_package"){
+
+            // Filters
+            $destination = isset($_GET['destination']) ? $_GET['destination'] : '';
+            $supplier = isset($_GET['supplier']) ? $_GET['supplier'] : '';
+
+            $sql = "SELECT * FROM travel_agents WHERE status = 'Active'";
+            $values = array();
+
+            if(!empty($destination)) {
+                $sql .= " AND destination = ?";
+                $values[] = $destination;
+            }
+
+            if(!empty($supplier)) {
+                $sql .= " AND supplier LIKE ?";
+                $values[] = "%$supplier%";
+            }
+
+            if($sql_stmt = mysqli_prepare($conn, $sql)) {
+                if(count($values) > 0) {
+                    mysqli_stmt_bind_param($sql_stmt, str_repeat('s', count($values)), ...$values);
+                }
+                mysqli_stmt_execute($sql_stmt);
+                $result = mysqli_stmt_get_result($sql_stmt);
+                
+                // Convert result to array
+                $data = array();
+                while($row = mysqli_fetch_assoc($result)) {
+                    $data[] = $row;
+                }
+
+                $response = array(
+                    'success' => true,
+                    'data' => $data
+                );
+
+                echo json_encode($response);
+                mysqli_stmt_close($sql_stmt);
+            }
+
+        }
+        elseif($data_model == "medical_tourism"){
+
+            // Filters
+            $destination = isset($_GET['destination']) ? $_GET['destination'] : '';
+            $hospital_name = isset($_GET['hospital_name']) ? $_GET['hospital_name'] : '';
+
+            $sql = "SELECT * FROM hospital_details WHERE status = 'Active'";
+            $values = array();
+
+            if(!empty($destination)) {
+                $sql .= " AND destination = ?";
+                $values[] = $destination;
+            }
+
+            if(!empty($hospital_name)) {
+                $sql .= " AND hospital_name LIKE ?";
+                $values[] = "%$hospital_name%";
+            }
+
+            if($sql_stmt = mysqli_prepare($conn, $sql)) {
+                if(count($values) > 0) {
+                    mysqli_stmt_bind_param($sql_stmt, str_repeat('s', count($values)), ...$values);
+                }
+                mysqli_stmt_execute($sql_stmt);
+                $result = mysqli_stmt_get_result($sql_stmt);
+                
+                // Convert result to array
+                $data = array();
+                while($row = mysqli_fetch_assoc($result)) {
+                    $data[] = $row;
+                }
+
+                $response = array(
+                    'success' => true,
+                    'data' => $data
+                );
+
+                echo json_encode($response);
+                mysqli_stmt_close($sql_stmt);
+            }
+
+        }
         else {
             $response = array(
                 'success' => true,
