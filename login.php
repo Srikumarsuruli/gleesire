@@ -14,6 +14,12 @@ require_once "config/database.php";
 // Define variables and initialize with empty values
 $username = $password = "";
 $username_err = $password_err = $login_err = "";
+
+// Check for remembered credentials
+if(isset($_COOKIE['remember_username']) && isset($_COOKIE['remember_password'])) {
+    $username = $_COOKIE['remember_username'];
+    $password = base64_decode($_COOKIE['remember_password']);
+}
  
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
@@ -55,6 +61,16 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     mysqli_stmt_bind_result($stmt, $id, $username, $hashed_password, $role_id);
                     if(mysqli_stmt_fetch($stmt)){
                         if(password_verify($password, $hashed_password)){
+                            // Handle Remember Me functionality
+                            if(isset($_POST['remember_me'])) {
+                                setcookie('remember_username', $username, time() + (30 * 24 * 60 * 60), '/'); // 30 days
+                                setcookie('remember_password', base64_encode($password), time() + (30 * 24 * 60 * 60), '/'); // 30 days
+                            } else {
+                                // Clear cookies if remember me is not checked
+                                setcookie('remember_username', '', time() - 3600, '/');
+                                setcookie('remember_password', '', time() - 3600, '/');
+                            }
+                            
                             // Password is correct, so start a new session
                             session_start();
                             
@@ -75,19 +91,46 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                 $device_name = 'Unknown';
                                 $device_type = 'Unknown';
                                 
-                                // Mobile devices
+                                // Mobile devices with more details
                                 if (preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i', $user_agent)) {
                                     $device_type = 'Mobile';
-                                    if (preg_match('/iPhone/i', $user_agent)) $device_name = 'iPhone';
-                                    elseif (preg_match('/iPad/i', $user_agent)) $device_name = 'iPad';
-                                    elseif (preg_match('/Android/i', $user_agent)) $device_name = 'Android Device';
-                                    elseif (preg_match('/BlackBerry/i', $user_agent)) $device_name = 'BlackBerry';
-                                    elseif (preg_match('/Windows Phone/i', $user_agent)) $device_name = 'Windows Phone';
+                                    if (preg_match('/iPhone OS ([0-9_]+)/i', $user_agent, $matches)) {
+                                        $ios_version = str_replace('_', '.', $matches[1]);
+                                        $device_name = 'iPhone (iOS ' . $ios_version . ')';
+                                    } elseif (preg_match('/iPhone/i', $user_agent)) {
+                                        $device_name = 'iPhone';
+                                    } elseif (preg_match('/iPad/i', $user_agent)) {
+                                        $device_name = 'iPad';
+                                    } elseif (preg_match('/Android ([0-9.]+)/i', $user_agent, $matches)) {
+                                        $android_version = $matches[1];
+                                        $device_name = 'Android ' . $android_version;
+                                    } elseif (preg_match('/Android/i', $user_agent)) {
+                                        $device_name = 'Android Device';
+                                    }
                                 } else {
                                     $device_type = 'Desktop';
-                                    if (preg_match('/Windows/i', $user_agent)) $device_name = 'Windows PC';
-                                    elseif (preg_match('/Macintosh|Mac OS X/i', $user_agent)) $device_name = 'Mac';
-                                    elseif (preg_match('/Linux/i', $user_agent)) $device_name = 'Linux PC';
+                                    // Browser detection
+                                    $browser = 'Unknown Browser';
+                                    if (preg_match('/Chrome\/([0-9.]+)/i', $user_agent, $matches)) {
+                                        $browser = 'Chrome ' . explode('.', $matches[1])[0];
+                                    } elseif (preg_match('/Firefox\/([0-9.]+)/i', $user_agent, $matches)) {
+                                        $browser = 'Firefox ' . explode('.', $matches[1])[0];
+                                    } elseif (preg_match('/Safari\/([0-9.]+)/i', $user_agent) && !preg_match('/Chrome/i', $user_agent)) {
+                                        $browser = 'Safari';
+                                    } elseif (preg_match('/Edge\/([0-9.]+)/i', $user_agent, $matches)) {
+                                        $browser = 'Edge ' . explode('.', $matches[1])[0];
+                                    }
+                                    
+                                    if (preg_match('/Windows NT ([0-9.]+)/i', $user_agent, $matches)) {
+                                        $win_version = $matches[1];
+                                        $win_name = $win_version == '10.0' ? 'Windows 10' : ($win_version == '6.1' ? 'Windows 7' : 'Windows');
+                                        $device_name = $win_name . ' (' . $browser . ')';
+                                    } elseif (preg_match('/Mac OS X ([0-9_]+)/i', $user_agent, $matches)) {
+                                        $mac_version = str_replace('_', '.', $matches[1]);
+                                        $device_name = 'macOS ' . $mac_version . ' (' . $browser . ')';
+                                    } elseif (preg_match('/Linux/i', $user_agent)) {
+                                        $device_name = 'Linux (' . $browser . ')';
+                                    }
                                 }
                                 
                                 return array('name' => $device_name, 'type' => $device_type);
@@ -225,7 +268,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                             <div class="row pb-30">
                                 <div class="col-6">
                                     <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input" id="remember-me">
+                                        <input type="checkbox" class="custom-control-input" id="remember-me" name="remember_me" <?php echo (isset($_COOKIE['remember_username']) ? 'checked' : ''); ?>>
                                         <label class="custom-control-label" for="remember-me">Remember Me</label>
                                     </div>
                                 </div>

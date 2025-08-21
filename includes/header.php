@@ -208,25 +208,16 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if(hasPrivilege('booking_confirmed') || $_SESSION["role_id"] == 1): ?>
-                    <li>
-                        <a href="booking_confirmed.php" class="dropdown-toggle no-arrow">
-                            <span class="micon bi bi-check-circle"></span><span class="mtext">Booking Confirmed</span>
+                    <?php if(hasPrivilege('booking_confirmed') || hasPrivilege('booking_cancelled') || hasPrivilege('travel_completed') || $_SESSION["role_id"] == 1): ?>
+                    <li class="dropdown">
+                        <a href="javascript:;" class="dropdown-toggle">
+                            <span class="micon bi bi-calendar-check"></span><span class="mtext">Booking</span>
                         </a>
-                    </li>
-                    <?php endif; ?>
-                    <?php if(hasPrivilege('booking_cancelled') || $_SESSION["role_id"] == 1): ?>
-                    <li>
-                        <a href="booking_cancelled.php" class="dropdown-toggle no-arrow">
-                            <span class="micon bi bi-x-circle"></span><span class="mtext">Booking Cancelled</span>
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                    <?php if(hasPrivilege('travel_completed') || $_SESSION["role_id"] == 1): ?>
-                    <li>
-                        <a href="under_construction.php?page=Travel Completed" class="dropdown-toggle no-arrow">
-                            <span class="micon dw dw-checked"></span><span class="mtext">Travel Completed</span>
-                        </a>
+                        <ul class="submenu">
+                            <?php if(hasPrivilege('booking_confirmed') || $_SESSION["role_id"] == 1): ?><li><a href="booking_confirmed.php">Booking Confirmed</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('booking_cancelled') || $_SESSION["role_id"] == 1): ?><li><a href="booking_cancelled.php">Booking Cancelled</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('travel_completed') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Travel Completed">Travel Completed</a></li><?php endif; ?>
+                        </ul>
                     </li>
                     <?php endif; ?>
                     <?php if(hasPrivilege('view_cost_sheets') || $_SESSION["role_id"] == 1): ?>
@@ -281,7 +272,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                     <?php endif; ?>
                     <li class="dropdown">
                         <a href="javascript:;" class="dropdown-toggle">
-                            <span class="micon bi bi-calculator"></span><span class="mtext">Accounts</span>
+                            <span class="micon bi bi-calculator"></span><span class="mtext">Payments</span>
                         </a>
                         <ul class="submenu">
                             <li><a href="under_construction.php?page=Booked Cost Sheets">Booked Cost Sheets</a></li>
@@ -346,6 +337,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                         <ul class="submenu">
                             <?php if(hasPrivilege('add_user') || $_SESSION["role_id"] == 1): ?><li><a href="add_user.php">Manage Users</a></li><?php endif; ?>
                             <?php if(hasPrivilege('user_privileges') || $_SESSION["role_id"] == 1): ?><li><a href="user_privileges.php">User Privileges</a></li><?php endif; ?>
+                            <?php if($_SESSION["role_id"] == 1): ?><li><a href="api_keys.php">API Keys</a></li><?php endif; ?>
                         </ul>
                     </li>
                     <?php endif; ?>

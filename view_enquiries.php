@@ -274,7 +274,7 @@ $url_string = !empty($url_params) ? "&" . implode("&", $url_params) : "";
                 </div>
                 <div class="form-group">
                     <label for="search-filter">Search</label>
-                    <input type="text" class="form-control" id="search-filter" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Lead #, Name, Mobile, Email">
+                    <input type="text" class="form-control" id="search-filter" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Enquiry #, Name, Mobile, Email">
                 </div>
                 
                 <div class="form-group">
