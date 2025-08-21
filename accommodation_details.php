@@ -20,10 +20,18 @@ $destination_filter = $room_category_filter = $price_from = $price_to = $validit
 if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["filter"])) {
     $destination_filter = !empty($_POST["destination_filter"]) ? $_POST["destination_filter"] : "";
     $room_category_filter = !empty($_POST["room_category_filter"]) ? $_POST["room_category_filter"] : "";
-    $price_from = !empty($_POST["price_from"]) ? $_POST["price_from"] : "";
-    $price_to = !empty($_POST["price_to"]) ? $_POST["price_to"] : "";
+    $price_from = !empty($_POST["price_from"]) ? floatval($_POST["price_from"]) : "";
+    $price_to = !empty($_POST["price_to"]) ? floatval($_POST["price_to"]) : "";
     $validity_from = !empty($_POST["validity_from"]) ? $_POST["validity_from"] : "";
     $validity_to = !empty($_POST["validity_to"]) ? $_POST["validity_to"] : "";
+} else {
+    // Get from URL parameters for pagination
+    $destination_filter = isset($_GET['destination_filter']) ? $_GET['destination_filter'] : "";
+    $room_category_filter = isset($_GET['room_category_filter']) ? $_GET['room_category_filter'] : "";
+    $price_from = isset($_GET['price_from']) ? floatval($_GET['price_from']) : "";
+    $price_to = isset($_GET['price_to']) ? floatval($_GET['price_to']) : "";
+    $validity_from = isset($_GET['validity_from']) ? $_GET['validity_from'] : "";
+    $validity_to = isset($_GET['validity_to']) ? $_GET['validity_to'] : "";
 }
 
 // Build SQL query with filters
@@ -43,26 +51,26 @@ if(!empty($room_category_filter)) {
     $types .= "s";
 }
 
-if(!empty($price_from)) {
+if(!empty($price_from) && is_numeric($price_from)) {
     $sql .= " AND cp >= ?";
-    $params[] = $price_from;
+    $params[] = floatval($price_from);
     $types .= "d";
 }
 
-if(!empty($price_to)) {
+if(!empty($price_to) && is_numeric($price_to)) {
     $sql .= " AND cp <= ?";
-    $params[] = $price_to;
+    $params[] = floatval($price_to);
     $types .= "d";
 }
 
 if(!empty($validity_from)) {
-    $sql .= " AND validity_from >= ?";
+    $sql .= " AND validity_to >= ?";
     $params[] = $validity_from;
     $types .= "s";
 }
 
 if(!empty($validity_to)) {
-    $sql .= " AND validity_to <= ?";
+    $sql .= " AND validity_from <= ?";
     $params[] = $validity_to;
     $types .= "s";
 }

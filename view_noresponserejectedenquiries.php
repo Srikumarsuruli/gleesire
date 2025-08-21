@@ -144,11 +144,8 @@ $count_row = mysqli_fetch_array($count_result);
 $total_records = $count_row ? $count_row[0] : 0;
 $total_pages = ceil($total_records / $records_per_page);
 
-// Add order by and limit for main query
-$sql = $base_sql . " ORDER BY e.received_datetime DESC LIMIT ? OFFSET ?";
-$params[] = $records_per_page;
-$params[] = $offset;
-$types .= "ii";
+// Add order by for main query (remove LIMIT for DataTables)
+$sql = $base_sql . " ORDER BY e.received_datetime DESC";
 
 // Prepare and execute the main query
 $stmt = mysqli_prepare($conn, $sql);
@@ -158,8 +155,12 @@ if(!empty($params)) {
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 
-// Get users for filter dropdown
-$users_sql = "SELECT * FROM users ORDER BY full_name";
+// Get users for filter dropdown - only those who have No Response enquiries
+$users_sql = "SELECT DISTINCT u.* FROM users u 
+              INNER JOIN enquiries e ON u.id = e.attended_by 
+              INNER JOIN lead_status ls ON e.status_id = ls.id 
+              WHERE ls.name = 'No Response'
+              ORDER BY u.full_name";
 $users = mysqli_query($conn, $users_sql);
 
 // Get lead statuses for filter dropdown
@@ -239,7 +240,7 @@ $url_string = !empty($url_params) ? "&" . implode("&", $url_params) : "";
         <h4 class="text-blue h4">No Response/Rejected Enquiries (<?php echo $total_records; ?> total)</h4>
     </div>
     <div class="pb-20">
-        <table class="data-table table stripe hover nowrap">
+        <table class="data-table table stripe hover nowrap" style="width: 100%;">
             <thead>
                 <tr>
                     <th>Enquiry Date</th>
@@ -301,44 +302,34 @@ $url_string = !empty($url_params) ? "&" . implode("&", $url_params) : "";
                 <?php endif; ?>
             </tbody>
         </table>
-        
-        <!-- Pagination -->
-        <?php if($total_pages > 1): ?>
-        <div class="row mt-3">
-            <div class="col-sm-12 col-md-5">
-                <div class="dataTables_info">
-                    Showing <?php echo $offset + 1; ?> to <?php echo min($offset + $records_per_page, $total_records); ?> of <?php echo $total_records; ?> entries
-                </div>
-            </div>
-            <div class="col-sm-12 col-md-7">
-                <div class="dataTables_paginate paging_simple_numbers">
-                    <ul class="pagination">
-                        <?php if($page > 1): ?>
-                            <li class="paginate_button page-item previous">
-                                <a href="?page=<?php echo $page-1; ?><?php echo $url_string; ?>" class="page-link">Previous</a>
-                            </li>
-                        <?php endif; ?>
-                        
-                        <?php for($i = max(1, $page-2); $i <= min($total_pages, $page+2); $i++): ?>
-                            <li class="paginate_button page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
-                                <a href="?page=<?php echo $i; ?><?php echo $url_string; ?>" class="page-link"><?php echo $i; ?></a>
-                            </li>
-                        <?php endfor; ?>
-                        
-                        <?php if($page < $total_pages): ?>
-                            <li class="paginate_button page-item next">
-                                <a href="?page=<?php echo $page+1; ?><?php echo $url_string; ?>" class="page-link">Next</a>
-                            </li>
-                        <?php endif; ?>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <?php endif; ?>
+
     </div>
 </div>
 
 <script>
+// Initialize DataTable
+$(document).ready(function() {
+    $('.data-table').DataTable({
+        scrollCollapse: true,
+        autoWidth: false,
+        responsive: true,
+        "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+        "language": {
+            "info": "_START_-_END_ of _TOTAL_ entries",
+            searchPlaceholder: "Search",
+            paginate: {
+                next: '<i class="ion-chevron-right"></i>',
+                previous: '<i class="ion-chevron-left"></i>'
+            }
+        },
+        columnDefs: [{
+            targets: "datatable-nosort",
+            orderable: false,
+        }],
+        order: [[0, 'desc']] // Sort by Enquiry Date descending
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // Show/hide custom date range based on date filter selection
     const dateFilter = document.getElementById('date-filter');

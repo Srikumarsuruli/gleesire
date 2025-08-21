@@ -10,6 +10,16 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
     exit;
 }
 
+// Session timeout - 15 minutes (900 seconds)
+$timeout_duration = 900;
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout_duration) {
+    session_unset();
+    session_destroy();
+    header("location: login.php?timeout=1");
+    exit;
+}
+$_SESSION['last_activity'] = time();
+
 // Include database connection
 require_once "config/database.php";
 
@@ -393,5 +403,34 @@ if($stmt = mysqli_prepare($conn, $sql)) {
         $(document).on('click', '.dropdown-menu', function(e) {
             e.stopPropagation();
         });
+        
+        // Auto-logout after 15 minutes of inactivity
+        let timeoutWarning;
+        let timeoutLogout;
+        
+        function resetTimeout() {
+            clearTimeout(timeoutWarning);
+            clearTimeout(timeoutLogout);
+            
+            // Show warning at 14 minutes (840 seconds)
+            timeoutWarning = setTimeout(function() {
+                if(confirm('Your session will expire in 1 minute due to inactivity. Click OK to stay logged in.')) {
+                    // User clicked OK, make an AJAX call to refresh session
+                    $.post('refresh_session.php');
+                }
+            }, 840000);
+            
+            // Auto logout at 15 minutes (900 seconds)
+            timeoutLogout = setTimeout(function() {
+                alert('Session expired due to inactivity. You will be redirected to login page.');
+                window.location.href = 'login.php?timeout=1';
+            }, 900000);
+        }
+        
+        // Reset timeout on any user activity
+        $(document).on('click keypress scroll mousemove', resetTimeout);
+        
+        // Initialize timeout
+        resetTimeout();
     });
     </script>
