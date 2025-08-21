@@ -901,6 +901,15 @@ while($row = mysqli_fetch_assoc($result)) {
 ?>
 
 <style>
+
+.table-responsive{
+    padding-bottom: 100px;
+}
+.dropdown-menu{
+    right: 20px;
+    left: unset;
+}
+
 .version-list {
     margin-bottom: 15px;
 }

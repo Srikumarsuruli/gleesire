@@ -120,6 +120,24 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         $infants_count = intval($_POST['infants_count'] ?? 0);
         $children_age_details = $_POST['children_age_details'] ?? '';
         $selected_services = json_encode($_POST['services'] ?? []);
+
+        $arrival_date = $_POST['arrival_date'] ?? '';
+        $arrival_city = $_POST['arrival_city'] ?? '';
+        $arrival_flight = $_POST['arrival_flight'] ?? '';
+        $arrival_nights_days = $_POST['arrival_nights_days'] ?? '';
+        $arrival_connection = $_POST['arrival_connection'] ?? '';
+        
+        $arrival_connecting_date = $_POST['arrival_connecting_date'] ?? '';
+        $arrival_connecting_city = $_POST['arrival_connecting_city'] ?? '';
+        $arrival_connecting_flight = $_POST['arrival_connecting_flight'] ?? '';
+        $arrival_connecting_nights_days = $_POST['arrival_connecting_nights_days'] ?? '';
+        $arrival_connecting_type = $_POST['arrival_connecting_type'] ?? '';
+        
+        $departure_date = $_POST['departure_date'] ?? '';
+        $departure_city = $_POST['departure_city'] ?? '';
+        $departure_flight = $_POST['departure_flight'] ?? '';
+        $departure_nights_days = $_POST['departure_nights_days'] ?? '';
+        $departure_connection = $_POST['departure_connection'] ?? '';
         
         // Update children_age_details in converted_leads table
         if (!empty($children_age_details) && isset($cost_data['enquiry_id'])) {
@@ -186,51 +204,67 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         $insert_sql = "INSERT INTO tour_costings (
             enquiry_id, cost_sheet_number, guest_name, guest_address, whatsapp_number,
             tour_package, currency, nationality, adults_count, children_count, infants_count,
-            selected_services, visa_data, accommodation_data, transportation_data, 
-            cruise_data, extras_data, agent_package_data, medical_tourism_data, payment_data, total_expense, markup_percentage, 
-            markup_amount, tax_percentage, tax_amount, package_cost, currency_rate, 
-            converted_amount, confirmed
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            selected_services, visa_data,
+            
+            arrival_date, arrival_city, arrival_flight, arrival_nights_days, arrival_connection,
+            arrival_connecting_date, arrival_connecting_city, arrival_connecting_flight, arrival_connecting_nights_days, arrival_connecting_type,
+            departure_date, departure_city, departure_flight, departure_nights_days, departure_connection,
+            
+            accommodation_data, transportation_data, cruise_data, extras_data, agent_package_data,
+            medical_tourism_data, payment_data, total_expense, markup_percentage, markup_amount,
+            tax_percentage, tax_amount, package_cost, currency_rate, converted_amount, confirmed
+        ) VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        )";
         
         $insert_stmt = mysqli_prepare($conn, $insert_sql);
-        
+
+        if (!$insert_stmt) {
+            die("SQL Prepare failed: " . mysqli_error($conn) . "\nQuery: " . $insert_sql);
+        }
+
+        // $cost_data['enquiry_id'], $new_cost_sheet_number,
         // Debug: Count parameters
         $params = [
             $cost_data['enquiry_id'], $new_cost_sheet_number, $guest_name, $guest_address, 
             $whatsapp_number, $tour_package, $currency, $nationality, $adults_count, 
-            $children_count, $infants_count, $selected_services, $visa_data, 
+            $children_count, $infants_count, $selected_services, $visa_data,
+
+            $arrival_date, $arrival_city, $arrival_flight, $arrival_nights_days, $arrival_connection,
+            $arrival_connecting_date, $arrival_connecting_city, $arrival_connecting_flight, $arrival_connecting_nights_days, $arrival_connecting_type,
+            $departure_date, $departure_city, $departure_flight, $departure_nights_days, $departure_connection,
+
             $accommodation_data, $transportation_data, $cruise_data, $extras_data, 
-            $agent_package_data, $medical_tourism_data, $payment_data, $total_expense, $markup_percentage, $markup_amount, 
-            $tax_percentage, $tax_amount, $package_cost, $currency_rate, $converted_amount, $confirmed
+            $agent_package_data, $medical_tourism_data, $payment_data, $total_expense, 
+            $markup_percentage, $markup_amount, $tax_percentage, $tax_amount, 
+            $package_cost, $currency_rate, $converted_amount, $confirmed
         ];
         // Build type string to match exact parameter count
-        $type_string = str_repeat('d', count($params)); // Start with all 'd'
-        $type_string[0] = 'i'; // enquiry_id
-        $type_string[1] = 's'; // cost_sheet_number
-        $type_string[2] = 's'; // guest_name
-        $type_string[3] = 's'; // guest_address
-        $type_string[4] = 's'; // whatsapp_number
-        $type_string[5] = 's'; // tour_package
-        $type_string[6] = 's'; // currency
-        $type_string[7] = 's'; // nationality
-        $type_string[8] = 'i'; // adults_count
-        $type_string[9] = 'i'; // children_count
+        // Build type string to match exact parameter count
+        $type_string = str_repeat('s', count($params)); 
+
+        // Adjust numeric fields
+        $type_string[0] = 'i';  // enquiry_id
+        $type_string[8] = 'i';  // adults_count
+        $type_string[9] = 'i';  // children_count
         $type_string[10] = 'i'; // infants_count
-        $type_string[11] = 's'; // selected_services
-        $type_string[12] = 's'; // visa_data
-        $type_string[13] = 's'; // accommodation_data
-        $type_string[14] = 's'; // transportation_data
-        $type_string[15] = 's'; // cruise_data
-        $type_string[16] = 's'; // extras_data
-        $type_string[17] = 's'; // agent_package_data
-        $type_string[18] = 's'; // medical_tourism_data
-        $type_string[19] = 's'; // payment_data
-        $type_string[20] = 'i'; // confirmed
-        // Rest are 'd' for decimal values
+            
+        // Decimal/float fields
+        $type_string[35] = 'd'; // total_expense
+        $type_string[36] = 'd'; // markup_percentage
+        $type_string[37] = 'd'; // markup_amount
+        $type_string[38] = 'd'; // tax_percentage
+        $type_string[39] = 'd'; // tax_amount
+        $type_string[40] = 'd'; // package_cost
+        $type_string[41] = 'd'; // currency_rate
+        $type_string[42] = 'd'; // converted_amount
+            
+        // confirmed is integer
+        $type_string[43] = 'i';
         
-        mysqli_stmt_bind_param($insert_stmt, $type_string,
-            ...$params
-        );
+        mysqli_stmt_bind_param($insert_stmt, $type_string, ...$params);
         
         if (mysqli_stmt_execute($insert_stmt)) {
             $new_cost_file_id = mysqli_insert_id($conn);
@@ -281,6 +315,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         
         mysqli_stmt_close($insert_stmt);
+
+        echo "<script>window.location.href='view_cost_sheets.php?success=true';</script>";
+        exit;
         
     } catch(Exception $e) {
         $error_message = "Error updating cost file: " . $e->getMessage();
@@ -291,16 +328,16 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
 $destinations_sql = "SELECT * FROM destinations ORDER BY name";
 $destinations = mysqli_query($conn, $destinations_sql);
 
-$accommodations_sql = "SELECT id,destination,hotel_name,room_category,cp,map_rate,eb_adult_cp,eb_adult_map,child_with_bed_cp,child_with_bed_map,child_without_bed_cp,child_without_bed_map FROM accommodation_details ORDER BY destination";
+$accommodations_sql = "SELECT * FROM accommodation_details ORDER BY destination";
 $accommodations = mysqli_query($conn, $accommodations_sql);
 
-$transport_sql = "SELECT id,destination,company_name,vehicle,daily_rent,rate_per_km FROM transport_details WHERE status = 'Active' ORDER BY destination";
+$transport_sql = "SELECT * FROM transport_details WHERE status = 'Active' ORDER BY destination";
 $transport_details = mysqli_query($conn, $transport_sql);
 
-$agent_sql = "SELECT id,destination,supplier,supplier_name FROM travel_agents WHERE status = 'Active' ORDER BY destination";
+$agent_sql = "SELECT * FROM travel_agents WHERE status = 'Active' ORDER BY destination";
 $agent_details = mysqli_query($conn, $agent_sql);
 
-$hospital_sql = "SELECT id,destination,hospital_name FROM hospital_details WHERE status = 'Active' ORDER BY destination";
+$hospital_sql = "SELECT * FROM hospital_details WHERE status = 'Active' ORDER BY destination";
 $hospital_details = mysqli_query($conn, $hospital_sql);
 
 
@@ -676,7 +713,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     </td>
                                     <td><button type="button" class="btn btn-sm btn-info" onclick="addConnectingFlight('arrival')"><i class="fas fa-plus"></i></button></td>
                                 </tr>
-                                <tr id="arrival-connecting" style="display: <?php echo !empty($cost_data['arrival_connecting_date']) ? 'table-row' : 'none'; ?>">
+                                <tr id="arrival-connecting" style="display: <?php echo isset($cost_data['arrival_connecting_date']) ? 'table-row' : 'none'; ?>">
                                     <td><strong>ARRIVAL (Connecting)</strong></td>
                                     <td><input type="date" class="form-control form-control-sm" name="arrival_connecting_date" value="<?php echo $cost_data['arrival_connecting_date'] ?? ''; ?>"></td>
                                     <td><input type="text" class="form-control form-control-sm" name="arrival_connecting_city" placeholder="City" value="<?php echo $cost_data['arrival_connecting_city'] ?? ''; ?>"></td>
@@ -779,7 +816,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <?php foreach ($accommodation_data as $index => $accom): ?>
                                 <tr>
                                     <td>
-                                        <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][destination]" onchange="updateHotels(this, <?php echo $index; ?>, <?php echo $accom['hotel']; ?>)">
+                                        <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][destination]" onchange="updateHotels(this, <?php echo $index; ?>, <?php echo $accom['hotel']; ?> )">
                                             <option value="">Select Destination</option>
                                             <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): ?>
                                                 <option 
@@ -793,8 +830,16 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                         <input type="hidden" name="accommodation[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
                                     </td>
                                     <td>
-                                        <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][hotel]" onchange="updateRoomTypes(this, <?php echo $index; ?>, <?php echo $accom['room_type']; ?>)">
+                                        <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][hotel]" onchange="updateRoomTypes(this, <?php echo $index; ?>, '<?php echo $accom['room_type']; ?>')">
                                             <option value="">Select Hotel</option>
+                                            <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): ?>
+                                                <option 
+                                                    value="<?php echo htmlspecialchars($dest['hotel_name']); ?>" 
+                                                    <?php echo ($accom['hotel'] == $dest['hotel_name']) ? 'selected' : ''; ?>
+                                                >
+                                                    <?php echo htmlspecialchars($dest['hotel_name']); ?>
+                                                </option>
+                                            <?php endwhile; ?>
                                         </select>
                                     </td>
                                     <td><input type="date" class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][check_in]" value="<?php echo $accom['check_in'] ?? ''; ?>"></td>
@@ -802,6 +847,14 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][room_type]" onchange="updateRates(this, <?php echo $index; ?>)">
                                             <option value="">Select Room Type</option>
+                                            <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): ?>
+                                                <option 
+                                                    value="<?php echo htmlspecialchars($dest['room_category']); ?>" 
+                                                    <?php echo ($accom['room_type'] == $dest['room_category']) ? 'selected' : ''; ?>
+                                                >
+                                                    <?php echo htmlspecialchars($dest['room_category']); ?>
+                                                </option>
+                                            <?php endwhile; ?>
                                         </select>
                                     </td>
                                     <td><input type="number" class="form-control form-control-sm accom-rooms-no" name="accommodation[<?php echo $index; ?>][rooms_no]" data-row="<?php echo $index; ?>" value="<?php echo $accom['rooms_no'] ?? '0'; ?>" onchange="calculateAccommodationTotal(<?php echo $index; ?>)"></td>
@@ -894,7 +947,6 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>S. NO</th>
                                 <th>SUPPLIER</th>
                                 <th>CAR TYPE</th>
                                 <th>DAILY RENT</th>
@@ -910,7 +962,6 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             <?php if (!empty($transportation_data) && is_array($transportation_data)): ?>
                                 <?php foreach ($transportation_data as $index => $trans): ?>
                                 <tr>
-                                    <td><?php echo $index + 1; ?></td>
                                     <td>
                                         <select class="form-control form-control-sm" name="transportation[<?php echo $index; ?>][supplier]" onchange="updateTransportVehicles(this, <?php echo $index; ?>, '<?php echo $trans['car_type'] ?? ''; ?>')">
                                             <option value="">Select Supplier</option>
@@ -936,7 +987,6 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td>1</td>
                                     <td>
                                         <select class="form-control form-control-sm" name="transportation[0][supplier]" onchange="updateTransportVehicles(this, 0)">
                                             <option value="">Select Supplier</option>
@@ -963,7 +1013,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="9" class="text-right"><strong>TOTAL TRANSPORTATION COST:</strong></td>
+                                <td colspan="8" class="text-right"><strong>TOTAL TRANSPORTATION COST:</strong></td>
                                 <td><input type="text" class="form-control form-control-sm" id="transportation-grand-total" readonly style="background: #e8f5e8; font-weight: bold;"></td>
                             </tr>
                         </tfoot>
@@ -1004,17 +1054,68 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="cruise[<?php echo $index; ?>][boat_type]">
                                             <option value="">Select Boat Type</option>
-                                            <option value="Yacht" <?php echo ($cruise['boat_type'] == 'Yacht') ? 'selected' : ''; ?>>Yacht</option>
-                                            <option value="Catamaran" <?php echo ($cruise['boat_type'] == 'Catamaran') ? 'selected' : ''; ?>>Catamaran</option>
-                                            <option value="Speedboat" <?php echo ($cruise['boat_type'] == 'Speedboat') ? 'selected' : ''; ?>>Speedboat</option>
+                                           
+                                            <option value="Sailboat / Sailing Yacht" <?php echo ($cruise['boat_type'] == 'Sailboat / Sailing Yacht') ? 'selected' : ''; ?> >Sailboat / Sailing Yacht</option>
+                                            <option value="Pontoon Boat" <?php echo ($cruise['boat_type'] == 'Pontoon Boat') ? 'selected' : ''; ?> >Pontoon Boat</option>
+                                            <option value="Bowrider" <?php echo ($cruise['boat_type'] == 'Bowrider') ? 'selected' : ''; ?> >Bowrider</option>
+                                            <option value="Cabin Cruiser" <?php echo ($cruise['boat_type'] == 'Cabin Cruiser') ? 'selected' : ''; ?> >Cabin Cruiser</option>
+                                            <option value="Deck Boat" <?php echo ($cruise['boat_type'] == 'Deck Boat') ? 'selected' : ''; ?> >Deck Boat</option>
+                                            <option value="Jet Boat" <?php echo ($cruise['boat_type'] == 'Jet Boat') ? 'selected' : ''; ?> >Jet Boat</option>
+                                            <option value="Personal Watercraft (PWC)" <?php echo ($cruise['boat_type'] == 'Personal Watercraft (PWC)') ? 'selected' : ''; ?> >Personal Watercraft (PWC)</option>
+                                            <option value="Houseboat" <?php echo ($cruise['boat_type'] == 'Houseboat') ? 'selected' : ''; ?> >Houseboat</option>
+                                            <option value="Bass Boat" <?php echo ($cruise['boat_type'] == 'Bass Boat') ? 'selected' : ''; ?> >Bass Boat</option>
+                                            <option value="Dinghy" <?php echo ($cruise['boat_type'] == 'Dinghy') ? 'selected' : ''; ?> >Dinghy</option>
+                                            <option value="Canoe" <?php echo ($cruise['boat_type'] == 'Canoe') ? 'selected' : ''; ?> >Canoe</option>
+                                            <option value="Kayak" <?php echo ($cruise['boat_type'] == 'Kayak') ? 'selected' : ''; ?> >Kayak</option>
+                                            <option value="Rowboat" <?php echo ($cruise['boat_type'] == 'Rowboat') ? 'selected' : ''; ?> >Rowboat</option>
+                                            <option value="Inflatable Boat" <?php echo ($cruise['boat_type'] == 'Inflatable Boat') ? 'selected' : ''; ?> >Inflatable Boat</option>
+                                            <option value="Sloop" <?php echo ($cruise['boat_type'] == 'Sloop') ? 'selected' : ''; ?> >Sloop</option>
+                                            <option value="Cutter" <?php echo ($cruise['boat_type'] == 'Cutter') ? 'selected' : ''; ?> >Cutter</option>
+                                            <option value="Ketch" <?php echo ($cruise['boat_type'] == 'Ketch') ? 'selected' : ''; ?> >Ketch</option>
+                                            <option value="Yawl" <?php echo ($cruise['boat_type'] == 'Yawl') ? 'selected' : ''; ?> >Yawl</option>
+                                            <option value="Catamaran" <?php echo ($cruise['boat_type'] == 'Catamaran') ? 'selected' : ''; ?> >Catamaran</option>
+                                            <option value="Trimaran" <?php echo ($cruise['boat_type'] == 'Trimaran') ? 'selected' : ''; ?> >Trimaran</option>
+                                            <option value="Fishing Trawler" <?php echo ($cruise['boat_type'] == 'Fishing Trawler') ? 'selected' : ''; ?> >Fishing Trawler</option>
+                                            <option value="Cargo Ship / Freighter" <?php echo ($cruise['boat_type'] == 'Cargo Ship / Freighter') ? 'selected' : ''; ?> >Cargo Ship / Freighter</option>
+                                            <option value="Tugboat" <?php echo ($cruise['boat_type'] == 'Tugboat') ? 'selected' : ''; ?> >Tugboat</option>
+                                            <option value="Ferry" <?php echo ($cruise['boat_type'] == 'Ferry') ? 'selected' : ''; ?> >Ferry</option>
+                                            <option value="Pilot Boat" <?php echo ($cruise['boat_type'] == 'Pilot Boat') ? 'selected' : ''; ?> >Pilot Boat</option>
+                                            <option value="Barge" <?php echo ($cruise['boat_type'] == 'Barge') ? 'selected' : ''; ?> >Barge</option>
+                                            <option value="Oil Tanker / Gas Carrier" <?php echo ($cruise['boat_type'] == 'Oil Tanker / Gas Carrier') ? 'selected' : ''; ?> >Oil Tanker / Gas Carrier</option>
+                                            <option value="Dredger" <?php echo ($cruise['boat_type'] == 'Dredger') ? 'selected' : ''; ?> >Dredger</option>
+                                            <option value="Fireboat" <?php echo ($cruise['boat_type'] == 'Fireboat') ? 'selected' : ''; ?> >Fireboat</option>
+                                            <option value="Research Vessel" <?php echo ($cruise['boat_type'] == 'Research Vessel') ? 'selected' : ''; ?> >Research Vessel</option>
+                                            <option value="Yacht" <?php echo ($cruise['boat_type'] == 'Yacht') ? 'selected' : ''; ?> >Yacht</option>
+                                            <option value="Superyacht / Megayacht" <?php echo ($cruise['boat_type'] == 'Superyacht / Megayacht') ? 'selected' : ''; ?> >Superyacht / Megayacht</option>
+                                            <option value="Cruise Ship" <?php echo ($cruise['boat_type'] == 'Cruise Ship') ? 'selected' : ''; ?> >Cruise Ship</option>
+                                            <option value="Expedition Yacht" <?php echo ($cruise['boat_type'] == 'Expedition Yacht') ? 'selected' : ''; ?> >Expedition Yacht</option>
                                         </select>
                                     </td>
                                     <td>
                                         <select class="form-control form-control-sm" name="cruise[<?php echo $index; ?>][cruise_type]">
                                             <option value="">Select Cruise Type</option>
-                                            <option value="Half Day" <?php echo ($cruise['cruise_type'] == 'Half Day') ? 'selected' : ''; ?>>Half Day</option>
-                                            <option value="Full Day" <?php echo ($cruise['cruise_type'] == 'Full Day') ? 'selected' : ''; ?>>Full Day</option>
-                                            <option value="Sunset Cruise" <?php echo ($cruise['cruise_type'] == 'Sunset Cruise') ? 'selected' : ''; ?>>Sunset Cruise</option>
+                                            <option value="Ocean Cruise" <?php echo ($cruise['cruise_type'] == 'Ocean Cruise') ? 'selected' : ''; ?>>Ocean Cruise</option>
+                                            <option value="River Cruise" <?php echo ($cruise['cruise_type'] == 'River Cruise') ? 'selected' : ''; ?>>River Cruise</option>
+                                            <option value="Expedition Cruise" <?php echo ($cruise['cruise_type'] == 'Expedition Cruise') ? 'selected' : ''; ?>>Expedition Cruise</option>
+                                            <option value="Coastal Cruise" <?php echo ($cruise['cruise_type'] == 'Coastal Cruise') ? 'selected' : ''; ?>>Coastal Cruise</option>
+                                            <option value="Mini / Weekend Cruise" <?php echo ($cruise['cruise_type'] == 'Mini / Weekend Cruise') ? 'selected' : ''; ?>>Mini / Weekend Cruise</option>
+                                            <option value="Short Cruise" <?php echo ($cruise['cruise_type'] == 'Short Cruise') ? 'selected' : ''; ?>>Short Cruise</option>
+                                            <option value="Weeklong Cruise" <?php echo ($cruise['cruise_type'] == 'Weeklong Cruise') ? 'selected' : ''; ?>>Weeklong Cruise</option>
+                                            <option value="Extended Cruise" <?php echo ($cruise['cruise_type'] == 'Extended Cruise') ? 'selected' : ''; ?>>Extended Cruise</option>
+                                            <option value="World Cruise" <?php echo ($cruise['cruise_type'] == 'World Cruise') ? 'selected' : ''; ?>>World Cruise</option>
+                                            <option value="Luxury Cruise" <?php echo ($cruise['cruise_type'] == 'Luxury Cruise') ? 'selected' : ''; ?>>Luxury Cruise</option>
+                                            <option value="Family Cruise" <?php echo ($cruise['cruise_type'] == 'Family Cruise') ? 'selected' : ''; ?>>Family Cruise</option>
+                                            <option value="Adventure Cruise" <?php echo ($cruise['cruise_type'] == 'Adventure Cruise') ? 'selected' : ''; ?>>Adventure Cruise</option>
+                                            <option value="Wellness Cruise" <?php echo ($cruise['cruise_type'] == 'Wellness Cruise') ? 'selected' : ''; ?>>Wellness Cruise</option>
+                                            <option value="Romantic / Honeymoon Cruise" <?php echo ($cruise['cruise_type'] == 'Romantic / Honeymoon Cruise') ? 'selected' : ''; ?>>Romantic / Honeymoon Cruise</option>
+                                            <option value="Singles Cruise" <?php echo ($cruise['cruise_type'] == 'Singles Cruise') ? 'selected' : ''; ?>>Singles Cruise</option>
+                                            <option value="Themed Cruise" <?php echo ($cruise['cruise_type'] == 'Themed Cruise') ? 'selected' : ''; ?>>Themed Cruise</option>
+                                            <option value="Repositioning Cruise" <?php echo ($cruise['cruise_type'] == 'Repositioning Cruise') ? 'selected' : ''; ?>>Repositioning Cruise</option>
+                                            <option value="Mega Cruise" <?php echo ($cruise['cruise_type'] == 'Mega Cruise') ? 'selected' : ''; ?>>Mega Cruise</option>
+                                            <option value="Small Ship Cruise" <?php echo ($cruise['cruise_type'] == 'Small Shiplf') ? 'selected' : ''; ?>>Small Ship Cruise</option>
+                                            <option value="Yacht Cruise" <?php echo ($cruise['cruise_type'] == 'Yacht Cruise') ? 'selected' : ''; ?>>Yacht Cruise</option>
+                                            <option value="Sailing Cruise" <?php echo ($cruise['cruise_type'] == 'Sailing Cruise') ? 'selected' : ''; ?>>Sailing Cruise</option>
+                                            <option value="Barge Cruise" <?php echo ($cruise['cruise_type'] == 'Barge Cruise') ? 'selected' : ''; ?>>Barge Cruise</option>
                                         </select>
                                     </td>
                                     <td><input type="datetime-local" class="form-control form-control-sm" name="cruise[<?php echo $index; ?>][check_in]" value="<?php echo $cruise['check_in'] ?? ''; ?>"></td>
@@ -1099,7 +1200,12 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                         <select class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][destination]" onchange="updateAgentSupplier(this, <?php echo $index; ?>, '<?php echo $package['agent_supplier']; ?>' )">
                                             <option value="">Select Destination</option>
                                             <?php mysqli_data_seek($agent_details, 0); while($agent = mysqli_fetch_assoc($agent_details)): ?>
-                                                <option value="<?php echo htmlspecialchars($agent['destination']); ?>" <?php echo ($package['agent_supplier'] == $agent['destination']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($agent['destination']); ?></option>
+                                                <option 
+                                                value="<?php echo htmlspecialchars($agent['destination']); ?>" 
+                                                <?php echo ($package['destination'] == $agent['destination']) ? 'selected' : ''; ?>
+                                            >
+                                                <?php echo htmlspecialchars($agent['destination']); ?>
+                                            </option>
                                             <?php endwhile; ?>
                                         </select>
                                         <input type="hidden" name="agent_package[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
@@ -1107,6 +1213,14 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][agent_supplier]" style="width: 120px;">
                                             <option value="">Select Agent/Supplier</option>
+                                            <?php mysqli_data_seek($agent_details, 0); while($agent = mysqli_fetch_assoc($agent_details)): ?>
+                                            <option 
+                                                value="<?php echo htmlspecialchars($agent['supplier']); ?>" 
+                                                <?php echo ($package['agent_supplier'] == $agent['supplier']) ? 'selected' : ''; ?>
+                                            >
+                                                <?php echo htmlspecialchars($agent['supplier']); ?>
+                                            </option>
+                                            <?php endwhile; ?>
                                         </select>
                                     </td>
                                     <td><input type="date" class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][start_date]" value="<?php echo $package['start_date'] ?? ''; ?>"></td>
@@ -1180,18 +1294,26 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                 <th>TOTAL</th>
                             </tr>
                         </thead>
-                        <tbody id="medical-tourism-tbody">
+                                              <tbody id="medical-tourism-tbody">
                             <?php 
-                            $medical_tourism_data = json_decode($cost_data['$medical_tourism_data'] ?? '[]', true);
+                            $medical_tourism_data = json_decode($cost_data['medical_tourism_data'] ?? '[]', true);
+                            
+                            
                             if (!empty($medical_tourism_data) && is_array($medical_tourism_data)): 
                             ?>
                                 <?php foreach ($medical_tourism_data as $index => $package): ?>
                                 <tr>
                                     <td>
+                                        
                                         <select class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][place]" onchange="updateHospitals(this, <?php echo $index; ?>, '<?php echo $package['hospital'] ?? ''; ?>')" style="width: 120px;">
                                             <option value="">Select Place</option>
                                             <?php mysqli_data_seek($hospital_details, 0); while($hospital = mysqli_fetch_assoc($hospital_details)): ?>
-                                                <option value="<?php echo htmlspecialchars($hospital['destination']); ?>" <?php echo ($package['place'] == $hospital['destination']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($hospital['destination']); ?></option>
+                                                <option 
+                                                    value="<?php echo htmlspecialchars($hospital['destination']); ?>" 
+                                                    <?php echo ($package['place'] == $hospital['destination']) ? 'selected' : ''; ?>
+                                                >
+                                                    <?php echo htmlspecialchars($hospital['destination']); ?>
+                                                </option>
                                             <?php endwhile; ?>
                                         </select>
                                         <input type="hidden" name="medical_tourisms[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
@@ -1205,7 +1327,10 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][treatment_type]">
                                            <option value="">Select type</option>
-                                           <option value="Type 1" >Type 1</option>
+                                           <option 
+                                                value="Type 1"
+                                                <?php echo ($package['treatment_type'] == "Type 1") ? 'selected' : ''; ?>
+                                           >Type 1</option>
                                         </select>
                                     </td>
                                     <td>
@@ -1446,7 +1571,6 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                     <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): ?>
                         <option 
                             value="<?php echo htmlspecialchars($dest['destination']); ?>" 
-                            <?php echo ($accom['destination'] == $dest['destination']) ? 'selected' : ''; ?>
                         >
                             <?php echo htmlspecialchars($dest['destination']); ?>
                         </option>
@@ -1615,7 +1739,6 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
         const tbody = document.getElementById('transportation-tbody');
         const newRow = document.createElement('tr');
         newRow.innerHTML = `
-            <td>${transportationRowCount + 1}</td>
             <td>
                 <select class="form-control form-control-sm" name="transportation[${transportationRowCount}][supplier]" onchange="updateTransportVehicles(this, ${transportationRowCount})">
                     <option value="">Select Supplier</option>
@@ -1690,6 +1813,89 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
         }
     }
 
+    let cruiseRowCount = 1;
+    function addCruiseRow() {
+        const tbody = document.getElementById('cruise-tbody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td>${cruiseRowCount + 1}</td>
+            <td><input type="text" class="form-control form-control-sm" name="cruise[${cruiseRowCount}][supplier]" placeholder="Supplier Name"></td>
+            <td>
+                <select class="form-control form-control-sm" name="cruise[${cruiseRowCount}][boat_type]">
+                    <option value="">Select Boat Type</option>
+                    <option value="Speedboat / Powerboat">Speedboat / Powerboat</option>
+                    <option value="Sailboat / Sailing Yacht">Sailboat / Sailing Yacht</option>
+                    <option value="Pontoon Boat">Pontoon Boat</option>
+                    <option value="Bowrider">Bowrider</option>
+                    <option value="Cabin Cruiser">Cabin Cruiser</option>
+                    <option value="Deck Boat">Deck Boat</option>
+                    <option value="Jet Boat">Jet Boat</option>
+                    <option value="Personal Watercraft (PWC)">Personal Watercraft (PWC)</option>
+                    <option value="Houseboat">Houseboat</option>
+                    <option value="Bass Boat">Bass Boat</option>
+                    <option value="Dinghy">Dinghy</option>
+                    <option value="Canoe">Canoe</option>
+                    <option value="Kayak">Kayak</option>
+                    <option value="Rowboat">Rowboat</option>
+                    <option value="Inflatable Boat">Inflatable Boat</option>
+                    <option value="Sloop">Sloop</option>
+                    <option value="Cutter">Cutter</option>
+                    <option value="Ketch">Ketch</option>
+                    <option value="Yawl">Yawl</option>
+                    <option value="Catamaran">Catamaran</option>
+                    <option value="Trimaran">Trimaran</option>
+                    <option value="Fishing Trawler">Fishing Trawler</option>
+                    <option value="Cargo Ship / Freighter">Cargo Ship / Freighter</option>
+                    <option value="Tugboat">Tugboat</option>
+                    <option value="Ferry">Ferry</option>
+                    <option value="Pilot Boat">Pilot Boat</option>
+                    <option value="Barge">Barge</option>
+                    <option value="Oil Tanker / Gas Carrier">Oil Tanker / Gas Carrier</option>
+                    <option value="Dredger">Dredger</option>
+                    <option value="Fireboat">Fireboat</option>
+                    <option value="Research Vessel">Research Vessel</option>
+                    <option value="Yacht">Yacht</option>
+                    <option value="Superyacht / Megayacht">Superyacht / Megayacht</option>
+                    <option value="Cruise Ship">Cruise Ship</option>
+                    <option value="Expedition Yacht">Expedition Yacht</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control form-control-sm" name="cruise[${cruiseRowCount}][cruise_type]">
+                    <option value="">Select Cruise Type</option>
+                    <option value="Ocean Cruise">Ocean Cruise</option>
+                    <option value="River Cruise">River Cruise</option>
+                    <option value="Expedition Cruise">Expedition Cruise</option>
+                    <option value="Coastal Cruise">Coastal Cruise</option>
+                    <option value="Mini / Weekend Cruise">Mini / Weekend Cruise</option>
+                    <option value="Short Cruise">Short Cruise</option>
+                    <option value="Weeklong Cruise">Weeklong Cruise</option>
+                    <option value="Extended Cruise">Extended Cruise</option>
+                    <option value="World Cruise">World Cruise</option>
+                    <option value="Luxury Cruise">Luxury Cruise</option>
+                    <option value="Family Cruise">Family Cruise</option>
+                    <option value="Adventure Cruise">Adventure Cruise</option>
+                    <option value="Wellness Cruise">Wellness Cruise</option>
+                    <option value="Romantic / Honeymoon Cruise">Romantic / Honeymoon Cruise</option>
+                    <option value="Singles Cruise">Singles Cruise</option>
+                    <option value="Themed Cruise">Themed Cruise</option>
+                    <option value="Repositioning Cruise">Repositioning Cruise</option>
+                    <option value="Mega Cruise">Mega Cruise</option>
+                    <option value="Small Ship Cruise">Small Ship Cruise</option>
+                    <option value="Yacht Cruise">Yacht Cruise</option>
+                    <option value="Sailing Cruise">Sailing Cruise</option>
+                    <option value="Barge Cruise">Barge Cruise</option>
+                </select>
+            </td>
+            <td><input type="datetime-local" class="form-control form-control-sm" name="cruise[${cruiseRowCount}][check_in]"></td>
+            <td><input type="datetime-local" class="form-control form-control-sm" name="cruise[${cruiseRowCount}][check_out]"></td>
+            <td><input type="number" class="form-control form-control-sm cruise-rate" name="cruise[${cruiseRowCount}][rate]" data-row="${cruiseRowCount}" value="0" onchange="calculateCruiseTotal(${cruiseRowCount})" placeholder="0"></td>
+            <td><input type="number" class="form-control form-control-sm cruise-extra" name="cruise[${cruiseRowCount}][extra]" data-row="${cruiseRowCount}" value="0" onchange="calculateCruiseTotal(${cruiseRowCount})" placeholder="0"></td>
+            <td><input type="text" class="form-control form-control-sm cruise-total" name="cruise[${cruiseRowCount}][total]" data-row="${cruiseRowCount}" readonly style="background: #f0f8ff; font-weight: bold;"></td>
+        `;
+        tbody.appendChild(newRow);
+        cruiseRowCount++;
+    }
     // Confirmation popup for new version creation
     function confirmNewVersion(event) {
         event.preventDefault();

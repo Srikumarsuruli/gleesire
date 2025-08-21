@@ -27,7 +27,7 @@ try {
             $hotel_name = isset($_GET['hotel_name']) ? $_GET['hotel_name'] : '';
             $room_category = isset($_GET['room_category']) ? $_GET['room_category'] : '';
 
-            $sql = "SELECT * FROM accommodation_details WHERE validity_to < NOW()";
+            $sql = "SELECT distinct * FROM accommodation_details WHERE validity_to < NOW()";
             $values = array();
 
             if(!empty($destination)) {
@@ -73,7 +73,7 @@ try {
             $company_name = isset($_GET['company_name']) ? $_GET['company_name'] : '';
             $vehicle = isset($_GET['vehicle']) ? $_GET['vehicle'] : '';
 
-            $sql = "SELECT * FROM transport_details WHERE status = 'Active'";
+            $sql = "SELECT distinct * FROM transport_details WHERE status = 'Active'";
             $values = array();
 
             if(!empty($destination)) {
@@ -120,7 +120,7 @@ try {
             $destination = isset($_GET['destination']) ? $_GET['destination'] : '';
             $supplier = isset($_GET['supplier']) ? $_GET['supplier'] : '';
 
-            $sql = "SELECT * FROM travel_agents WHERE status = 'Active'";
+            $sql = "SELECT distinct * FROM travel_agents WHERE status = 'Active'";
             $values = array();
 
             if(!empty($destination)) {
@@ -162,7 +162,7 @@ try {
             $destination = isset($_GET['destination']) ? $_GET['destination'] : '';
             $hospital_name = isset($_GET['hospital_name']) ? $_GET['hospital_name'] : '';
 
-            $sql = "SELECT * FROM hospital_details WHERE status = 'Active'";
+            $sql = "SELECT distinct * FROM hospital_details WHERE status = 'Active'";
             $values = array();
 
             if(!empty($destination)) {

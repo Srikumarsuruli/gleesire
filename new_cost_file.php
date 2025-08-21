@@ -72,24 +72,20 @@ $error_message = "";
 // Generate cost sheet number
 $cost_sheet_number = generateNumber('cost_sheet', $conn);
 
-// Get destinations for dropdown
-$destinations_sql = "SELECT * FROM destinations ORDER BY name";
-$destinations = mysqli_query($conn, $destinations_sql);
-
 // Get accommodation details for dropdown
-$accommodation_sql = "SELECT id,destination,hotel_name,room_category,cp,map_rate,eb_adult_cp,eb_adult_map,child_with_bed_cp,child_with_bed_map,child_without_bed_cp,child_without_bed_map FROM accommodation_details ORDER BY destination";
+$accommodation_sql = "SELECT * FROM accommodation_details ORDER BY destination";
 $accommodation_details = mysqli_query($conn, $accommodation_sql);
 
 // Get transport details for dropdown
-$transport_sql = "SELECT id,destination,company_name,vehicle,daily_rent,rate_per_km FROM transport_details WHERE status = 'Active' ORDER BY destination";
+$transport_sql = "SELECT * FROM transport_details WHERE status = 'Active' ORDER BY destination";
 $transport_details = mysqli_query($conn, $transport_sql);
 
 // Get travel agents for dropdown
-$travel_agents_sql = "SELECT id,destination,supplier,supplier_name FROM travel_agents WHERE status = 'Active' ORDER BY destination";
+$travel_agents_sql = "SELECT * FROM travel_agents WHERE status = 'Active' ORDER BY destination";
 $travel_agents = mysqli_query($conn, $travel_agents_sql);
 
 // Get hospital details for dropdown
-$hospital_sql = "SELECT id,destination,hospital_name FROM hospital_details WHERE status = 'Active' ORDER BY destination";
+$hospital_sql = "SELECT * FROM hospital_details WHERE status = 'Active' ORDER BY destination";
 $hospital_details = mysqli_query($conn, $hospital_sql);
 
 // Check if editing existing cost file
@@ -107,6 +103,7 @@ if ($check_stmt) {
     }
     mysqli_stmt_close($check_stmt);
 }
+
 
 // Process form submission
 if($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -204,6 +201,26 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         $children_age_details = $_POST['children_age_details'] ?? '';
         $selected_services = json_encode($_POST['services'] ?? []);
         
+        $arrival_date = $_POST['arrival_date'] ?? '';
+        $arrival_city = $_POST['arrival_city'] ?? '';
+        $arrival_flight = $_POST['arrival_flight'] ?? '';
+        $arrival_nights_days = $_POST['arrival_nights_days'] ?? '';
+        $arrival_connection = $_POST['arrival_connection'] ?? '';
+        
+        $arrival_connecting_date = $_POST['arrival_connecting_date'] ?? '';
+        $arrival_connecting_city = $_POST['arrival_connecting_city'] ?? '';
+        $arrival_connecting_flight = $_POST['arrival_connecting_flight'] ?? '';
+        $arrival_connecting_nights_days = $_POST['arrival_connecting_nights_days'] ?? '';
+        $arrival_connecting_type = $_POST['arrival_connecting_type'] ?? '';
+        
+        $departure_date = $_POST['departure_date'] ?? '';
+        $departure_city = $_POST['departure_city'] ?? '';
+        $departure_flight = $_POST['departure_flight'] ?? '';
+        $departure_nights_days = $_POST['departure_nights_days'] ?? '';
+        $departure_connection = $_POST['departure_connection'] ?? '';
+
+        
+        
         // Update children_age_details in converted_leads table
         if (!empty($children_age_details)) {
             $update_children_sql = "UPDATE converted_leads SET children_age_details = ? WHERE enquiry_id = ?";
@@ -244,48 +261,65 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         $insert_sql = "INSERT INTO tour_costings (
             enquiry_id, cost_sheet_number, guest_name, guest_address, whatsapp_number,
             tour_package, currency, nationality, adults_count, children_count, infants_count,
-            selected_services, visa_data, accommodation_data, transportation_data, 
-            cruise_data, extras_data, agent_package_data, medical_tourism_data, payment_data, total_expense, markup_percentage, 
-            markup_amount, tax_percentage, tax_amount, package_cost, currency_rate, 
-            converted_amount, confirmed
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            selected_services, visa_data,
+            
+            arrival_date, arrival_city, arrival_flight, arrival_nights_days, arrival_connection,
+            arrival_connecting_date, arrival_connecting_city, arrival_connecting_flight, arrival_connecting_nights_days, arrival_connecting_type,
+            departure_date, departure_city, departure_flight, departure_nights_days, departure_connection,
+            
+            accommodation_data, transportation_data, cruise_data, extras_data, agent_package_data,
+            medical_tourism_data, payment_data, total_expense, markup_percentage, markup_amount,
+            tax_percentage, tax_amount, package_cost, currency_rate, converted_amount, confirmed
+        ) VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        )";
         
         $stmt = mysqli_prepare($conn, $insert_sql);
+
+        if (!$stmt) {
+            die("SQL Prepare failed: " . mysqli_error($conn) . "\nQuery: " . $insert_sql);
+        }
         
         // Build parameter array and type string
         $params = [
             $enquiry_id, $cost_sheet_number, $guest_name, $guest_address, 
             $whatsapp_number, $tour_package, $currency, $nationality, $adults_count, 
-            $children_count, $infants_count, $selected_services, $visa_data, 
+            $children_count, $infants_count, $selected_services, $visa_data,
+
+            $arrival_date, $arrival_city, $arrival_flight, $arrival_nights_days, $arrival_connection,
+            $arrival_connecting_date, $arrival_connecting_city, $arrival_connecting_flight, $arrival_connecting_nights_days, $arrival_connecting_type,
+            $departure_date, $departure_city, $departure_flight, $departure_nights_days, $departure_connection,
+
             $accommodation_data, $transportation_data, $cruise_data, $extras_data, 
-            $agent_package_data, $medical_tourism_data, $payment_data, $total_expense, $markup_percentage, $markup_amount, 
-            $tax_percentage, $tax_amount, $package_cost, $currency_rate, $converted_amount, $confirmed
+            $agent_package_data, $medical_tourism_data, $payment_data, $total_expense, 
+            $markup_percentage, $markup_amount, $tax_percentage, $tax_amount, 
+            $package_cost, $currency_rate, $converted_amount, $confirmed
         ];
         
         // Build type string to match exact parameter count
-        $type_string = str_repeat('d', count($params)); // Start with all 'd'
-        $type_string[0] = 'i'; // enquiry_id
-        $type_string[1] = 's'; // cost_sheet_number
-        $type_string[2] = 's'; // guest_name
-        $type_string[3] = 's'; // guest_address
-        $type_string[4] = 's'; // whatsapp_number
-        $type_string[5] = 's'; // tour_package
-        $type_string[6] = 's'; // currency
-        $type_string[7] = 's'; // nationality
-        $type_string[8] = 'i'; // adults_count
-        $type_string[9] = 'i'; // children_count
+        $type_string = str_repeat('s', count($params)); 
+
+        // Adjust numeric fields
+        $type_string[0] = 'i';  // enquiry_id
+        $type_string[8] = 'i';  // adults_count
+        $type_string[9] = 'i';  // children_count
         $type_string[10] = 'i'; // infants_count
-        $type_string[11] = 's'; // selected_services
-        $type_string[12] = 's'; // visa_data
-        $type_string[13] = 's'; // accommodation_data
-        $type_string[14] = 's'; // transportation_data
-        $type_string[15] = 's'; // cruise_data
-        $type_string[16] = 's'; // extras_data
-        $type_string[17] = 's'; // agent_package_data
-        $type_string[18] = 's'; // medical_tourism_data
-        $type_string[19] = 's'; // payment_data
-        $type_string[28] = 'i'; // confirmed
-        // Rest are 'd' for decimal values
+        $type_string[11] = 's';
+
+        // Decimal/float fields
+        $type_string[35] = 'd'; // total_expense
+        $type_string[36] = 'd'; // markup_percentage
+        $type_string[37] = 'd'; // markup_amount
+        $type_string[38] = 'd'; // tax_percentage
+        $type_string[39] = 'd'; // tax_amount
+        $type_string[40] = 'd'; // package_cost
+        $type_string[41] = 'd'; // currency_rate
+        $type_string[42] = 'd'; // converted_amount
+            
+        // confirmed is integer
+        $type_string[43] = 'i';
         
         mysqli_stmt_bind_param($stmt, $type_string, ...$params);
         
@@ -326,6 +360,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                 $cost_file_id = mysqli_insert_id($conn);
                 $success_message = "Cost file saved successfully to database!";
                 $show_success_popup = true;
+                
+                
+                echo "<script>window.location.href='view_leads.php?success=true';</script>";
+                exit;
+
             } else {
                 throw new Exception("Database insertion failed: " . mysqli_error($conn));
             }
@@ -2413,7 +2452,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         const tds = parseFloat(document.querySelector(`.medical-tourism-tds[data-row="${row}"]`).value) || 0;
         const otherExpenses = parseFloat(document.querySelector(`.medical-tourism-other_expenses[data-row="${row}"]`).value) || 0;
 
-        const subtotal = net + otherExpenses - tds;
+        const subtotal = net + otherExpenses + tds;
         const gst = subtotal * 0.18; // 18% GST
         const total = subtotal + gst;
 
