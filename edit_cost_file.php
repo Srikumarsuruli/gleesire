@@ -443,18 +443,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                         <span class="info-value"><?php echo $cost_data['lead_date'] ? date('d-m-Y', strtotime($cost_data['lead_date'])) : 'N/A'; ?></span>
                         
                     </div>
-                    <div class="info-row">
-                        <span class="info-label">Lead Department:</span>
-                        <span class="info-value"><?php echo htmlspecialchars($cost_data['department_name'] ?? 'N/A'); ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Night/Day:</span>
-                        <span class="info-value"><?php echo htmlspecialchars($cost_data['night_day'] ?? 'N/A'); ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Travel Period:</span>
-                        <span class="info-value"><?php echo date('d-m-Y', strtotime($cost_data['travel_start_date'])) ?? 'N/A'; ?> To <?php echo date('d-m-Y', strtotime($cost_data['travel_end_date'])) ?? 'N/A'; ?></span>
-                    </div>
+                    
                 </div>
 
                 <!-- Travel Information -->
@@ -511,6 +500,18 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                     <div class="info-row">
                         <span class="info-label">Travel Destination:</span>
                         <span class="info-value"><?php echo htmlspecialchars($cost_data['destination_name'] ?? 'N/A'); ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Lead Department:</span>
+                        <span class="info-value"><?php echo htmlspecialchars($cost_data['department_name'] ?? 'N/A'); ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Night/Day:</span>
+                        <span class="info-value"><?php echo htmlspecialchars($cost_data['night_day'] ?? 'N/A'); ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Travel Period:</span>
+                        <span class="info-value"><?php echo date('d-m-Y', strtotime($cost_data['travel_start_date'])) ?? 'N/A'; ?> To <?php echo date('d-m-Y', strtotime($cost_data['travel_end_date'])) ?? 'N/A'; ?></span>
                     </div>
                 </div>
 
@@ -583,19 +584,6 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             <span class="service-text">CRUISE HIRE</span>
                             <input type="checkbox" name="services[]" value="cruise_hire" <?php echo in_array('cruise_hire', $selected_services) ? 'checked' : ''; ?> style="display: none;">
                         </div>
-                        
-                        <div class="service-item <?php echo in_array('extras', $selected_services) ? 'selected' : ''; ?>" onclick="toggleService(this, 'extras')">
-                            <i class="fas fa-plus service-icon-small"></i>
-                            <span class="service-text">EXTRAS/MISCELLANEOUS</span>
-                            <input type="checkbox" name="services[]" value="extras" <?php echo in_array('extras', $selected_services) ? 'checked' : ''; ?> style="display: none;">
-                        </div>
-                        
-                        <div class="service-item <?php echo in_array('travel_insurance', $selected_services) ? 'selected' : ''; ?>" onclick="toggleService(this, 'travel_insurance')">
-                            <i class="fas fa-shield-alt service-icon-small"></i>
-                            <span class="service-text">TRAVEL INSURANCE</span>
-                            <input type="checkbox" name="services[]" value="travel_insurance" <?php echo in_array('travel_insurance', $selected_services) ? 'checked' : ''; ?> style="display: none;">
-                        </div>
-                        
                         <div class="service-item <?php echo in_array('agent_package', $selected_services) ? 'selected' : ''; ?>" onclick="toggleService(this, 'agent_package')">
                             <i class="fas fa-briefcase service-icon-small"></i>
                             <span class="service-text">AGENT PACKAGE SERVICE</span>
@@ -606,6 +594,21 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                             <span class="service-text">MEDICAL TOURISM</span>
                             <input type="checkbox" name="services[]" value="medical_tourism" <?php echo in_array('medical_tourism', $selected_services) ? 'checked' : ''; ?> style="display: none;">
                         </div>
+                        <div class="service-item <?php echo in_array('travel_insurance', $selected_services) ? 'selected' : ''; ?>" onclick="toggleService(this, 'travel_insurance')">
+                            <i class="fas fa-shield-alt service-icon-small"></i>
+                            <span class="service-text">TRAVEL INSURANCE</span>
+                            <input type="checkbox" name="services[]" value="travel_insurance" <?php echo in_array('travel_insurance', $selected_services) ? 'checked' : ''; ?> style="display: none;">
+                        </div>
+                        <div class="service-item <?php echo in_array('extras', $selected_services) ? 'selected' : ''; ?>" onclick="toggleService(this, 'extras')">
+                            <i class="fas fa-plus service-icon-small"></i>
+                            <span class="service-text">EXTRAS/MISCELLANEOUS</span>
+                            <input type="checkbox" name="services[]" value="extras" <?php echo in_array('extras', $selected_services) ? 'checked' : ''; ?> style="display: none;">
+                        </div>
+                        
+                        
+                        
+                        
+                        
                     </div>
                 </div>
             </div>
@@ -842,8 +845,8 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                             <?php endwhile; ?>
                                         </select>
                                     </td>
-                                    <td><input type="date" class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][check_in]" value="<?php echo $accom['check_in'] ?? ''; ?>"></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][check_out]" value="<?php echo $accom['check_out'] ?? ''; ?>"></td>
+                                    <td><input type="date" class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][check_in]" value="<?php echo $accom['check_in'] ?? ''; ?>" onchange="calculateNights(<?php echo $index; ?>)"></td>
+                                    <td><input type="date" class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][check_out]" value="<?php echo $accom['check_out'] ?? ''; ?>" onchange="calculateNights(<?php echo $index; ?>)"></td>
                                     <td>
                                         <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][room_type]" onchange="updateRates(this, <?php echo $index; ?>)">
                                             <option value="">Select Room Type</option>
@@ -872,7 +875,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td><input type="number" class="form-control form-control-sm accom-extra-child-rate" name="accommodation[<?php echo $index; ?>][extra_child_rate]" data-row="<?php echo $index; ?>" value="<?php echo $accom['extra_child_rate'] ?? '0'; ?>" onchange="calculateAccommodationTotal(<?php echo $index; ?>)"></td>
                                     <td><input type="number" class="form-control form-control-sm accom-child-no-bed-no" name="accommodation[<?php echo $index; ?>][child_no_bed_no]" data-row="<?php echo $index; ?>" value="<?php echo $accom['child_no_bed_no'] ?? '0'; ?>" onchange="calculateAccommodationTotal(<?php echo $index; ?>)"></td>
                                     <td><input type="number" class="form-control form-control-sm accom-child-no-bed-rate" name="accommodation[<?php echo $index; ?>][child_no_bed_rate]" data-row="<?php echo $index; ?>" value="<?php echo $accom['child_no_bed_rate'] ?? '0'; ?>" onchange="calculateAccommodationTotal(<?php echo $index; ?>)"></td>
-                                    <td><input type="number" class="form-control form-control-sm accom-nights" name="accommodation[<?php echo $index; ?>][nights]" data-row="<?php echo $index; ?>" value="<?php echo $accom['nights'] ?? '0'; ?>" onchange="calculateAccommodationTotal(<?php echo $index; ?>)"></td>
+                                    <td><input type="number" class="form-control form-control-sm accom-nights" name="accommodation[<?php echo $index; ?>][nights]" data-row="<?php echo $index; ?>" value="<?php echo $accom['nights'] ?? '0'; ?>" onchange="calculateAccommodationTotal(<?php echo $index; ?>)" readonly></td>
                                     
                                     <td><input type="text" class="form-control form-control-sm accom-total" name="accommodation[<?php echo $index; ?>][total]" data-row="<?php echo $index; ?>" value="<?php echo $accom['total'] ?? '0.00'; ?>" readonly style="background: #f0f8ff; font-weight: bold;"></td>
                                 </tr>
@@ -1558,6 +1561,8 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
 </div>
 
 <script src="edit_cost_file_agent_package.js?v=<?php echo time(); ?>"></script>
+<script src="prevent_negative_values.js?v=<?php echo time(); ?>"></script>
+<script src="auto_date_selector.js?v=<?php echo time(); ?>"></script>
 <script>
 
     let accommodationRowCount = 1;
@@ -1583,8 +1588,8 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                     <option value="">Select Hotel</option>
                 </select>
             </td>
-            <td><input type="date" class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][check_in]"></td>
-            <td><input type="date" class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][check_out]"></td>
+            <td><input type="date" class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][check_in]" onchange="calculateNights(${accommodationRowCount})"></td>
+            <td><input type="date" class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][check_out]" onchange="calculateNights(${accommodationRowCount})"></td>
             <td>
                 <select class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][room_type]" onchange="updateRates(this, ${accommodationRowCount})" disabled>
                     <option value="">Select Room Type</option>
@@ -1606,7 +1611,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
             <td><input type="number" class="form-control form-control-sm accom-extra-child-rate" name="accommodation[${accommodationRowCount}][extra_child_rate]" data-row="${accommodationRowCount}" value="0" readonly></td>
             <td><input type="number" class="form-control form-control-sm accom-child-no-bed-no" name="accommodation[${accommodationRowCount}][child_no_bed_no]" data-row="${accommodationRowCount}" value="0" onchange="calculateAccommodationTotal(${accommodationRowCount})"></td>
             <td><input type="number" class="form-control form-control-sm accom-child-no-bed-rate" name="accommodation[${accommodationRowCount}][child_no_bed_rate]" data-row="${accommodationRowCount}" value="0" readonly></td>
-            <td><input type="number" class="form-control form-control-sm accom-nights" name="accommodation[${accommodationRowCount}][nights]" data-row="${accommodationRowCount}" value="0" onchange="calculateAccommodationTotal(${accommodationRowCount})"></td>
+            <td><input type="number" class="form-control form-control-sm accom-nights" name="accommodation[${accommodationRowCount}][nights]" data-row="${accommodationRowCount}" value="0" onchange="calculateAccommodationTotal(${accommodationRowCount})" readonly></td>
                     
             <td><input type="text" class="form-control form-control-sm accom-total" name="accommodation[${accommodationRowCount}][total]" data-row="${accommodationRowCount}" readonly style="background: #f0f8ff; font-weight: bold;"></td>
         `;
@@ -1936,6 +1941,27 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
             const section = document.getElementById(sectionId);
             if (section) section.style.display = 'none';
         } else {
+            // Check for mutual exclusion between accommodation and agent_package
+            if (serviceName === 'accommodation') {
+                // If selecting accommodation, deselect agent_package
+                const agentPackageItem = document.querySelector('.service-item input[value="agent_package"]').closest('.service-item');
+                if (agentPackageItem && agentPackageItem.classList.contains('selected')) {
+                    agentPackageItem.classList.remove('selected');
+                    agentPackageItem.querySelector('input[type="checkbox"]').checked = false;
+                    const agentSection = document.getElementById('agent-package-section');
+                    if (agentSection) agentSection.style.display = 'none';
+                }
+            } else if (serviceName === 'agent_package') {
+                // If selecting agent_package, deselect accommodation
+                const accommodationItem = document.querySelector('.service-item input[value="accommodation"]').closest('.service-item');
+                if (accommodationItem && accommodationItem.classList.contains('selected')) {
+                    accommodationItem.classList.remove('selected');
+                    accommodationItem.querySelector('input[type="checkbox"]').checked = false;
+                    const accomSection = document.getElementById('accommodation-section');
+                    if (accomSection) accomSection.style.display = 'none';
+                }
+            }
+            
             item.classList.add('selected');
             checkbox.checked = true;
             const sectionId = serviceName.replace('_', '-') + '-section';
@@ -2154,6 +2180,24 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
     }
 
     // Add calculation functions for all services
+    function calculateNights(row) {
+        const checkInInput = document.querySelector(`input[name="accommodation[${row}][check_in]"]`);
+        const checkOutInput = document.querySelector(`input[name="accommodation[${row}][check_out]"]`);
+        const nightsInput = document.querySelector(`.accom-nights[data-row="${row}"]`);
+        
+        if (checkInInput && checkOutInput && nightsInput && checkInInput.value && checkOutInput.value) {
+            const checkIn = new Date(checkInInput.value);
+            const checkOut = new Date(checkOutInput.value);
+            const timeDiff = checkOut.getTime() - checkIn.getTime();
+            const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            
+            if (nights > 0) {
+                nightsInput.value = nights;
+                calculateAccommodationTotal(row);
+            }
+        }
+    }
+
     function calculateAccommodationTotal(row) {
         const roomsNo = parseFloat(document.querySelector(`.accom-rooms-no[data-row="${row}"]`).value) || 0;
         const roomsRate = parseFloat(document.querySelector(`.accom-rooms-rate[data-row="${row}"]`).value) || 0;
@@ -2449,6 +2493,11 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                 const selectedVehicle = vehicleSelect.getAttribute('data-selected') || '';
                 updateTransportVehicles(supplierSelect, index, selectedVehicle);
             }
+        });
+
+        // Initialize nights calculation for existing accommodation rows
+        document.querySelectorAll('input[name^="accommodation"][name$="[check_in]"]').forEach((checkInInput, index) => {
+            calculateNights(index);
         });
 
         // Initialize medical tourism dropdowns for existing rows

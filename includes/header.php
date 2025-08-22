@@ -237,13 +237,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                         </a>
                     </li>
                     <?php endif; ?>
-                    <?php if(hasPrivilege('view_payment_receipts') || $_SESSION["role_id"] == 1): ?>
-                    <li>
-                        <a href="view_payment_receipts.php" class="dropdown-toggle no-arrow">
-                            <span class="micon bi bi-receipt"></span><span class="mtext">View Payment Receipts</span>
-                        </a>
-                    </li>
-                    <?php endif; ?>
+                    
                     <?php if(hasPrivilege('feedbacks') || $_SESSION["role_id"] == 1): ?>
                     <li>
                         <a href="under_construction.php?page=Feedbacks" class="dropdown-toggle no-arrow">
@@ -286,7 +280,11 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                         </a>
                         <ul class="submenu">
                             <li><a href="under_construction.php?page=Booked Cost Sheets">Booked Cost Sheets</a></li>
-                            <li><a href="under_construction.php?page=Payment Received Receipts">Payment Received Receipts</a></li>
+                            <?php if(hasPrivilege('view_payment_receipts') || $_SESSION["role_id"] == 1): ?>
+                    <li>
+                        <a href="view_payment_receipts.php">Payment Received Receipts</a>
+                    </li>
+                    <?php endif; ?>
                             <li><a href="under_construction.php?page=Transportation Payment Receipts">Transportation Payment Receipts</a></li>
                             <li><a href="under_construction.php?page=Hotel & Resorts Payment Receipts">Hotel & Resorts Payment Receipts</a></li>
                             <li><a href="under_construction.php?page=Cruise Payment Receipts">Cruise Payment Receipts</a></li>
