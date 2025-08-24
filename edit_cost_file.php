@@ -370,6 +370,21 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <link rel="stylesheet" href="cost_file_styles.css">
+<style>
+.info-label, .service-text, th, td, label, .form-control, select, input, span, 
+placeholder, option, .table th, .table td, h5, h6, strong, 
+.services-section h5, .services-section h6, .table thead th {
+    text-transform: capitalize !important;
+}
+
+input::placeholder, textarea::placeholder {
+    text-transform: capitalize !important;
+}
+
+select option {
+    text-transform: capitalize !important;
+}
+</style>
 
 
 <div class="cost-file-container">
@@ -626,14 +641,14 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>S. NO</th>
-                                <th>SECTOR</th>
-                                <th>SUPPLIER</th>
-                                <th>TRAVEL DATE</th>
-                                <th>PASSENGERS</th>
-                                <th>RATE PER PERSON</th>
-                                <th>ROE</th>
-                                <th>TOTAL</th>
+                                <th>S. No</th>
+                                <th>Sector</th>
+                                <th>Supplier</th>
+                                <th>Travel Date</th>
+                                <th>Passengers</th>
+                                <th>Rate Per Person</th>
+                                <th>Roe</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="visa-details-tbody">
@@ -685,11 +700,11 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                         <table class="table table-bordered table-sm">
                             <thead>
                                 <tr>
-                                    <th>TRAVEL PERIOD</th>
-                                    <th>DATE</th>
-                                    <th>CITY</th>
-                                    <th>FLIGHT</th>
-                                    <th>NIGHTS/DAYS</th>
+                                    <th>Travel Period</th>
+                                    <th>Date</th>
+                                    <th>City</th>
+                                    <th>Flight</th>
+                                    <th>Nights/Days</th>
                                     <th>Flight Type</th>
                                     <th>Actions</th>
                                 </tr>
@@ -795,23 +810,23 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>DESTINATION</th>
-                                <th>HOTEL</th>
-                                <th>CHECK-IN</th>
-                                <th>CHECK-OUT</th>
-                                <th>ROOM TYPE</th>
-                                <th>ROOMS NO</th>
-                                <th>MEAL PLAN</th>
-                                <th>ROOMS RATE</th>
-                                <th>EXTRA ADULT NO</th>
-                                <th>EXTRA ADULT RATE</th>
-                                <th>EXTRA CHILD NO</th>
-                                <th>EXTRA CHILD RATE</th>
-                                <th>CHILD NO BED NO</th>
-                                <th>CHILD NO BED RATE</th>
-                                <th>NIGHTS</th>
+                                <th>Destination</th>
+                                <th>Hotel</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                                <th>Room Type</th>
+                                <th>Rooms</th>
+                                <th>Meal Plan</th>
+                                <th>Rate ($)</th>
+                                <th>Extra Bed Adult</th>
+                                <th>Rate/Bed ($)</th>
+                                <th>Extra Bed Child</th>
+                                <th>Rate ($)</th>
+                                <th>Child No Bed</th>
+                                <th>Rate ($)</th>
+                                <th>Nights</th>
                                 
-                                <th>TOTAL</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="accommodation-tbody">
@@ -982,15 +997,15 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>SUPPLIER</th>
-                                <th>CAR TYPE</th>
-                                <th>DAILY RENT</th>
-                                <th>DAYS</th>
-                                <th>KM</th>
-                                <th>EXTRA KM</th>
-                                <th>PRICE/KM</th>
-                                <th>TOLL/PARKING</th>
-                                <th>TOTAL</th>
+                                <th>Supplier</th>
+                                <th>Car Type</th>
+                                <th>Daily Rent</th>
+                                <th>Days</th>
+                                <th>Km</th>
+                                <th>Extra Km</th>
+                                <th>Price/Km</th>
+                                <th>Toll/Parking</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="transportation-tbody">
@@ -1083,15 +1098,15 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>S. NO</th>
-                                <th>SUPPLIER</th>
-                                <th>TYPE OF BOAT</th>
-                                <th>CRUISE TYPE</th>
-                                <th>CHECK-IN</th>
-                                <th>CHECK-OUT</th>
-                                <th>RATE</th>
-                                <th>EXTRA</th>
-                                <th>TOTAL</th>
+                                <th>S. No</th>
+                                <th>Supplier</th>
+                                <th>Type Of Boat</th>
+                                <th>Cruise Type</th>
+                                <th>Check-In</th>
+                                <th>Check-Out</th>
+                                <th>Rate</th>
+                                <th>Extra</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="cruise-tbody">
@@ -1228,17 +1243,17 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>DESTINATION</th>
-                                <th>AGENT/SUPPLIER</th>
-                                <th>START DATE</th>
-                                <th>END DATE</th>
-                                <th>ADULTS</th>
-                                <th>PRICE/ADULT</th>
-                                <th>CHILDREN</th>
-                                <th>PRICE/CHILD</th>
-                                <th>INFANTS</th>
-                                <th>PRICE/INFANT</th>
-                                <th>TOTAL</th>
+                                <th>Destination</th>
+                                <th>Agent/Supplier</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Adults</th>
+                                <th>Price/Adult</th>
+                                <th>Children</th>
+                                <th>Price/Child</th>
+                                <th>Infants</th>
+                                <th>Price/Infant</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="agent-package-tbody">
@@ -1359,16 +1374,16 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>PLACE</th>
-                                <th>TREATMENT DATE</th>
-                                <th>HOSPITAL NAME</th>
-                                <th>TREATMENT TYPE</th>
-                                <th>OP/IP</th>
-                                <th>NET</th>
-                                <th>TDS</th>
-                                <th>OTHER EXPENSES</th>
-                                <th>GST</th>                                
-                                <th>TOTAL</th>
+                                <th>Place</th>
+                                <th>Treatment Date</th>
+                                <th>Hospital Name</th>
+                                <th>Treatment Type</th>
+                                <th>Op/Ip</th>
+                                <th>Net</th>
+                                <th>Tds</th>
+                                <th>Other Expenses</th>
+                                <th>Gst</th>                                
+                                <th>Total</th>
                             </tr>
                         </thead>
                                               <tbody id="medical-tourism-tbody">
@@ -1498,11 +1513,11 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>SUPPLIER</th>
-                                <th>TYPE OF SERVICE</th>
-                                <th>AMOUNT</th>
-                                <th>EXTRAS</th>
-                                <th>TOTAL</th>
+                                <th>Supplier</th>
+                                <th>Type Of Service</th>
+                                <th>Amount</th>
+                                <th>Extras</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="extras-tbody">
@@ -1587,12 +1602,12 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                         <table class="table table-bordered table-sm">
                             <tbody>
                                 <tr>
-                                    <td><strong>TOTAL EXPENSE</strong></td>
+                                    <td><strong>Total Expense</strong></td>
                                     <td></td>
                                     <td><input type="text" class="form-control form-control-sm" id="summary-total-expense" name="total_expense" value="<?php echo $cost_data['total_expense']; ?>" readonly></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>MARK UP (PROFIT)</strong></td>
+                                    <td><strong>Mark Up (Profit)</strong></td>
                                     <td>
                                         <input type="hidden" class="form-control form-control-sm" id="markup-percentage" name="markup_percentage" value="<?php echo $cost_data['markup_percentage']; ?>"placeholder="%" style="max-width: 80px;" readonly>
                                         <span id="markup-percent-display" style="font-size: 0.8rem; color: var(--gray-600);"><?php echo $cost_data['markup_percentage']; ?>%</span>
@@ -1600,7 +1615,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td><input type="text" class="form-control form-control-sm" id="markup-amount" name="markup_amount" value="<?php echo $cost_data['markup_amount']; ?>" readonly></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>SERVICE TAX</strong></td>
+                                    <td><strong>Service Tax</strong></td>
                                     <td>
                                         <select class="form-control form-control-sm" id="tax-percentage" name="tax_percentage" onchange="calculateSummary()" style="max-width: 80px;">
                                             <option value="0" <?php echo ($cost_data['tax_percentage'] == 0) ? 'selected' : ''; ?>>0%</option>
@@ -1613,12 +1628,12 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td><input type="text" class="form-control form-control-sm" id="tax-amount" name="tax_amount" value="<?php echo $cost_data['tax_amount']; ?>" readonly></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>PACKAGE COST</strong></td>
+                                    <td><strong>Package Cost</strong></td>
                                     <td></td>
                                     <td><input type="number" class="form-control form-control-sm" id="package-cost" name="package_cost" value="<?php echo $cost_data['package_cost']; ?>" onchange="calculateSummary()"></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Amount in</strong></td>
+                                    <td><strong>Amount In</strong></td>
                                     <td><span id="selected-currency" style="font-weight: bold;"><?php echo $cost_data['currency']; ?></span></td>
                                     <td><input type="number" class="form-control form-control-sm" id="currency-rate" name="currency_rate" value="<?php echo $cost_data['currency_rate']; ?>" onchange="calculateSummary()"></td>
                                 </tr>

@@ -426,6 +426,21 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 <link rel="stylesheet" href="cost_file_styles.css">
+<style>
+.info-label, .service-text, th, td, label, .form-control, select, input, span, 
+placeholder, option, .table th, .table td, h5, h6, strong, 
+.services-section h5, .services-section h6, .table thead th {
+    text-transform: capitalize !important;
+}
+
+input::placeholder, textarea::placeholder {
+    text-transform: capitalize !important;
+}
+
+select option {
+    text-transform: capitalize !important;
+}
+</style>
 
 
 <div class="cost-file-container">
@@ -753,10 +768,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                         <span class="info-label">File Manager:</span>
                         <span class="info-value"><?php echo htmlspecialchars($enquiry['file_manager_name'] ?? 'N/A'); ?></span>
                     </div>
-                    <div class="info-row">
+                    <!-- <div class="info-row">
                         <span class="info-label">Lead Department:</span>
                         <span class="info-value"><?php echo htmlspecialchars($enquiry['department_name']); ?></span>
-                    </div>
+                    </div> --> 
                     <div class="info-row">
                         <span class="info-label">Night/Day:</span>
                         <span class="info-value"><?php 
@@ -897,11 +912,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>TRAVEL PERIOD</th>
-                                <th>DATE</th>
-                                <th>CITY</th>
-                                <th>FLIGHT</th>
-                                <th>NIGHTS/DAYS</th>
+                                <th>Travel Period</th>
+                                <th>Date</th>
+                                <th>City</th>
+                                <th>Flight</th>
+                                <th>Nights/Days</th>
                                 <th>Flight Type</th>
                                 <th>Actions</th>
                             </tr>
@@ -1005,13 +1020,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                         <thead>
                             <tr>
                                 <th>S. No</th>
-                                <th>SECTOR</th>
-                                <th>SUPPLIER</th>
-                                <th>DATE of TRAVELS</th>
-                                <th>NO OF PASSENGER</th>
-                                <th>RATE / PERSON</th>
-                                <th>ROE</th>
-                                <th>TOTAL</th>
+                                <th>Sector</th>
+                                <th>Supplier</th>
+                                <th>Date Of Travels</th>
+                                <th>No Of Passenger</th>
+                                <th>Rate / Person</th>
+                                <th>Roe</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="visa-details-tbody">
@@ -1048,29 +1063,29 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th rowspan="2">DESTINATION</th>
-                                <th rowspan="2">HOTEL</th>
-                                <th rowspan="2">CHECK IN</th>
-                                <th rowspan="2">CHECK OUT</th>
-                                <th rowspan="2">ROOM TYPE</th>
+                                <th rowspan="2">Destination</th>
+                                <th rowspan="2">Hotel</th>
+                                <th rowspan="2">Check In</th>
+                                <th rowspan="2">Check Out</th>
+                                <th rowspan="2">Room Type</th>
                                 <th rowspan="2">Meal Plan</th>
-                                <th colspan="2">ROOMS</th>
-                                <th colspan="2">EXTRA BED ADULT</th>
-                                <th colspan="2">EXTRA BED CHILD</th>
-                                <th colspan="2">CHILD NO BED</th>
+                                <th colspan="2">Rooms</th>
+                                <th colspan="2">Extra Bed Adult</th>
+                                <th colspan="2">Extra Bed Child</th>
+                                <th colspan="2">Child No Bed</th>
                                 <th rowspan="2">Nights</th>
                                 
                                 <th rowspan="2">Total</th>
                             </tr>
                             <tr>
-                                <th>NO</th>
-                                <th>RATE</th>
-                                <th>NO</th>
-                                <th>RATE/bed</th>
-                                <th>NO</th>
-                                <th>RATE</th>
-                                <th>NO</th>
-                                <th>RATE</th>
+                                <th>No</th>
+                                <th>Rate</th>
+                                <th>No</th>
+                                <th>Rate/Bed</th>
+                                <th>No</th>
+                                <th>Rate</th>
+                                <th>No</th>
+                                <th>Rate</th>
                             </tr>
                         </thead>
                         <tbody id="accommodation-tbody">
@@ -1148,16 +1163,16 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>S. NO</th>
-                                <th>SUPPLIER</th>
-                                <th>CAR TYPE</th>
-                                <th>DAILY RENT</th>
-                                <th>DAYS</th>
-                                <th>KM</th>
-                                <th>EXTRA KM</th>
-                                <th>PRICE/KM</th>
-                                <th>TOLL/PARKING</th>
-                                <th>TOTAL</th>
+                                <th>S. No</th>
+                                <th>Supplier</th>
+                                <th>Car Type</th>
+                                <th>Daily Rent</th>
+                                <th>Days</th>
+                                <th>Km</th>
+                                <th>Extra Km</th>
+                                <th>Price/Km</th>
+                                <th>Toll/Parking</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="transportation-tbody">
@@ -1214,15 +1229,15 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>S. NO</th>
-                                <th>SUPPLIER</th>
-                                <th>TYPE OF BOAT</th>
-                                <th>CRUISE TYPE</th>
-                                <th>CHECK-IN</th>
-                                <th>CHECK-OUT</th>
-                                <th>RATE</th>
-                                <th>EXTRA</th>
-                                <th>TOTAL</th>
+                                <th>S. No</th>
+                                <th>Supplier</th>
+                                <th>Type Of Boat</th>
+                                <th>Cruise Type</th>
+                                <th>Check-In</th>
+                                <th>Check-Out</th>
+                                <th>Rate</th>
+                                <th>Extra</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="cruise-tbody">
@@ -1324,17 +1339,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>DESTINATION</th>
-                                <th>AGENT/SUPPLIER</th>
-                                <th>START DATE</th>
-                                <th>END DATE</th>
-                                <th>ADULTS</th>
-                                <th>PRICE/ADULT</th>
-                                <th>CHILDREN</th>
-                                <th>PRICE/CHILD</th>
-                                <th>INFANTS</th>
-                                <th>PRICE/INFANT</th>
-                                <th>TOTAL</th>
+                                <th>Destination</th>
+                                <th>Agent/Supplier</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Adults</th>
+                                <th>Price/Adult</th>
+                                <th>Children</th>
+                                <th>Price/Child</th>
+                                <th>Infants</th>
+                                <th>Price/Infant</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="agent-package-tbody">
@@ -1389,16 +1404,16 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>PLACE</th>
-                                <th>TREATMENT DATE</th>
-                                <th>HOSPITAL NAME</th>
-                                <th>TREATMENT TYPE</th>
-                                <th>OP/IP</th>
-                                <th>NET</th>
-                                <th>TDS</th>
-                                <th>OTHER EXPENSES</th>
-                                <th>GST</th>
-                                <th>TOTAL</th>
+                                <th>Place</th>
+                                <th>Treatment Date</th>
+                                <th>Hospital Name</th>
+                                <th>Treatment Type</th>
+                                <th>Op/Ip</th>
+                                <th>Net</th>
+                                <th>Tds</th>
+                                <th>Other Expenses</th>
+                                <th>Gst</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="medical-tourism-tbody">
@@ -1461,11 +1476,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     <table class="table table-bordered table-sm">
                         <thead>
                             <tr>
-                                <th>SUPPLIER</th>
-                                <th>TYPE OF SERVICE</th>
-                                <th>AMOUNT</th>
-                                <th>EXTRAS</th>
-                                <th>TOTAL</th>
+                                <th>Supplier</th>
+                                <th>Type Of Service</th>
+                                <th>Amount</th>
+                                <th>Extras</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody id="extras-tbody">
@@ -1536,16 +1551,16 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                         <table class="table table-bordered table-sm">
                             <tbody>
                                 <tr>
-                                    <td><strong>Amount in</strong></td>
+                                    <td><strong>Amount In</strong></td>
                                     <td>
                                         <span id="selected-currency" style="font-weight: bold;">USD</span>
-                                        <span style="margin-left: 10px; font-size: 0.8rem; color: #666;">AUTO from Currency in top</span>
+                                        <span style="margin-left: 10px; font-size: 0.8rem; color: #666;">Auto From Currency In Top</span>
                                     </td>
                                     <td><input type="number" class="form-control form-control-sm" id="currency-rate" name="currency_rate" value="82" onchange="calculateSummary()" placeholder="1.00"></td>
                                 </tr>
                                                  
                                 <tr>
-                                    <td><strong>MARK UP (PROFIT)</strong></td>
+                                    <td><strong>Mark Up (Profit)</strong></td>
                                     <td>
                                         <input type="hidden" class="form-control form-control-sm" id="markup-percentage" name="markup_percentage" value="" onchange="calculateSummary()" placeholder="%" style="max-width: 80px;">  
                                         <span id="markup-percent-display" style="font-size: 0.8rem; color: #666;"></span>
@@ -1553,7 +1568,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <td><input type="text" class="form-control form-control-sm" id="markup-amount" name="markup_amount" readonly style="background: #f0f8ff; font-weight: bold;" placeholder="0.00"></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>SERVICE TAX</strong></td>
+                                    <td><strong>Service Tax</strong></td>
                                     <td>
                                         <select class="form-control form-control-sm" id="tax-percentage" name="tax_percentage" onchange="calculateSummary()" style="max-width: 80px;">
                                             <option value="0">0%</option>
@@ -1566,12 +1581,12 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <td><input type="text" class="form-control form-control-sm" id="tax-amount" name="tax_amount" readonly style="background: #f0f8ff; font-weight: bold;" placeholder="0.00"></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>TOTAL EXPENSE</strong></td>
+                                    <td><strong>Total Expense</strong></td>
                                     <td></td>
                                     <td><input type="text" class="form-control form-control-sm" id="summary-total-expense" name="total_expense" readonly style="background: #f0f8ff; font-weight: bold;" placeholder="0.00"></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>PACKAGE COST</strong></td>
+                                    <td><strong>Package Cost</strong></td>
                                     <td></td>
                                     <td><input type="number" class="form-control form-control-sm" id="package-cost" name="package_cost" style="background: #e8f5e8; font-weight: bold;" placeholder="0.00" onchange="calculateSummary()"></td>
                                 </tr>
