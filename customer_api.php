@@ -1,14 +1,8 @@
 <?php
-// ---- Config ----
-$ACCESS_KEY = "MY_STATIC_KEY_123"; // change this
-$servername = "localhost";
-$username   = "root";      // your db username
-$password   = "root";          // your db password
-$dbname     = "lead_management";   // your database
+$ACCESS_KEY = "MY_STATIC_KEY_123";
 
 header("Content-Type: application/json");
 
-// ---- Validate Access Key ----
 $headers = getallheaders();
 if (!isset($headers['Access-Key']) || $headers['Access-Key'] !== $ACCESS_KEY) {
     http_response_code(401);
@@ -16,7 +10,6 @@ if (!isset($headers['Access-Key']) || $headers['Access-Key'] !== $ACCESS_KEY) {
     exit;
 }
 
-// ---- Read POST Data ----
 $input = file_get_contents("php://input");
 $data  = json_decode($input, true);
 
@@ -26,15 +19,14 @@ if (!$data || !isset($data['customers']) || !is_array($data['customers'])) {
     exit;
 }
 
-// ---- DB Connection ----
-$conn = new mysqli($servername, $username, $password, $dbname);
+require_once 'config/database.php';
+
 if ($conn->connect_error) {
     http_response_code(500);
     echo json_encode(["status" => "error", "message" => "DB Connection failed"]);
     exit;
 }
 
-// ---- Prepare Statement ----
 $stmt = $conn->prepare("INSERT INTO customers (name, phone, destination, time) VALUES (?, ?, ?, ?)");
 
 $successCount = 0;
