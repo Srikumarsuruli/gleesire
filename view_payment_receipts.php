@@ -188,9 +188,9 @@ if($payments_table_exists) {
                                 <div class="info-label">Receipt:</div>
                                 <div class="info-value">
                                     <?php if(!empty($payment_details['payment_receipt'])): ?>
-                                        <a href="view_receipt.php?path=<?php echo urlencode($payment_details['payment_receipt']); ?>&id=<?php echo $cost_sheet_id; ?>" target="_blank" class="btn btn-sm btn-primary">
+                                        <button type="button" class="btn btn-sm btn-primary" onclick="openReceiptModal('view_receipt.php?path=<?php echo urlencode($payment_details['payment_receipt']); ?>&id=<?php echo $cost_sheet_id; ?>')">
                                             <i class="fa fa-eye"></i> View Receipt
-                                        </a>
+                                        </button>
                                     <?php else: ?>
                                         <span class="badge badge-secondary">No Receipt Uploaded</span>
                                     <?php endif; ?>
@@ -293,7 +293,7 @@ if($payments_table_exists) {
                                         <div class="dropdown-menu dropdown-menu-right dropdown-menu-icon-list">
                                             <a class="dropdown-item" href="view_payment_receipts.php?id=<?php echo $row['cost_file_id']; ?>"><i class="dw dw-eye"></i> View Details</a>
                                             <?php if(!empty($payment_receipt)): ?>
-                                                <a class="dropdown-item" href="view_receipt.php?path=<?php echo urlencode($payment_receipt); ?>&id=<?php echo $row['cost_file_id']; ?>" target="_blank"><i class="dw dw-file"></i> View Receipt</a>
+                                                <a class="dropdown-item" href="#" onclick="openReceiptModal('view_receipt.php?path=<?php echo urlencode($payment_receipt); ?>&id=<?php echo $row['cost_file_id']; ?>')"><i class="dw dw-file"></i> View Receipt</a>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -310,6 +310,35 @@ if($payments_table_exists) {
         </div>
     <?php endif; ?>
 </div>
+
+<!-- Receipt Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1" role="dialog" aria-labelledby="receiptModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="receiptModalLabel">Payment Receipt</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <iframe id="receiptFrame" src="" style="width: 100%; height: 500px; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openReceiptModal(url) {
+    document.getElementById('receiptFrame').src = url;
+    $('#receiptModal').modal('show');
+}
+
+// Clear iframe when modal is closed
+$('#receiptModal').on('hidden.bs.modal', function () {
+    document.getElementById('receiptFrame').src = '';
+});
+</script>
 
 <?php
 // Include footer

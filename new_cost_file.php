@@ -753,6 +753,34 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                         <span class="info-label">File Manager:</span>
                         <span class="info-value"><?php echo htmlspecialchars($enquiry['file_manager_name'] ?? 'N/A'); ?></span>
                     </div>
+                    <div class="info-row">
+                        <span class="info-label">Lead Department:</span>
+                        <span class="info-value"><?php echo htmlspecialchars($enquiry['department_name']); ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Night/Day:</span>
+                        <span class="info-value"><?php 
+                            $night_day_sql = "SELECT night_day FROM converted_leads WHERE enquiry_id = ?";
+                            $night_day_stmt = mysqli_prepare($conn, $night_day_sql);
+                            mysqli_stmt_bind_param($night_day_stmt, "i", $enquiry_id);
+                            mysqli_stmt_execute($night_day_stmt);
+                            $night_day_result = mysqli_stmt_get_result($night_day_stmt);
+                            $night_day = 'N/A';
+                            if ($night_day_row = mysqli_fetch_assoc($night_day_result)) {
+                                $night_day = $night_day_row['night_day'];
+                            }
+                            mysqli_stmt_close($night_day_stmt);
+                            echo htmlspecialchars($night_day ?: 'N/A');
+                        ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Travel Period:</span>
+                        <span class="info-value"><?php 
+                            $start_date = $enquiry['travel_start_date'] ? date('d-m-Y', strtotime($enquiry['travel_start_date'])) : 'N/A';
+                            $end_date = $enquiry['travel_end_date'] ? date('d-m-Y', strtotime($enquiry['travel_end_date'])) : 'N/A';
+                            echo $start_date . ' To ' . $end_date;
+                        ?></span>
+                    </div>
                 </div>
 
                 <!-- Passenger Information -->
@@ -769,6 +797,27 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     <div class="info-row">
                         <span class="info-label">Infants:</span>
                         <span class="info-value"><?php echo intval($enquiry['infants_count'] ?? 0); ?></span>
+                    </div>
+                    
+
+                    <div class="info-row">
+                        <span class="info-label">Children Age Details:</span>
+                        <span class="info-value"><?php 
+                            // Get children age details from converted_leads table
+                            $children_age_details = '';
+                            $children_details_sql = "SELECT children_age_details FROM converted_leads WHERE enquiry_id = ?";
+                            $children_details_stmt = mysqli_prepare($conn, $children_details_sql);
+                            mysqli_stmt_bind_param($children_details_stmt, "i", $enquiry_id);
+                            mysqli_stmt_execute($children_details_stmt);
+                            $children_details_result = mysqli_stmt_get_result($children_details_stmt);
+                            
+                            if ($children_details_row = mysqli_fetch_assoc($children_details_result)) {
+                                $children_age_details = $children_details_row['children_age_details'];
+                            }
+                            
+                            mysqli_stmt_close($children_details_stmt);
+                            echo htmlspecialchars($children_age_details ?: 'N/A');
+                        ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Total PAX:</span>
@@ -807,7 +856,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                             <span class="service-text">CRUISE HIRE</span>
                             <input type="checkbox" name="services[]" value="cruise_hire" style="display: none;">
                         </div>
+                     <div class="service-item" onclick="toggleService(this, 'agent_package')">
+                            <i class="fa fa-briefcase service-icon-small"></i>
+                            <span class="service-text">AGENT PACKAGE SERVICE</span>
+                            <input type="checkbox" name="services[]" value="agent_package" style="display: none;">
+                        </div>
                     
+                        <div class="service-item" onclick="toggleService(this, 'medical_tourism')">
+                            <i class="fa fa-hospital service-icon-small"></i>
+                            <span class="service-text">MEDICAL TOURISM</span>
+                            <input type="checkbox" name="services[]" value="medical_tourism" style="display: none;">
+                        </div>
                         <div class="service-item" onclick="toggleService(this, 'extras')">
                             <i class="fa fa-plus service-icon-small"></i>
                             <span class="service-text">EXTRAS/MISCELLANEOUS</span>
@@ -820,17 +879,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                             <input type="checkbox" name="services[]" value="travel_insurance" style="display: none;">
                         </div>
                     
-                        <div class="service-item" onclick="toggleService(this, 'agent_package')">
-                            <i class="fa fa-briefcase service-icon-small"></i>
-                            <span class="service-text">AGENT PACKAGE SERVICE</span>
-                            <input type="checkbox" name="services[]" value="agent_package" style="display: none;">
-                        </div>
-                    
-                        <div class="service-item" onclick="toggleService(this, 'medical_tourism')">
-                            <i class="fa fa-hospital service-icon-small"></i>
-                            <span class="service-text">MEDICAL TOURISM</span>
-                            <input type="checkbox" name="services[]" value="medical_tourism" style="display: none;">
-                        </div>
+                       
                     </div>
                 </div>
             </div>
@@ -1051,8 +1100,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <option value="">Select Hotel</option>
                                     </select>
                                 </td>
-                                <td><input type="date" class="form-control form-control-sm" name="accommodation[0][check_in]" value="<?php echo $enquiry['travel_start_date'] ?? ''; ?>"></td>
-                                <td><input type="date" class="form-control form-control-sm" name="accommodation[0][check_out]" value="<?php echo $enquiry['travel_end_date'] ?? ''; ?>"></td>
+                                <td><input type="date" class="form-control form-control-sm" name="accommodation[0][check_in]" value="<?php echo $enquiry['travel_start_date'] ?? ''; ?>" onchange="calculateNights(0)"></td>
+                                <td><input type="date" class="form-control form-control-sm" name="accommodation[0][check_out]" value="<?php echo $enquiry['travel_end_date'] ?? ''; ?>" onchange="calculateNights(0)"></td>
                                 <td>
                                     <select class="form-control form-control-sm" name="accommodation[0][room_type]" onchange="updateRoomRate(this, 0)" disabled>
                                         <option value="">Select Room Type</option>
@@ -1074,7 +1123,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <td><input type="number" class="form-control form-control-sm accom-extra-child-rate" name="accommodation[0][extra_child_rate]" data-row="0" value="0" onchange="calculateAccommodationTotal(0)"></td>
                                 <td><input type="number" class="form-control form-control-sm accom-child-no-bed-no" name="accommodation[0][child_no_bed_no]" data-row="0" value="0" onchange="calculateAccommodationTotal(0)"></td>
                                 <td><input type="number" class="form-control form-control-sm accom-child-no-bed-rate" name="accommodation[0][child_no_bed_rate]" data-row="0" value="0" onchange="calculateAccommodationTotal(0)"></td>
-                                <td><input type="number" class="form-control form-control-sm accom-nights" name="accommodation[0][nights]" data-row="0" value="0" onchange="calculateAccommodationTotal(0)"></td>
+                                <td><input type="number" class="form-control form-control-sm accom-nights" name="accommodation[0][nights]" data-row="0" value="0" onchange="calculateAccommodationTotal(0)" readonly></td>
                               
                                 <td><input type="text" class="form-control form-control-sm accom-total" name="accommodation[0][total]" data-row="0" readonly style="background: #f0f8ff; font-weight: bold;"></td>
                             </tr>
@@ -1545,6 +1594,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 
 <script src="agent_package_section.js?v=<?php echo time(); ?>"></script>
+<script src="prevent_negative_values.js?v=<?php echo time(); ?>"></script>
+<script src="auto_date_selector.js?v=<?php echo time(); ?>"></script>
 <!-- Include in edit_cost_file.php as well -->
 <script>
     // Confirmation popup for saving cost sheet
@@ -1564,6 +1615,27 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             const section = document.getElementById(sectionId);
             if (section) section.style.display = 'none';
         } else {
+            // Check for mutual exclusion between accommodation and agent_package
+            if (serviceName === 'accommodation') {
+                // If selecting accommodation, deselect agent_package
+                const agentPackageItem = document.querySelector('.service-item input[value="agent_package"]').closest('.service-item');
+                if (agentPackageItem && agentPackageItem.classList.contains('selected')) {
+                    agentPackageItem.classList.remove('selected');
+                    agentPackageItem.querySelector('input[type="checkbox"]').checked = false;
+                    const agentSection = document.getElementById('agent-package-section');
+                    if (agentSection) agentSection.style.display = 'none';
+                }
+            } else if (serviceName === 'agent_package') {
+                // If selecting agent_package, deselect accommodation
+                const accommodationItem = document.querySelector('.service-item input[value="accommodation"]').closest('.service-item');
+                if (accommodationItem && accommodationItem.classList.contains('selected')) {
+                    accommodationItem.classList.remove('selected');
+                    accommodationItem.querySelector('input[type="checkbox"]').checked = false;
+                    const accomSection = document.getElementById('accommodation-section');
+                    if (accomSection) accomSection.style.display = 'none';
+                }
+            }
+            
             item.classList.add('selected');
             checkbox.checked = true;
             // Show service section
@@ -1912,6 +1984,24 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Accommodation calculations
+    function calculateNights(row) {
+        const checkInInput = document.querySelector(`input[name="accommodation[${row}][check_in]"]`);
+        const checkOutInput = document.querySelector(`input[name="accommodation[${row}][check_out]"]`);
+        const nightsInput = document.querySelector(`.accom-nights[data-row="${row}"]`);
+        
+        if (checkInInput && checkOutInput && nightsInput && checkInInput.value && checkOutInput.value) {
+            const checkIn = new Date(checkInInput.value);
+            const checkOut = new Date(checkOutInput.value);
+            const timeDiff = checkOut.getTime() - checkIn.getTime();
+            const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            
+            if (nights > 0) {
+                nightsInput.value = nights;
+                calculateAccommodationTotal(row);
+            }
+        }
+    }
+
     function calculateAccommodationTotal(row) {
         const roomsNo = parseFloat(document.querySelector(`.accom-rooms-no[data-row="${row}"]`).value) || 0;
         const roomsRate = parseFloat(document.querySelector(`.accom-rooms-rate[data-row="${row}"]`).value) || 0;
@@ -2642,8 +2732,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     <option value="">Select Hotel</option>
                 </select>
             </td>
-            <td><input type="date" class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][check_in]"></td>
-            <td><input type="date" class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][check_out]"></td>
+            <td><input type="date" class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][check_in]" onchange="calculateNights(${accommodationRowCount})"></td>
+            <td><input type="date" class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][check_out]" onchange="calculateNights(${accommodationRowCount})"></td>
             <td>
                 <select class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][room_type]" onchange="updateRoomRate(this, ${accommodationRowCount})" disabled>
                     <option value="">Select Room Type</option>
@@ -2665,7 +2755,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             <td><input type="number" class="form-control form-control-sm accom-extra-child-rate" name="accommodation[${accommodationRowCount}][extra_child_rate]" data-row="${accommodationRowCount}" value="0" readonly></td>
             <td><input type="number" class="form-control form-control-sm accom-child-no-bed-no" name="accommodation[${accommodationRowCount}][child_no_bed_no]" data-row="${accommodationRowCount}" value="0" onchange="calculateAccommodationTotal(${accommodationRowCount})"></td>
             <td><input type="number" class="form-control form-control-sm accom-child-no-bed-rate" name="accommodation[${accommodationRowCount}][child_no_bed_rate]" data-row="${accommodationRowCount}" value="0" readonly></td>
-            <td><input type="number" class="form-control form-control-sm accom-nights" name="accommodation[${accommodationRowCount}][nights]" data-row="${accommodationRowCount}" value="0" onchange="calculateAccommodationTotal(${accommodationRowCount})"></td>
+            <td><input type="number" class="form-control form-control-sm accom-nights" name="accommodation[${accommodationRowCount}][nights]" data-row="${accommodationRowCount}" value="0" onchange="calculateAccommodationTotal(${accommodationRowCount})" readonly></td>
                     
             <td><input type="text" class="form-control form-control-sm accom-total" name="accommodation[${accommodationRowCount}][total]" data-row="${accommodationRowCount}" readonly style="background: #f0f8ff; font-weight: bold;"></td>
         `;
