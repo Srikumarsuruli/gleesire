@@ -165,7 +165,153 @@ Authorization: Bearer YOUR_API_KEY
 
 ---
 
-### 3.3 Get Master Data
+### 3.3 Get All Chats
+**Endpoint:** `GET /chats`
+
+**Description:** Retrieves all chat conversations from multiple social media platforms via UrbanChat integration
+
+#### Request Headers
+```
+Authorization: Bearer YOUR_API_KEY
+```
+
+#### Query Parameters (Optional)
+- `platform` (string): Filter by platform (whatsapp, instagram, facebook, telegram)
+- `date_from` (date): Start date filter (YYYY-MM-DD)
+- `date_to` (date): End date filter (YYYY-MM-DD)
+- `status` (string): Filter by conversation status (active, closed, pending)
+- `limit` (integer): Number of conversations to return (default: 100, max: 1000)
+- `offset` (integer): Pagination offset (default: 0)
+
+#### Example Request
+```
+GET /chats?platform=whatsapp&date_from=2024-01-01&limit=50
+```
+
+#### Response - Success (200 OK)
+```json
+{
+  "success": true,
+  "message": "Chats retrieved successfully",
+  "data": {
+    "total_conversations": 150,
+    "returned_count": 50,
+    "conversations": [
+      {
+        "conversation_id": "conv_12345",
+        "platform": "whatsapp",
+        "customer_name": "John Doe",
+        "customer_phone": "+919876543210",
+        "customer_email": "john.doe@example.com",
+        "status": "active",
+        "created_at": "2024-01-10T10:30:00Z",
+        "updated_at": "2024-01-10T15:45:00Z",
+        "last_message_at": "2024-01-10T15:45:00Z",
+        "message_count": 12,
+        "agent_assigned": "Agent Smith",
+        "tags": ["travel", "goa", "family"],
+        "messages": [
+          {
+            "message_id": "msg_001",
+            "timestamp": "2024-01-10T10:30:00Z",
+            "sender": "customer",
+            "sender_name": "John Doe",
+            "message_type": "text",
+            "content": "Hi, I need a travel package for Goa",
+            "attachments": []
+          },
+          {
+            "message_id": "msg_002",
+            "timestamp": "2024-01-10T10:35:00Z",
+            "sender": "agent",
+            "sender_name": "Agent Smith",
+            "message_type": "text",
+            "content": "Hello! I'd be happy to help you with Goa packages.",
+            "attachments": []
+          },
+          {
+            "message_id": "msg_003",
+            "timestamp": "2024-01-10T10:40:00Z",
+            "sender": "customer",
+            "sender_name": "John Doe",
+            "message_type": "image",
+            "content": "Here's my preferred hotel",
+            "attachments": [
+              {
+                "type": "image",
+                "url": "https://urbanchat.com/files/img_12345.jpg",
+                "filename": "hotel_preference.jpg",
+                "size": 245760
+              }
+            ]
+          }
+        ],
+        "metadata": {
+          "source_url": "https://wa.me/919876543210",
+          "platform_user_id": "wa_user_12345",
+          "conversation_rating": 5,
+          "resolution_time": "2 hours",
+          "department": "Travel Booking"
+        }
+      }
+    ],
+    "pagination": {
+      "current_page": 1,
+      "total_pages": 3,
+      "has_next": true,
+      "next_offset": 50
+    }
+  }
+}
+```
+
+#### Response - Error (400 Bad Request)
+```json
+{
+  "success": false,
+  "message": "Invalid query parameters",
+  "errors": {
+    "date_from": "Invalid date format. Use YYYY-MM-DD",
+    "limit": "Limit cannot exceed 1000"
+  }
+}
+```
+
+---
+
+### 3.4 Get Single Chat Conversation
+**Endpoint:** `GET /chats/{conversation_id}`
+
+**Description:** Retrieves a specific chat conversation with full message history
+
+#### Response - Success (200 OK)
+```json
+{
+  "success": true,
+  "message": "Chat conversation retrieved successfully",
+  "data": {
+    "conversation_id": "conv_12345",
+    "platform": "whatsapp",
+    "customer_name": "John Doe",
+    "customer_phone": "+919876543210",
+    "status": "active",
+    "created_at": "2024-01-10T10:30:00Z",
+    "messages": [
+      {
+        "message_id": "msg_001",
+        "timestamp": "2024-01-10T10:30:00Z",
+        "sender": "customer",
+        "message_type": "text",
+        "content": "Hi, I need a travel package for Goa"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 3.5 Get Master Data
 **Endpoint:** `GET /master-data`
 
 **Description:** Retrieves all master data for dropdowns (departments, sources, campaigns, etc.)
@@ -234,7 +380,57 @@ Authorization: Bearer YOUR_API_KEY
 
 ---
 
-## 5. Webhook Configuration
+## 5. UrbanChat Integration
+
+### 5.1 Chat Platform Mapping
+```json
+{
+  "whatsapp": {
+    "platform_id": "wa",
+    "source_id": 1,
+    "webhook_url": "https://urbanchat.com/webhook/whatsapp"
+  },
+  "instagram": {
+    "platform_id": "ig",
+    "source_id": 2,
+    "webhook_url": "https://urbanchat.com/webhook/instagram"
+  },
+  "facebook": {
+    "platform_id": "fb",
+    "source_id": 3,
+    "webhook_url": "https://urbanchat.com/webhook/facebook"
+  },
+  "telegram": {
+    "platform_id": "tg",
+    "source_id": 4,
+    "webhook_url": "https://urbanchat.com/webhook/telegram"
+  }
+}
+```
+
+### 5.2 UrbanChat API Configuration
+- **UrbanChat Base URL:** `https://api.urbanchat.com/v1/`
+- **Authentication:** API Key in header
+- **Rate Limit:** 1000 requests per hour
+- **Sync Frequency:** Real-time via webhooks + hourly batch sync
+
+### 5.3 Message Types Supported
+```json
+{
+  "text": "Plain text messages",
+  "image": "Image files (jpg, png, gif)",
+  "video": "Video files (mp4, avi)",
+  "audio": "Audio files (mp3, wav)",
+  "document": "Documents (pdf, doc, xlsx)",
+  "location": "GPS coordinates",
+  "contact": "Contact information",
+  "sticker": "Stickers and emojis"
+}
+```
+
+---
+
+## 6. Webhook Configuration
 
 ### 5.1 Webhook URL
 **URL:** `https://leads.gleesire.com/api/webhook/botamation`
@@ -272,7 +468,7 @@ Authorization: Bearer YOUR_API_KEY
 
 ---
 
-## 6. Error Codes
+## 7. Error Codes
 
 | Code | Message | Description |
 |------|---------|-------------|
@@ -286,14 +482,15 @@ Authorization: Bearer YOUR_API_KEY
 
 ---
 
+## 8. Testing
 
-## 7. Testing
-
-### 7.1 Test Environment
+### 8.1 Test Environment
 - **Base URL:** `https://leads.gleesire.com/api/test/`
 - **Test API Key:** Contact administrator
 
-### 7.2 Sample cURL Request
+### 8.2 Sample cURL Requests
+
+#### Create Enquiry
 ```bash
 curl -X POST https://leads.gleesire.com/api/enquiries \
   -H "Content-Type: application/json" \
@@ -306,6 +503,18 @@ curl -X POST https://leads.gleesire.com/api/enquiries \
     "source_id": 1,
     "enquiry_type": "Travel Package"
   }'
+```
+
+#### Get All Chats
+```bash
+curl -X GET "https://leads.gleesire.com/api/chats?platform=whatsapp&limit=50" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+#### Get Specific Chat
+```bash
+curl -X GET https://leads.gleesire.com/api/chats/conv_12345 \
+  -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 ---

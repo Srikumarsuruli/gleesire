@@ -191,6 +191,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                             <?php if(hasPrivilege('cruise_enquiries') || $_SESSION["role_id"] == 1): ?><li><a href="view_cruise.php">Cruise Enquiries</a></li><?php endif; ?>
                             <?php if(hasPrivilege('no_response_enquiries') || $_SESSION["role_id"] == 1): ?><li><a href="view_noresponserejectedenquiries.php">No Response Enquiries</a></li><?php endif; ?>
                             <?php if(hasPrivilege('follow_up_enquiries') || $_SESSION["role_id"] == 1): ?><li><a href="view_flowup.php">Follow up Enquiries</a></li><?php endif; ?>
+                            <li><a href="under_construction.php?page=Accommodation Partnership Enquiries">Accommodation Partnership Enquiries</a></li>
                         </ul>
                     </li>
                     <?php endif; ?>
@@ -203,19 +204,17 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                             <?php if(hasPrivilege('view_leads') || $_SESSION["role_id"] == 1): ?><li><a href="view_leads.php">All Leads</a></li><?php endif; ?>
                             <?php if(hasPrivilege('fixed_package_lead') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Fixed Package Lead">Fixed Package Lead</a></li><?php endif; ?>
                             <?php if(hasPrivilege('custom_package_leads') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Custom Package Leads">Custom Package Leads</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('medical_tourism_leads') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Medical Tourism Leads">Medical Tourism Leads</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('pipeline') || $_SESSION["role_id"] == 1): ?><li><a href="pipeline.php">Pipe Line Leads</a></li><?php endif; ?>
+
+                                <?php if(hasPrivilege('medical_tourism_leads') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Medical Tourism Leads">Medical Tourism Leads</a></li><?php endif; ?>
                             <?php if(hasPrivilege('lost_to_competitors') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Lost to Competitors">Lost to Competitors</a></li><?php endif; ?>
                             <?php if(hasPrivilege('no_response_leads') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=No Response/Rejected Leads">No Response/Rejected Leads</a></li><?php endif; ?>
                             <?php if(hasPrivilege('follow_up_leads') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=No Follow up Leads">Follow up Leads</a></li><?php endif; ?>
                             <?php if(hasPrivilege('junk_duplicate_leads') || $_SESSION["role_id"] == 1): ?><li><a href="junk_duplicate_leads.php">Junk and Duplicate Leads</a></li><?php endif; ?>
+                            <li><a href="under_construction.php?page=Group Tour Package Leads">Group Tour Package Leads</a></li>
+                            <li><a href="under_construction.php?page=Honeymoon Package Leads">Honeymoon Package Leads</a></li>
+                            <li><a href="under_construction.php?page=Corporate Package Leads">Corporate Package Leads</a></li>
                         </ul>
-                    </li>
-                    <?php endif; ?>
-                    <?php if(hasPrivilege('pipeline') || $_SESSION["role_id"] == 1): ?>
-                    <li>
-                        <a href="pipeline.php" class="dropdown-toggle no-arrow">
-                            <span class="micon bi bi-diagram-3"></span><span class="mtext">Pipeline</span>
-                        </a>
                     </li>
                     <?php endif; ?>
                     <?php if(hasPrivilege('booking_confirmed') || hasPrivilege('booking_cancelled') || hasPrivilege('travel_completed') || $_SESSION["role_id"] == 1): ?>
@@ -241,21 +240,22 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                     <?php if(hasPrivilege('feedbacks') || $_SESSION["role_id"] == 1): ?>
                     <li>
                         <a href="under_construction.php?page=Feedbacks" class="dropdown-toggle no-arrow">
-                            <span class="micon dw dw-message"></span><span class="mtext">Feedbacks</span>
+                            <span class="micon dw dw-message"></span><span class="mtext">Our Customers</span>
                         </a> 
                     </li>
                     <?php endif; ?>
                     <?php if(hasPrivilege('hotel_resorts') || hasPrivilege('cruise_reservation') || hasPrivilege('visa_air_ticket') || hasPrivilege('transportation_reservation') || $_SESSION["role_id"] == 1): ?>
                     <li class="dropdown">
                         <a href="javascript:;" class="dropdown-toggle">
-                            <span class="micon bi bi-calendar-check"></span><span class="mtext">Reservation/Booking</span>
+                            <span class="micon bi bi-calendar-check"></span><span class="mtext">Reservation</span>
                         </a>
                         <ul class="submenu">
                             <?php if(hasPrivilege('hotel_resorts') || $_SESSION["role_id"] == 1): ?><li><a href="hotel_resorts.php">Hotel/Resorts</a></li><?php endif; ?>
                             <li><a href="hotel_cruise_details.php">Hotel/Resort Cruise Details</a></li>
                             <?php if(hasPrivilege('cruise_reservation') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Cruise">Cruise</a></li><?php endif; ?>
                             <?php if(hasPrivilege('visa_air_ticket') || $_SESSION["role_id"] == 1): ?><li><a href="visa_ticket_booking.php">Visa & Air Ticket</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('transportation_reservation') || $_SESSION["role_id"] == 1): ?><li><a href="transportation_booking.php">Transportation</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('train_ticketing') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Train Ticketing">Train Ticketing</a></li><?php endif; ?>
+                                <?php if(hasPrivilege('transportation_reservation') || $_SESSION["role_id"] == 1): ?><li><a href="transportation_booking.php">Transportation</a></li><?php endif; ?>
                         </ul>
                     </li>
                     <?php endif; ?>
@@ -279,18 +279,17 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                             <span class="micon bi bi-calculator"></span><span class="mtext">Payments</span>
                         </a>
                         <ul class="submenu">
-                            <li><a href="under_construction.php?page=Booked Cost Sheets">Booked Cost Sheets</a></li>
-                            <?php if(hasPrivilege('view_payment_receipts') || $_SESSION["role_id"] == 1): ?>
-                    <li>
-                        <a href="view_payment_receipts.php">Payment Received Receipts</a>
-                    </li>
-                    <?php endif; ?>
+                            <?php if(hasPrivilege('view_payment_receipts') || $_SESSION["role_id"] == 1): ?><li><a href="view_payment_receipts.php">Payment Received</a></li><?php endif; ?>
+                            <li><a href="under_construction.php?page=Accommodation Payment Receipts">Accommodation Payment Receipts</a></li>
                             <li><a href="under_construction.php?page=Transportation Payment Receipts">Transportation Payment Receipts</a></li>
-                            <li><a href="under_construction.php?page=Hotel & Resorts Payment Receipts">Hotel & Resorts Payment Receipts</a></li>
                             <li><a href="under_construction.php?page=Cruise Payment Receipts">Cruise Payment Receipts</a></li>
-                            <li><a href="under_construction.php?page=Visa/Flight Payment Receipts">Visa/Flight Payment Receipts</a></li>
-                            <li><a href="under_construction.php?page=Hospital Payment Receipts">Hospital Payment Receipts</a></li>
-                            <li><a href="under_construction.php?page=Travel Insurance Payment Receipts">Travel Insurance Payment Receipts</a></li>
+                            <li><a href="under_construction.php?page=Hospital TAC Receipt">Hospital TAC(Travel Agent Commission) Receipt</a></li>
+                            <li><a href="under_construction.php?page=Travel Insurance Receipts">Travel Insurance Receipts</a></li>
+                            <li><a href="under_construction.php?page=Air Ticket Payment Receipts">Air Ticket Payment Receipts</a></li>
+                            <li><a href="under_construction.php?page=VISA Payment Receipts">VISA Payment Receipts</a></li>
+                            <li><a href="under_construction.php?page=Train Ticket Receipts">Train Ticket Receipts</a></li>
+                            <li><a href="under_construction.php?page=Agent Payment Receipt">Agent Payment Receipt</a></li>
+                            <li><a href="under_construction.php?page=Freelance Travel Agent Commission Payment Receipts">Freelance Travel Agent Commission Payment Receipts</a></li>
                         </ul>
                     </li>
                     <?php if(hasPrivilege('summary_report') || hasPrivilege('daily_movement_register') || hasPrivilege('user_activity_report') || hasPrivilege('department_report') || hasPrivilege('source_report') || hasPrivilege('user_performance_report') || hasPrivilege('package_performance_report') || hasPrivilege('marketing_performance_report') || $_SESSION["role_id"] == 1): ?>
@@ -305,35 +304,54 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                             <?php if(hasPrivilege('department_report') || $_SESSION["role_id"] == 1): ?><li><a href="department_report.php">Department Wise Report</a></li><?php endif; ?>
                             <?php if(hasPrivilege('source_report') || $_SESSION["role_id"] == 1): ?><li><a href="source_report.php">Source Wise Report</a></li><?php endif; ?>
                             <?php if(hasPrivilege('user_performance_report') || $_SESSION["role_id"] == 1): ?><li><a href="user_performance_report.php">User Performance Report</a></li><?php endif; ?>
+                            <li><a href="under_construction.php?page=Source/Channel Wise Reports">Source/Channel Wise Reports</a></li>
+                            <li><a href="under_construction.php?page=Campaign wise Reports">Campaign wise Reports</a></li>
+                            <li><a href="under_construction.php?page=Package wise Reports">Package wise Reports</a></li>
+                            <li><a href="under_construction.php?page=Destination Wise Reports">Destination Wise Reports</a></li>
+                            <li><a href="under_construction.php?page=File Manager wise Reports">File Manager wise Reports</a></li>
+                            <li><a href="under_construction.php?page=Enquiry Type wise Reports">Enquiry Type wise Reports</a></li>
+                            <li><a href="under_construction.php?page=Enquiry Status wise Reports">Enquiry Status wise Reports</a></li>
+                            <li><a href="under_construction.php?page=Lead Status Wise Reports">Lead Status Wise Reports</a></li>
+                            <li><a href="under_construction.php?page=Lead Priority Wise Reports">Lead Priority Wise Reports</a></li>
+                            <li><a href="under_construction.php?page=Lead Attended User Wise Report">Lead Attended User Wise Report</a></li>
+                            <li><a href="under_construction.php?page=Tele Sales User wise Reports">Tele Sales User wise Reports</a></li>
+                            <li><a href="under_construction.php?page=Reservation Team Reports">Reservation Team Reports</a></li>
+                            <?php if(hasPrivilege('user_logs') || $_SESSION["role_id"] == 1): ?><li><a href="user_logs.php">User Logs (User Session Report)</a></li><?php endif; ?>
+                            <li><a href="under_construction.php?page=All Users Activity Reports">All Users Activity Reports</a></li>
                         </ul>
                     </li>
                     <?php endif; ?>
-                    <?php if($_SESSION["role_id"] == 1): ?>
-                    <li>
-                        <a href="user_logs.php" class="dropdown-toggle no-arrow">
-                            <span class="micon bi bi-clock-history"></span><span class="mtext">User Logs</span>
+                    <?php if(hasPrivilege('accommodation_details') || hasPrivilege('transportation_details') || hasPrivilege('cruise_details') || hasPrivilege('travel_agents') || hasPrivilege('hospital_details') || hasPrivilege('extras_miscellaneous_details') || $_SESSION["role_id"] == 1): ?>
+                    <li class="dropdown">
+                        <a href="javascript:;" class="dropdown-toggle">
+                            <span class="micon bi bi-building"></span><span class="mtext">Data Module (BC)</span>
                         </a>
+                        <ul class="submenu">
+                            <?php if(hasPrivilege('accommodation_details') || $_SESSION["role_id"] == 1): ?><li><a href="accommodation_details.php">Accommodation Details</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('transportation_details') || $_SESSION["role_id"] == 1): ?><li><a href="transport_details.php">Transportation Details</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('cruise_details') || $_SESSION["role_id"] == 1): ?><li><a href="cruise_details.php">Cruise Details</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('travel_agents') || $_SESSION["role_id"] == 1): ?><li><a href="TravelAgents.php">Travel Agent Details</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('hospital_details') || $_SESSION["role_id"] == 1): ?><li><a href="HospitalDetails.php">Hospital Details</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('extras_miscellaneous_details') || $_SESSION["role_id"] == 1): ?><li><a href="extras_details.php">Extras/Miscellaneous Details</a></li><?php endif; ?>
+                            <li><a href="under_construction.php?page=Freelance Travel Consultant">Freelance Travel Consultant</a></li>
+                            <li><a href="under_construction.php?page=Packages">Packages</a></li>
+                        </ul>
                     </li>
                     <?php endif; ?>
-                    <?php if(hasPrivilege('transportation_details') || hasPrivilege('accommodation_details') || hasPrivilege('cruise_details') || hasPrivilege('extras_miscellaneous_details') || $_SESSION["role_id"] == 1): ?>
+                    <?php if(hasPrivilege('destinations') || hasPrivilege('departments') || hasPrivilege('source_channel') || hasPrivilege('referral_code') || hasPrivilege('enquiry_type') || hasPrivilege('enquiry_status') || hasPrivilege('lead_status') || hasPrivilege('night_day') || $_SESSION["role_id"] == 1): ?>
                     <li class="dropdown">
                         <a href="javascript:;" class="dropdown-toggle">
                             <span class="micon bi bi-server"></span><span class="mtext">Data Module</span>
                         </a>
                         <ul class="submenu">
-                            <?php if(hasPrivilege('transportation_details') || $_SESSION["role_id"] == 1): ?><li><a href="transport_details.php">Transportation Details</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('accommodation_details') || $_SESSION["role_id"] == 1): ?><li><a href="accommodation_details.php">Accommodation Details</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('cruise_details') || $_SESSION["role_id"] == 1): ?><li><a href="cruise_details.php">Cruise Details</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('extras_miscellaneous_details') || $_SESSION["role_id"] == 1): ?><li><a href="extras_details.php">Extras/Miscellaneous Details</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('travel_agents') || $_SESSION["role_id"] == 1): ?><li><a href="TravelAgents.php">Travel Agents</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('hospital_details') || $_SESSION["role_id"] == 1): ?><li><a href="HospitalDetails.php">Hospital Details</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('source_channel') || $_SESSION["role_id"] == 1): ?><li><a href="source.php">Source (Channel)</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('referral_code') || $_SESSION["role_id"] == 1): ?><li><a href="ReferralCode.php">Referral Code</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('enquiry_type') || $_SESSION["role_id"] == 1): ?><li><a href="EnquiryType.php">Enquiry Type</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('lead_status') || $_SESSION["role_id"] == 1): ?><li><a href="LeadStatus.php">Enquiry Status</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('enquiry_status') || $_SESSION["role_id"] == 1): ?><li><a href="EnquiryStatus.php">Lead Status</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('night_day') || $_SESSION["role_id"] == 1): ?><li><a href="NightDay.php">Night/Day</a></li><?php endif; ?>
                             <?php if(hasPrivilege('destinations') || $_SESSION["role_id"] == 1): ?><li><a href="Destinations.php">Destinations</a></li><?php endif; ?>
+                            <li><a href="under_construction.php?page=Departments">Departments</a></li>
+                            <?php if(hasPrivilege('source_channel') || $_SESSION["role_id"] == 1): ?><li><a href="source.php">Source (Channels)</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('referral_code') || $_SESSION["role_id"] == 1): ?><li><a href="ReferralCode.php">Referral Codes</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('enquiry_type') || $_SESSION["role_id"] == 1): ?><li><a href="EnquiryType.php">Enquiry Types</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('enquiry_status') || $_SESSION["role_id"] == 1): ?><li><a href="EnquiryStatus.php">Enquiry Statuses</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('lead_status') || $_SESSION["role_id"] == 1): ?><li><a href="LeadStatus.php">Leads Statuses</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('night_day') || $_SESSION["role_id"] == 1): ?><li><a href="NightDay.php">Night/Days</a></li><?php endif; ?>
                         </ul>
                     </li>
                     <?php endif; ?>
@@ -345,7 +363,12 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                         <ul class="submenu">
                             <?php if(hasPrivilege('add_user') || $_SESSION["role_id"] == 1): ?><li><a href="add_user.php">Manage Users</a></li><?php endif; ?>
                             <?php if(hasPrivilege('user_privileges') || $_SESSION["role_id"] == 1): ?><li><a href="user_privileges.php">User Privileges</a></li><?php endif; ?>
-                            <?php if($_SESSION["role_id"] == 1): ?><li><a href="api_keys.php">API Keys</a></li><?php endif; ?>
+                            <?php if($_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=API Keys">API Keys</a></li><?php endif; ?>
+                            <?php if($_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=SMTP Main Setup">SMTP Main Setup</a></li><?php endif; ?>
+                            <?php if($_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=SMS Integration">SMS Integration</a></li><?php endif; ?>
+                            <?php if($_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Whatsapp API">Whatsapp API</a></li><?php endif; ?>
+                            <?php if($_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Instagram Message API">Instagram Message API</a></li><?php endif; ?>
+                            <?php if($_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Messenger API">Messenger API</a></li><?php endif; ?>
                         </ul>
                     </li>
                     <?php endif; ?>
