@@ -818,7 +818,15 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][destination]" onchange="updateHotels(this, <?php echo $index; ?>, <?php echo $accom['hotel']; ?> )">
                                             <option value="">Select Destination</option>
-                                            <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): ?>
+                                            <?php
+                                                $uniqueValues = [];
+                                                mysqli_data_seek($accommodations, 0);
+                                                while($dest = mysqli_fetch_assoc($accommodations)):
+                                                    if (in_array($dest['destination'], $uniqueValues)) {
+                                                        continue; // skip duplicate
+                                                    }
+                                                    $uniqueValues[] = $dest['destination'];
+                                            ?>
                                                 <option 
                                                     value="<?php echo htmlspecialchars($dest['destination']); ?>" 
                                                     <?php echo ($accom['destination'] == $dest['destination']) ? 'selected' : ''; ?>
@@ -832,7 +840,15 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][hotel]" onchange="updateRoomTypes(this, <?php echo $index; ?>, '<?php echo $accom['room_type']; ?>')">
                                             <option value="">Select Hotel</option>
-                                            <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): ?>
+                                            <?php
+                                                $uniqueValues = [];
+                                                mysqli_data_seek($accommodations, 0);
+                                                while($dest = mysqli_fetch_assoc($accommodations)):
+                                                    if (in_array($dest['hotel_name'], $uniqueValues)) {
+                                                        continue; // skip duplicate
+                                                    }
+                                                    $uniqueValues[] = $dest['hotel_name'];
+                                            ?>
                                                 <option 
                                                     value="<?php echo htmlspecialchars($dest['hotel_name']); ?>" 
                                                     <?php echo ($accom['hotel'] == $dest['hotel_name']) ? 'selected' : ''; ?>
@@ -847,7 +863,15 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="accommodation[<?php echo $index; ?>][room_type]" onchange="updateRates(this, <?php echo $index; ?>)">
                                             <option value="">Select Room Type</option>
-                                            <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): ?>
+                                            <?php
+                                                $uniqueValues = [];
+                                                mysqli_data_seek($accommodations, 0);
+                                                while($dest = mysqli_fetch_assoc($accommodations)):
+                                                    if (in_array($dest['room_category'], $uniqueValues)) {
+                                                        continue; // skip duplicate
+                                                    }
+                                                    $uniqueValues[] = $dest['room_category'];
+                                            ?>
                                                 <option 
                                                     value="<?php echo htmlspecialchars($dest['room_category']); ?>" 
                                                     <?php echo ($accom['room_type'] == $dest['room_category']) ? 'selected' : ''; ?>
@@ -882,7 +906,15 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="accommodation[0][destination]" onchange="updateHotels(this, 0)">
                                             <option value="">Select Destination</option>
-                                            <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): ?>
+                                            <?php
+                                                $uniqueValues = [];
+                                                mysqli_data_seek($accommodations, 0);
+                                                while($dest = mysqli_fetch_assoc($accommodations)):
+                                                    if (in_array($dest['destination'], $uniqueValues)) {
+                                                        continue; // skip duplicate
+                                                    }
+                                                    $uniqueValues[] = $dest['destination'];
+                                            ?>
                                                 <option 
                                                     value="<?php echo htmlspecialchars($dest['destination']); ?>" 
                                                 >
@@ -965,8 +997,16 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="transportation[<?php echo $index; ?>][supplier]" onchange="updateTransportVehicles(this, <?php echo $index; ?>, '<?php echo $trans['car_type'] ?? ''; ?>')">
                                             <option value="">Select Supplier</option>
-                                            <?php mysqli_data_seek($transport_details, 0); while($transport = mysqli_fetch_assoc($transport_details)): ?>
-                                                <option value="<?php echo htmlspecialchars($transport['company_name']); ?>" <?php echo ($trans['supplier'] == $transport['company_name']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($transport['company_name']); ?></option>
+                                            <?php
+                                                $uniqueValues = [];
+                                                mysqli_data_seek($transport_details, 0);
+                                                while($transport = mysqli_fetch_assoc($transport_details)):
+                                                    if (in_array($transport['company_name'], $uniqueValues)) {
+                                                        continue; // skip duplicate
+                                                    }
+                                                    $uniqueValues[] = $transport['company_name'];
+                                            ?>
+                                                <option value="<?php echo htmlspecialchars($transport['company_name']); ?>" <?php echo ((isset($trans['supplier']) ? $trans['supplier'] : '') == $transport['company_name']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($transport['company_name']); ?></option>
                                             <?php endwhile; ?>
                                         </select>
                                         <input type="hidden" name="transportation[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
@@ -990,7 +1030,16 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="transportation[0][supplier]" onchange="updateTransportVehicles(this, 0)">
                                             <option value="">Select Supplier</option>
-                                            <?php mysqli_data_seek($transport_details, 0); while($transport = mysqli_fetch_assoc($transport_details)): ?>
+                                            <?php
+                                                $uniqueValues = [];
+                                                mysqli_data_seek($transport_details, 0);
+                                                while($transport = mysqli_fetch_assoc($transport_details)):
+                                                    if (in_array($transport['company_name'], $uniqueValues)) {
+                                                        continue; // skip duplicate
+                                                    }
+                                                    $uniqueValues[] = $transport['company_name'];
+                                            ?>
+                                            
                                                 <option value="<?php echo htmlspecialchars($transport['company_name']); ?>"><?php echo htmlspecialchars($transport['company_name']); ?></option>
                                             <?php endwhile; ?>
                                         </select>
@@ -1199,13 +1248,21 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][destination]" onchange="updateAgentSupplier(this, <?php echo $index; ?>, '<?php echo $package['agent_supplier']; ?>' )">
                                             <option value="">Select Destination</option>
-                                            <?php mysqli_data_seek($agent_details, 0); while($agent = mysqli_fetch_assoc($agent_details)): ?>
+                                            <?php
+                                                $uniqueValues = [];
+                                                mysqli_data_seek($agent_details, 0);
+                                                while($agent = mysqli_fetch_assoc($agent_details)):
+                                                    if (in_array($agent['destination'], $uniqueValues)) {
+                                                        continue; // skip duplicate
+                                                    }
+                                                    $uniqueValues[] = $agent['destination'];
+                                            ?>
                                                 <option 
-                                                value="<?php echo htmlspecialchars($agent['destination']); ?>" 
-                                                <?php echo ($package['destination'] == $agent['destination']) ? 'selected' : ''; ?>
-                                            >
-                                                <?php echo htmlspecialchars($agent['destination']); ?>
-                                            </option>
+                                                    value="<?php echo htmlspecialchars($agent['destination']); ?>" 
+                                                    <?php echo ($package['destination'] == $agent['destination']) ? 'selected' : ''; ?>
+                                                >
+                                                    <?php echo htmlspecialchars($agent['destination']); ?>
+                                                </option>
                                             <?php endwhile; ?>
                                         </select>
                                         <input type="hidden" name="agent_package[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
@@ -1213,7 +1270,16 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="agent_package[<?php echo $index; ?>][agent_supplier]" style="width: 120px;">
                                             <option value="">Select Agent/Supplier</option>
-                                            <?php mysqli_data_seek($agent_details, 0); while($agent = mysqli_fetch_assoc($agent_details)): ?>
+                                            <?php
+                                                $uniqueValues = [];
+                                                mysqli_data_seek($agent_details, 0);
+                                                while($agent = mysqli_fetch_assoc($agent_details)):
+                                                    if (in_array($agent['supplier'], $uniqueValues)) {
+                                                        continue; // skip duplicate
+                                                    }
+                                                    $uniqueValues[] = $agent['supplier'];
+                                            ?>
+
                                             <option 
                                                 value="<?php echo htmlspecialchars($agent['supplier']); ?>" 
                                                 <?php echo ($package['agent_supplier'] == $agent['supplier']) ? 'selected' : ''; ?>
@@ -1239,7 +1305,15 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="agent_package[0][destination]" onchange="updateAgentSupplier(this, 0)">
                                             <option value="">Select Destination</option>
-                                             <?php mysqli_data_seek($agent_details, 0); while($agent = mysqli_fetch_assoc($agent_details)): ?>
+                                            <?php
+                                                $uniqueValues = [];
+                                                mysqli_data_seek($agent_details, 0);
+                                                while($agent = mysqli_fetch_assoc($agent_details)):
+                                                    if (in_array($agent['destination'], $uniqueValues)) {
+                                                        continue; // skip duplicate
+                                                    }
+                                                    $uniqueValues[] = $agent['destination'];
+                                            ?>
                                                 <option value="<?php echo htmlspecialchars($agent['destination']); ?>" ><?php echo htmlspecialchars($agent['destination']); ?></option>
                                             <?php endwhile; ?>
                                         </select>
@@ -1307,7 +1381,15 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                         
                                         <select class="form-control form-control-sm" name="medical_tourisms[<?php echo $index; ?>][place]" onchange="updateHospitals(this, <?php echo $index; ?>, '<?php echo $package['hospital'] ?? ''; ?>')" style="width: 120px;">
                                             <option value="">Select Place</option>
-                                            <?php mysqli_data_seek($hospital_details, 0); while($hospital = mysqli_fetch_assoc($hospital_details)): ?>
+                                            <?php
+                                                $uniqueValues = [];
+                                                mysqli_data_seek($hospital_details, 0);
+                                                while($hospital = mysqli_fetch_assoc($hospital_details)):
+                                                    if (in_array($hospital['destination'], $uniqueValues)) {
+                                                        continue; // skip duplicate
+                                                    }
+                                                    $uniqueValues[] = $hospital['destination'];
+                                            ?>
                                                 <option 
                                                     value="<?php echo htmlspecialchars($hospital['destination']); ?>" 
                                                     <?php echo ($package['place'] == $hospital['destination']) ? 'selected' : ''; ?>
@@ -1352,7 +1434,15 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                                     <td>
                                         <select class="form-control form-control-sm" name="medical_tourisms[0][place]" onchange="updateHospitals(this, 0)" style="width: 120px;">
                                             <option value="">Select Place</option>
-                                            <?php mysqli_data_seek($hospital_details, 0); while($hospital = mysqli_fetch_assoc($hospital_details)): ?>
+                                            <?php
+                                                $uniqueValues = [];
+                                                mysqli_data_seek($hospital_details, 0);
+                                                while($hospital = mysqli_fetch_assoc($hospital_details)):
+                                                    if (in_array($hospital['destination'], $uniqueValues)) {
+                                                        continue; // skip duplicate
+                                                    }
+                                                    $uniqueValues[] = $hospital['destination'];
+                                            ?>
                                                 <option value="<?php echo htmlspecialchars($hospital['destination']); ?>"><?php echo htmlspecialchars($hospital['destination']); ?></option>
                                             <?php endwhile; ?>
                                         </select>
@@ -1568,7 +1658,15 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
             <td>
                 <select class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][destination]" onchange="updateHotels(this, ${accommodationRowCount})">
                     <option value="">Select Destination</option>
-                    <?php mysqli_data_seek($accommodations, 0); while($dest = mysqli_fetch_assoc($accommodations)): ?>
+                    <?php
+                        $uniqueValues = [];
+                        mysqli_data_seek($accommodations, 0);
+                        while($dest = mysqli_fetch_assoc($accommodations)):
+                            if (in_array($dest['destination'], $uniqueValues)) {
+                                continue; // skip duplicate
+                            }
+                            $uniqueValues[] = $dest['destination'];
+                    ?>
                         <option 
                             value="<?php echo htmlspecialchars($dest['destination']); ?>" 
                         >
@@ -1631,8 +1729,18 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
             .then(response => response.json())
             .then(res => {
                 hotelSelect.innerHTML = '<option value="">Select Hotel</option>';
-                res.data.forEach(hotel => {
-                    hotelSelect.innerHTML += `<option value="${hotel.hotel_name}" ${value == hotel.hotel_name ? 'selected': ''}>${hotel.hotel_name}</option>`;
+
+                let rows = []
+                let key_name = "hotel_name"
+                
+                res.data.forEach(row=>{
+                    if(row[key_name] && !rows.includes(row[key_name])){
+                        rows.push(row[key_name])
+                    }
+                })
+
+                rows.forEach(item => {
+                    hotelSelect.innerHTML += `<option value="${item}">${item}</option>`;
                 });
             });
 
@@ -1656,8 +1764,18 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                 .then(response => response.json())
                 .then(res => {
                     roomTypeSelect.innerHTML = '<option value="">Select Room Type</option>';
-                    res.data.forEach(type => {
-                        roomTypeSelect.innerHTML += `<option value="${type.room_category}" ${value == type.room_category ? 'selected': ''}>${type.room_category}</option>`;
+
+                    let rows = []
+                    let key_name = "room_category"
+                    
+                    res.data.forEach(row=>{
+                        if(row[key_name] && !rows.includes(row[key_name])){
+                            rows.push(row[key_name])
+                        }
+                    })
+                
+                    rows.forEach(item => {
+                        roomTypeSelect.innerHTML += `<option value="${item}">${item}</option>`;
                     });
 
                     updateRates(hotelSelect, rowIndex)
@@ -1742,7 +1860,15 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
             <td>
                 <select class="form-control form-control-sm" name="transportation[${transportationRowCount}][supplier]" onchange="updateTransportVehicles(this, ${transportationRowCount})">
                     <option value="">Select Supplier</option>
-                    <?php mysqli_data_seek($transport_details, 0); while($transport = mysqli_fetch_assoc($transport_details)): ?>
+                    <?php
+                        $uniqueValues = [];
+                        mysqli_data_seek($transport_details, 0);
+                        while($transport = mysqli_fetch_assoc($transport_details)):
+                            if (in_array($transport['company_name'], $uniqueValues)) {
+                                continue; // skip duplicate
+                            }
+                            $uniqueValues[] = $transport['company_name'];
+                    ?>
                         <option value="<?php echo htmlspecialchars($transport['company_name']); ?>"><?php echo htmlspecialchars($transport['company_name']); ?></option>
                     <?php endwhile; ?>
                 </select>
@@ -1778,8 +1904,18 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                 .then(response => response.json())
                 .then(res => {
                     vehicleSelect.innerHTML = '<option value="">Select Car Type</option>';
-                    res.data.forEach(transport => {
-                        vehicleSelect.innerHTML += `<option value="${transport.vehicle}" ${selectedVehicle == transport.vehicle ? 'selected': ''}>${transport.vehicle}</option>`;
+
+                    let rows = []
+                    let key_name = "vehicle"
+                    
+                    res.data.forEach(row=>{
+                        if(row[key_name] && !rows.includes(row[key_name])){
+                            rows.push(row[key_name])
+                        }
+                    })
+                
+                    rows.forEach(item => {
+                        vehicleSelect.innerHTML += `<option value="${item}">${item}</option>`;
                     });
 
                     // If there's a selected vehicle, update rates
@@ -2364,8 +2500,19 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                 .then(response => response.json())
                 .then(res => {
                     supplierSelect.innerHTML = '<option value="">Select Agent/Supplier</option>';
-                    res.data.forEach(item => {
-                        supplierSelect.innerHTML += `<option value="${item.supplier}" ${value == item.supplier ? 'selected': ''}>${item.supplier}</option>`;
+                 
+
+                    let rows = []
+                    let key_name = "supplier"
+                    
+                    res.data.forEach(row=>{
+                        if(row[key_name] && !rows.includes(row[key_name])){
+                            rows.push(row[key_name])
+                        }
+                    })
+                
+                    rows.forEach(item => {
+                        supplierSelect.innerHTML += `<option value="${item}">${item}</option>`;
                     });
                 });
         }
@@ -2382,7 +2529,15 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
             <td>
                 <select class="form-control form-control-sm" name="medical_tourisms[${newIndex}][place]" onchange="updateHospitals(this, ${newIndex})" style="width: 120px;">
                     <option value="">Select Place</option>
-                    <?php mysqli_data_seek($hospital_details, 0); while($hospital = mysqli_fetch_assoc($hospital_details)): ?>
+                    <?php
+                        $uniqueValues = [];
+                        mysqli_data_seek($hospital_details, 0);
+                        while($hospital = mysqli_fetch_assoc($hospital_details)):
+                            if (in_array($hospital['destination'], $uniqueValues)) {
+                                continue; // skip duplicate
+                            }
+                            $uniqueValues[] = $hospital['destination'];
+                    ?>
                         <option value="<?php echo htmlspecialchars($hospital['destination']); ?>"><?php echo htmlspecialchars($hospital['destination']); ?></option>
                     <?php endwhile; ?>
                 </select>
@@ -2476,8 +2631,18 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                 .then(response => response.json())
                 .then(res => {
                     hospitalSelect.innerHTML = '<option value="">Select Hospital</option>';
-                    res.data.forEach(hospital => {
-                        hospitalSelect.innerHTML += `<option value="${hospital.hospital_name}" ${selectedHospital == hospital.hospital_name ? 'selected': ''}>${hospital.hospital_name}</option>`;
+
+                    let rows = []
+                    let key_name = "hospital_name"
+                    
+                    res.data.forEach(row=>{
+                        if(row[key_name] && !rows.includes(row[key_name])){
+                            rows.push(row[key_name])
+                        }
+                    })
+                
+                    rows.forEach(item => {
+                        hospitalSelect.innerHTML += `<option value="${item}">${item}</option>`;
                     });
                 });
         }

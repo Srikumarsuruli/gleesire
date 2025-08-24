@@ -23,3 +23,14 @@ ALTER TABLE `tour_costings`
   ADD COLUMN `departure_flight` VARCHAR(50) AFTER `departure_city`,
   ADD COLUMN `departure_nights_days` VARCHAR(50) AFTER `departure_flight`,
   ADD COLUMN `departure_connection` VARCHAR(50) AFTER `departure_nights_days`;
+
+
+-- 24-08-2025---
+CREATE TABLE customers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    destination VARCHAR(255) NOT NULL,
+    time DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

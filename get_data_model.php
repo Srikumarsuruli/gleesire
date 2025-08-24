@@ -27,7 +27,7 @@ try {
             $hotel_name = isset($_GET['hotel_name']) ? $_GET['hotel_name'] : '';
             $room_category = isset($_GET['room_category']) ? $_GET['room_category'] : '';
 
-            $sql = "SELECT distinct * FROM accommodation_details WHERE validity_to < NOW()";
+            $sql = "SELECT distinct * FROM accommodation_details WHERE 1=1 ";
             $values = array();
 
             if(!empty($destination)) {

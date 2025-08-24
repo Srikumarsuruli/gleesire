@@ -1029,7 +1029,15 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <td>
                                     <select class="form-control form-control-sm" name="accommodation[0][destination]" onchange="updateHotels(this, 0)" >
                                         <option value="">Select Destination</option>
-                                        <?php mysqli_data_seek($accommodation_details, 0); while($accom = mysqli_fetch_assoc($accommodation_details)): ?>
+                                        <?php
+                                            $uniqueValues = [];
+                                            mysqli_data_seek($accommodation_details, 0);
+                                            while($accom = mysqli_fetch_assoc($accommodation_details)):
+                                                if (in_array($accom['destination'], $uniqueValues)) {
+                                                    continue; // skip duplicate
+                                                }
+                                                $uniqueValues[] = $accom['destination'];
+                                        ?>
                                             <option 
                                                 value="<?php echo htmlspecialchars($accom['destination']); ?>" 
                                             >
@@ -1109,7 +1117,15 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <td>
                                     <select class="form-control form-control-sm" name="transportation[<?php echo $index; ?>][supplier]" onchange="updateTransportVehicles(this, 0)">
                                         <option value="">Select Supplier</option>
-                                        <?php mysqli_data_seek($transport_details, 0); while($transport = mysqli_fetch_assoc($transport_details)): ?>
+                                        <?php
+                                            $uniqueValues = [];
+                                            mysqli_data_seek($transport_details, 0);
+                                            while($transport = mysqli_fetch_assoc($transport_details)):
+                                                if (in_array($transport['company_name'], $uniqueValues)) {
+                                                    continue; // skip duplicate
+                                                }
+                                                $uniqueValues[] = $transport['company_name'];
+                                        ?>
                                             <option value="<?php echo htmlspecialchars($transport['company_name']); ?>" ><?php echo htmlspecialchars($transport['company_name']); ?></option>
                                         <?php endwhile; ?>
                                     </select>
@@ -1130,7 +1146,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="4" class="text-right"><strong>TOTAL TRANSPORTATION COST:</strong></td>
+                                <td colspan="9" class="text-right"><strong>TOTAL TRANSPORTATION COST:</strong></td>
                                 <td><input type="text" class="form-control form-control-sm" id="transportation-grand-total" readonly style="background: #e8f5e8; font-weight: bold;"></td>
                             </tr>
                         </tfoot>
@@ -1141,7 +1157,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <!-- CRUISE HIRE Section -->
             <div id="cruise-hire-section" class="services-section" style="display: none;">
-                <h5><i class="icon-copy fa fa-ship"></i> CRUISE HIRE</h5>
+                <h5>
+                    <i class="icon-copy fa fa-ship"></i> CRUISE HIRE
+                   <button type="button" class="btn btn-sm btn-primary" onclick="addCruiseRow()"><i class="fa fa-plus"></i> Add Cruise</button>
+                </h5>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
                         <thead>
@@ -1242,7 +1261,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                             </tr>
                         </tfoot>
                     </table>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addCruiseRow()"><i class="fa fa-plus"></i> Add Cruise</button>
+                    
                 </div>
             </div>
 
@@ -1950,7 +1969,24 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         newRow.innerHTML = `
             <tr>
                 <td>${transportationRowCount + 1}</td>
-                <td><input type="text" class="form-control form-control-sm" name="transportation[${transportationRowCount}][supplier]" placeholder="Supplier Name"></td>
+                <td>
+                    <select class="form-control form-control-sm" name="transportation[${transportationRowCount}][supplier]" onchange="updateTransportVehicles(this, ${transportationRowCount})">
+                        <option value="">Select Supplier</option>
+                        <?php
+                            $uniqueValues = [];
+                            mysqli_data_seek($transport_details, 0);
+                            while($transport = mysqli_fetch_assoc($transport_details)):
+                                if (in_array($transport['company_name'], $uniqueValues)) {
+                                    continue; // skip duplicate
+                                }
+                                $uniqueValues[] = $transport['company_name'];
+                        ?>
+                            <option value="<?php echo htmlspecialchars($transport['company_name']); ?>"><?php echo htmlspecialchars($transport['company_name']); ?></option>
+                        <?php endwhile; ?>
+                    </select>
+                    <input type="hidden" name="transportation[${transportationRowCount}][idx]" value="${transportationRowCount}">
+                </td>
+
                 <td>
                     <select class="form-control form-control-sm" name="transportation[${transportationRowCount}][car_type]">
                         <option value="">Select Car Type</option>
@@ -2250,8 +2286,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                 .then(response => response.json())
                 .then(res => {
                     hotelSelect.innerHTML = '<option value="">Select Hotel</option>';
-                    res.data.forEach(item => {
-                        hotelSelect.innerHTML += `<option value="${item.hotel_name}" ${selectedHotel == item.hotel_name ? 'selected': ''}>${item.hotel_name}</option>`;
+                    let rows = []
+                    let key_name = "hotel_name"
+                    
+                    res.data.forEach(row=>{
+                        if(row[key_name] && !rows.includes(row[key_name])){
+                            rows.push(row[key_name])
+                        }
+                    })
+                
+                    rows.forEach(item => {
+                        hotelSelect.innerHTML += `<option value="${item}">${item}</option>`;
                     });
 
                     updateRoomRate(destinationSelect, rowIndex)
@@ -2270,8 +2315,19 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                 .then(response => response.json())
                 .then(res => {
                     roomTypeSelect.innerHTML = '<option value="">Select Room Type</option>';
-                    res.data.forEach(item => {
-                        roomTypeSelect.innerHTML += `<option value="${item.room_category}" data-rate="${item.room_rate}" ${selectedRoomType == item.room_category ? 'selected': ''}>${item.room_category}</option>`;
+                   
+
+                    let rows = []
+                    let key_name = "room_category"
+                    
+                    res.data.forEach(row=>{
+                        if(row[key_name] && !rows.includes(row[key_name])){
+                            rows.push(row[key_name])
+                        }
+                    })
+                
+                    rows.forEach(item => {
+                        roomTypeSelect.innerHTML += `<option value="${item}">${item}</option>`;
                     });
 
                     updateRoomRate(hotelSelect, rowIndex)
@@ -2343,8 +2399,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                 .then(response => response.json())
                 .then(res => {
                     vehicleSelect.innerHTML = '<option value="">Select Car Type</option>';
-                    res.data.forEach(item => {
-                        vehicleSelect.innerHTML += `<option value="${item.vehicle}" data-daily-rent="${item.daily_rent}" data-rate-per-km="${item.rate_per_km}" ${selectedVehicle == item.vehicle ? 'selected': ''}>${item.vehicle}</option>`;
+                    let rows = []
+                    let key_name = "vehicle"
+                    
+                    res.data.forEach(row=>{
+                        if(row[key_name] && !rows.includes(row[key_name])){
+                            rows.push(row[key_name])
+                        }
+                    })
+                
+                    rows.forEach(item => {
+                        vehicleSelect.innerHTML += `<option value="${item}">${item}</option>`;
                     });
                 });
         }
@@ -2439,8 +2504,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                 .then(response => response.json())
                 .then(res => {
                     supplierSelect.innerHTML = '<option value="">Select Agent/Supplier</option>';
-                    res.data.forEach(item => {
-                        supplierSelect.innerHTML += `<option value="${item.supplier}" ${value == item.supplier ? 'selected': ''}>${item.supplier}</option>`;
+                    let rows = []
+                    let key_name = "supplier"
+                    
+                    res.data.forEach(row=>{
+                        if(row[key_name] && !rows.includes(row[key_name])){
+                            rows.push(row[key_name])
+                        }
+                    })
+                
+                    rows.forEach(item => {
+                        supplierSelect.innerHTML += `<option value="${item}">${item}</option>`;
                     });
                 });
         }
@@ -2529,8 +2603,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                 .then(response => response.json())
                 .then(res => {
                     hospitalSelect.innerHTML = '<option value="">Select Hospital</option>';
-                    res.data.forEach(hospital => {
-                        hospitalSelect.innerHTML += `<option value="${hospital.hospital_name}" ${selectedHospital == hospital.hospital_name ? 'selected': ''}>${hospital.hospital_name}</option>`;
+                    let rows = []
+                    let key_name = "hospital_name"
+                    
+                    res.data.forEach(row=>{
+                        if(row[key_name] && !rows.includes(row[key_name])){
+                            rows.push(row[key_name])
+                        }
+                    })
+                
+                    rows.forEach(item => {
+                        hospitalSelect.innerHTML += `<option value="${item}">${item}</option>`;
                     });
                 });
         }
