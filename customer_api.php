@@ -1,5 +1,5 @@
 <?php
-$ACCESS_KEY = "MY_STATIC_KEY_123";
+$ACCESS_KEY = "gls_abac0e85b30e648f36d058898463fabb98fd7d57bcca83795c4e2170";
 
 header("Content-Type: application/json");
 

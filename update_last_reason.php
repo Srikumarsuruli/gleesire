@@ -41,17 +41,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['enquiry_id']) && isset(
         if(mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
             mysqli_stmt_close($check_stmt);
-            header("location: view_leads.php?reason_updated=1");
+            echo json_encode(['success' => true, 'message' => 'Last reason updated successfully']);
             exit;
         } else {
             mysqli_stmt_close($stmt);
             mysqli_stmt_close($check_stmt);
-            header("location: view_leads.php?error=1");
+            echo json_encode(['success' => false, 'message' => 'Error updating last reason']);
             exit;
         }
     }
 }
 
-header("location: view_leads.php?error=2");
+echo json_encode(['success' => false, 'message' => 'Invalid request']);
 exit;
 ?>

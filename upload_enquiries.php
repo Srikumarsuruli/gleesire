@@ -146,7 +146,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                 $enquiry_type = isset($line[9]) ? $line[9] : NULL;
                 $customer_location = isset($line[10]) ? $line[10] : NULL;
                 $secondary_contact = isset($line[11]) ? $line[11] : NULL;
-                $destination_id = isset($line[12]) && !empty(trim($line[12])) ? $line[12] : NULL;
+                $destination_ids = isset($line[12]) && !empty(trim($line[12])) ? explode(',', trim($line[12])) : [];
+                $destination_id = !empty($destination_ids) ? implode(',', array_map('trim', $destination_ids)) : NULL;
                 $other_details = isset($line[13]) ? $line[13] : NULL;
                 $travel_month = isset($line[14]) ? $line[14] : NULL;
                 $night_day = isset($line[15]) ? $line[15] : NULL;
@@ -324,7 +325,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                         $lead_type = !empty($_POST["lead_type"]) ? trim($_POST["lead_type"]) : NULL;
                         $customer_location = !empty($_POST["customer_location"]) ? trim($_POST["customer_location"]) : NULL;
                         $secondary_contact = !empty($_POST["secondary_contact"]) ? trim($_POST["secondary_contact"]) : NULL;
-                        $destination_id = !empty($_POST["destination_id"]) ? trim($_POST["destination_id"]) : NULL;
+                        $destination_ids = !empty($_POST["destination_id"]) ? $_POST["destination_id"] : [];
+                        $destination_id = !empty($destination_ids) ? implode(',', $destination_ids) : NULL;
                         $other_details = !empty($_POST["other_details"]) ? trim($_POST["other_details"]) : NULL;
                         // Convert month name to date format (first day of month)
 $travel_month = !empty($_POST["travel_month"]) ? trim($_POST["travel_month"]) : NULL;
@@ -627,8 +629,7 @@ if (in_array($current_user_role, $allowed_roles)):
                                         <div class="form-group row">
                                             <label class="col-sm-12 col-form-label">Destination</label>
                                             <div class="col-sm-12">
-                                                <select class="custom-select col-12" id="destination-id" name="destination_id">
-                                                    <option value="">Select Destination</option>
+                                                <select class="custom-select col-12" id="destination-id" name="destination_id[]" multiple size="5">
                                                     <?php mysqli_data_seek($destinations, 0); ?>
                                                     <?php while($destination = mysqli_fetch_assoc($destinations)): ?>
                                                         <option value="<?php echo $destination['id']; ?>">
@@ -636,6 +637,7 @@ if (in_array($current_user_role, $allowed_roles)):
                                                         </option>
                                                     <?php endwhile; ?>
                                                 </select>
+                                                <small class="text-muted">Hold Ctrl/Cmd to select multiple destinations</small>
                                             </div>
                                         </div>
                                     </div>

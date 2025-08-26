@@ -185,13 +185,14 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                         <ul class="submenu">
                             <?php if(hasPrivilege('view_enquiries') || $_SESSION["role_id"] == 1): ?><li><a href="view_enquiries.php">All Enquiries</a></li><?php endif; ?>
                             <?php if(hasPrivilege('job_enquiries') || $_SESSION["role_id"] == 1): ?><li><a href="view_job_enquiries.php">Job Enquiries</a></li><?php endif; ?>
+                                <li><a href="under_construction.php?page=Accommodation Partnership Enquiries">Accommodation Partnership Enquiries</a></li>
                             <?php if(hasPrivilege('ticket_enquiries') || $_SESSION["role_id"] == 1): ?><li><a href="view_ticket_enquiry.php">Ticket Enquiries</a></li><?php endif; ?>
                             <?php if(hasPrivilege('influencer_enquiries') || $_SESSION["role_id"] == 1): ?><li><a href="view_influencer_enquiries.php">Influencer Enquiries</a></li><?php endif; ?>
                             <?php if(hasPrivilege('dmc_agent_enquiries') || $_SESSION["role_id"] == 1): ?><li><a href="view_dmc.php">DMC/Agent Enquiries</a></li><?php endif; ?>
                             <?php if(hasPrivilege('cruise_enquiries') || $_SESSION["role_id"] == 1): ?><li><a href="view_cruise.php">Cruise Enquiries</a></li><?php endif; ?>
                             <?php if(hasPrivilege('no_response_enquiries') || $_SESSION["role_id"] == 1): ?><li><a href="view_noresponserejectedenquiries.php">No Response Enquiries</a></li><?php endif; ?>
                             <?php if(hasPrivilege('follow_up_enquiries') || $_SESSION["role_id"] == 1): ?><li><a href="view_flowup.php">Follow up Enquiries</a></li><?php endif; ?>
-                            <li><a href="under_construction.php?page=Accommodation Partnership Enquiries">Accommodation Partnership Enquiries</a></li>
+                            
                         </ul>
                     </li>
                     <?php endif; ?>
@@ -202,6 +203,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                         </a>
                         <ul class="submenu">
                             <?php if(hasPrivilege('view_leads') || $_SESSION["role_id"] == 1): ?><li><a href="view_leads.php">All Leads</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('view_leads') || $_SESSION["role_id"] == 11 || $_SESSION["role_id"] == 12): ?><li><a href="my_leads.php">My Leads</a></li><?php endif; ?>
                             <?php if(hasPrivilege('fixed_package_lead') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Fixed Package Lead">Fixed Package Lead</a></li><?php endif; ?>
                             <?php if(hasPrivilege('custom_package_leads') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Custom Package Leads">Custom Package Leads</a></li><?php endif; ?>
                             <?php if(hasPrivilege('pipeline') || $_SESSION["role_id"] == 1): ?><li><a href="pipeline.php">Pipe Line Leads</a></li><?php endif; ?>

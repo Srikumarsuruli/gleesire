@@ -138,16 +138,31 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             if(mysqli_stmt_execute($stmt)) {
                 // Check if status changed to "Converted" (ID 3)
                 if($status_id == 3 && $enquiry['status_id'] != 3) {
-                    // Include number generator
-                    require_once "includes/number_generator.php";
-                    // Generate enquiry number using the same system as upload_enquiries.php
-                    $enquiry_number = generateNumber('lead', $conn);
+                    // Check if converted_leads record already exists
+                    $check_sql = "SELECT id FROM converted_leads WHERE enquiry_id = ?";
+                    $existing_lead = false;
+                    if($check_stmt = mysqli_prepare($conn, $check_sql)) {
+                        mysqli_stmt_bind_param($check_stmt, "i", $id);
+                        mysqli_stmt_execute($check_stmt);
+                        $check_result = mysqli_stmt_get_result($check_stmt);
+                        if(mysqli_num_rows($check_result) > 0) {
+                            $existing_lead = true;
+                        }
+                        mysqli_stmt_close($check_stmt);
+                    }
+                    
+                    if(!$existing_lead) {
+                        // Include number generator
+                        require_once "includes/number_generator.php";
+                        // Generate enquiry number using the same system as upload_enquiries.php
+                        $enquiry_number = generateNumber('lead', $conn);
                     
                     // Get converted lead details
                     $lead_type = !empty($_POST["lead_type"]) ? trim($_POST["lead_type"]) : NULL;
                     $customer_location = !empty($_POST["customer_location"]) ? trim($_POST["customer_location"]) : NULL;
                     $secondary_contact = !empty($_POST["secondary_contact"]) ? trim($_POST["secondary_contact"]) : NULL;
-                    $destination_id = !empty($_POST["destination_id"]) ? trim($_POST["destination_id"]) : NULL;
+                    $destination_ids = !empty($_POST["destination_id"]) ? $_POST["destination_id"] : [];
+                    $destination_id = !empty($destination_ids) ? implode(',', $destination_ids) : NULL;
                     $other_details = !empty($_POST["other_details"]) ? trim($_POST["other_details"]) : NULL;
                     $travel_month = !empty($_POST["travel_month"]) ? trim($_POST["travel_month"]) : NULL;
                     $travel_start_date = !empty($_POST["travel_start_date"]) ? trim($_POST["travel_start_date"]) : NULL;
@@ -183,14 +198,26 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                         }
                         mysqli_stmt_close($stmt2);
                     }
-                } 
+                    }
+                }
+                // Status changed but not to converted, remove from converted_leads if exists
+                if($enquiry['status_id'] == 3 && $status_id != 3) {
+                    $delete_sql = "DELETE FROM converted_leads WHERE enquiry_id = ?";
+                    if($delete_stmt = mysqli_prepare($conn, $delete_sql)) {
+                        mysqli_stmt_bind_param($delete_stmt, "i", $id);
+                        mysqli_stmt_execute($delete_stmt);
+                        mysqli_stmt_close($delete_stmt);
+                    }
+                }
+                
                 // Check if status is still "Converted" (ID 3) and we need to update converted_lead details
                 else if($status_id == 3 && $enquiry['status_id'] == 3) {
                     // Get converted lead details
                     $lead_type = !empty($_POST["lead_type"]) ? trim($_POST["lead_type"]) : NULL;
                     $customer_location = !empty($_POST["customer_location"]) ? trim($_POST["customer_location"]) : NULL;
                     $secondary_contact = !empty($_POST["secondary_contact"]) ? trim($_POST["secondary_contact"]) : NULL;
-                    $destination_id = !empty($_POST["destination_id"]) ? trim($_POST["destination_id"]) : NULL;
+                    $destination_ids = !empty($_POST["destination_id"]) ? $_POST["destination_id"] : [];
+                    $destination_id = !empty($destination_ids) ? implode(',', $destination_ids) : NULL;
                     $other_details = !empty($_POST["other_details"]) ? trim($_POST["other_details"]) : NULL;
                     $travel_month = !empty($_POST["travel_month"]) ? trim($_POST["travel_month"]) : NULL;
                     $travel_start_date = !empty($_POST["travel_start_date"]) ? trim($_POST["travel_start_date"]) : NULL;
@@ -245,8 +272,31 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                 if(empty($error)) {
                     error_log("Enquiry updated successfully for ID: $id");
                     
-                    // Redirect to upload_enquiries.php after successful update
-                    header("location: upload_enquiries.php");
+                    // Determine the correct return page based on the referrer
+                    $return_page = "view_enquiries.php";
+                    
+                    if(isset($_SERVER['HTTP_REFERER'])) {
+                        $pages = [
+                            'view_leads.php',
+                            'view_job_enquiries.php',
+                            'view_ticket_enquiry.php',
+                            'view_influencer_enquiries.php',
+                            'view_dmc.php',
+                            'view_cruise.php',
+                            'view_noresponserejectedenquiries.php',
+                            'view_flowup.php'
+                        ];
+                        
+                        foreach($pages as $page) {
+                            if(strpos($_SERVER['HTTP_REFERER'], $page) !== false) {
+                                $return_page = $page;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Redirect back to the appropriate page
+                    header("location: $return_page");
                     exit;
                 }
             } else {
@@ -586,15 +636,18 @@ if($converted_lead && $converted_lead['enquiry_number'] && (strpos($converted_le
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="destination-id" class="form-label">Destination</label>
-                                    <select class="custom-select col-12" id="destination-id" name="destination_id">
-                                        <option value="">Select Destination</option>
-                                        <?php mysqli_data_seek($destinations, 0); ?>
+                                    <select class="custom-select col-12" id="destination-id" name="destination_id[]" multiple size="5">
+                                        <?php 
+                                        mysqli_data_seek($destinations, 0);
+                                        $selected_destinations = isset($converted_lead['destination_id']) ? explode(',', $converted_lead['destination_id']) : [];
+                                        ?>
                                         <?php while($destination = mysqli_fetch_assoc($destinations)): ?>
-                                            <option value="<?php echo $destination['id']; ?>" <?php echo (isset($converted_lead['destination_id']) && $destination['id'] == $converted_lead['destination_id']) ? 'selected' : ''; ?>>
+                                            <option value="<?php echo $destination['id']; ?>" <?php echo in_array($destination['id'], $selected_destinations) ? 'selected' : ''; ?>>
                                                 <?php echo htmlspecialchars($destination['name']); ?>
                                             </option>
                                         <?php endwhile; ?>
                                     </select>
+                                    <small class="text-muted">Hold Ctrl/Cmd to select multiple destinations</small>
                                 </div>
                             </div>
                             <div class="col-md-6">

@@ -1,0 +1,1 @@
+ALTER TABLE converted_leads MODIFY COLUMN destination_id TEXT NULL;

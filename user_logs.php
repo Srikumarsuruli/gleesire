@@ -37,6 +37,14 @@ $users_result = mysqli_query($conn, $users_sql);
 @mysqli_query($conn, "ALTER TABLE user_login_logs ADD COLUMN device_name VARCHAR(100) DEFAULT 'Unknown'");
 @mysqli_query($conn, "ALTER TABLE user_login_logs ADD COLUMN device_type VARCHAR(50) DEFAULT 'Unknown'");
 
+// Auto-logout users with sessions > 15 minutes
+$timeout_sql = "UPDATE user_login_logs SET 
+    logout_time = DATE_ADD(login_time, INTERVAL 15 MINUTE),
+    session_duration = 900
+    WHERE logout_time IS NULL 
+    AND login_time < DATE_SUB(NOW(), INTERVAL 15 MINUTE)";
+mysqli_query($conn, $timeout_sql);
+
 // Build query
 $sql = "SELECT l.*, u.username 
         FROM user_login_logs l 
@@ -68,6 +76,7 @@ $stats = mysqli_fetch_assoc($stats_result);
 
 function formatDuration($seconds) {
     if($seconds <= 0) return "Active";
+    if($seconds == 900) return "15:00 (Auto-logout)";
     $hours = floor($seconds / 3600);
     $minutes = floor(($seconds % 3600) / 60);
     $seconds = $seconds % 60;
@@ -162,7 +171,18 @@ function formatDuration($seconds) {
                 <tr>
                     <td><?php echo htmlspecialchars($row['username']); ?></td>
                     <td><?php echo date('H:i:s', strtotime($row['login_time'])); ?></td>
-                    <td><?php echo $row['logout_time'] ? date('H:i:s', strtotime($row['logout_time'])) : 'Active'; ?></td>
+                    <td>
+                        <?php 
+                        if($row['logout_time']) {
+                            echo date('H:i:s', strtotime($row['logout_time']));
+                            if($row['session_duration'] == 900) {
+                                echo ' <small class="text-warning">(Auto)</small>';
+                            }
+                        } else {
+                            echo 'Active';
+                        }
+                        ?>
+                    </td>
                     <td><?php echo formatDuration($row['session_duration']); ?></td>
                     <td><?php echo htmlspecialchars($row['device_name'] ?? 'Unknown'); ?></td>
                     <td><?php echo htmlspecialchars($row['device_type'] ?? 'Unknown'); ?></td>

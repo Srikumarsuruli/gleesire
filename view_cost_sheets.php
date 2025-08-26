@@ -865,9 +865,12 @@ $search_number = isset($_GET['search_number']) ? trim($_GET['search_number']) : 
 
 // Get all cost files grouped by base number with search filters
 $sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email,
-        SUBSTRING_INDEX(tc.cost_sheet_number, '-S', 1) as base_number
+        SUBSTRING_INDEX(tc.cost_sheet_number, '-S', 1) as base_number,
+        u.full_name as file_manager_name
         FROM tour_costings tc 
-        LEFT JOIN enquiries e ON tc.enquiry_id = e.id ";
+        LEFT JOIN enquiries e ON tc.enquiry_id = e.id 
+        LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id
+        LEFT JOIN users u ON cl.file_manager_id = u.id";
 
 if ($enquiry_id !=0){
     $sql .= " WHERE tc.enquiry_id = $enquiry_id";
@@ -1235,6 +1238,9 @@ while($row = mysqli_fetch_assoc($result)) {
                             <h2 class="mb-0">
                                 <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapse<?php echo $accordion_index; ?>" aria-expanded="false" aria-controls="collapse<?php echo $accordion_index; ?>">
                                     <strong><?php echo htmlspecialchars($base_number); ?></strong> - <?php echo htmlspecialchars($latest_version['guest_name'] ?? $latest_version['customer_name']); ?> 
+                                    <?php if(!empty($latest_version['file_manager_name'])): ?>
+                                        <small class="text-muted">(File Manager: <?php echo htmlspecialchars($latest_version['file_manager_name']); ?>)</small>
+                                    <?php endif; ?>
                                     <span class="badge badge-primary"><?php echo count($versions); ?> version(s)</span>
                                 </button>
                             </h2>

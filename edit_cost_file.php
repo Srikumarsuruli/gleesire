@@ -647,7 +647,7 @@ select option {
                                 <th>Travel Date</th>
                                 <th>Passengers</th>
                                 <th>Rate Per Person</th>
-                                <th>Roe</th>
+                                <th>ROE</th>
                                 <th>Total</th>
                             </tr>
                         </thead>
@@ -657,14 +657,18 @@ select option {
                                 <tr>
                                     <td><?php echo $index + 1; ?></td>
                                     <td>
-                                        <input type="text" class="form-control form-control-sm" name="visa[<?php echo $index; ?>][sector]" value="<?php echo htmlspecialchars($visa['sector'] ?? ''); ?>" placeholder="Sector">
+                                        <select class="form-control form-control-sm" name="visa[<?php echo $index; ?>][sector]">
+                                            <option value="">Select</option>
+                                            <option value="visa" <?php echo ($visa['sector'] == 'visa') ? 'selected' : ''; ?>>Visa</option>
+                                            <option value="flight" <?php echo ($visa['sector'] == 'flight') ? 'selected' : ''; ?>>Flight</option>
+                                        </select>
                                         <input type="hidden" name="visa[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
                                     </td>
                                     <td><input type="text" class="form-control form-control-sm" name="visa[<?php echo $index; ?>][supplier]" value="<?php echo htmlspecialchars($visa['supplier'] ?? ''); ?>" placeholder="Supplier"></td>
                                     <td><input type="date" class="form-control form-control-sm" name="visa[<?php echo $index; ?>][travel_date]" value="<?php echo $visa['travel_date'] ?? ''; ?>"></td>
                                     <td><input type="number" class="form-control form-control-sm visa-passengers" name="visa[<?php echo $index; ?>][passengers]" data-row="<?php echo $index; ?>" value="<?php echo $visa['passengers'] ?? '0'; ?>" onchange="calculateVisaTotal(<?php echo $index; ?>)"></td>
                                     <td><input type="number" class="form-control form-control-sm visa-rate" name="visa[<?php echo $index; ?>][rate_per_person]" data-row="<?php echo $index; ?>" value="<?php echo $visa['rate_per_person'] ?? '0'; ?>" onchange="calculateVisaTotal(<?php echo $index; ?>)"></td>
-                                    <td><input type="number" class="form-control form-control-sm" name="visa[<?php echo $index; ?>][roe]" value="<?php echo $visa['roe'] ?? '1'; ?>" step="0.01"></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="visa[<?php echo $index; ?>][roe]" value="<?php echo $visa['roe'] ?? '1'; ?>" step="0.01" onchange="calculateVisaTotal(<?php echo $index; ?>)"></td>
                                     <td><input type="text" class="form-control form-control-sm visa-total" name="visa[<?php echo $index; ?>][total]" data-row="<?php echo $index; ?>" value="<?php echo $visa['total'] ?? '0.00'; ?>" readonly></td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -672,14 +676,18 @@ select option {
                                 <tr>
                                     <td>1</td>
                                     <td>
-                                        <input type="text" class="form-control form-control-sm" name="visa[0][sector]" placeholder="Sector">
+                                        <select class="form-control form-control-sm" name="visa[0][sector]">
+                                            <option value="">Select</option>
+                                            <option value="visa">Visa</option>
+                                            <option value="flight">Flight</option>
+                                        </select>
                                         <input type="hidden" name="visa[0][idx]" value="0">
                                     </td>
                                     <td><input type="text" class="form-control form-control-sm" name="visa[0][supplier]" placeholder="Supplier"></td>
                                     <td><input type="date" class="form-control form-control-sm" name="visa[0][travel_date]"></td>
                                     <td><input type="number" class="form-control form-control-sm visa-passengers" name="visa[0][passengers]" data-row="0" value="0" onchange="calculateVisaTotal(0)"></td>
                                     <td><input type="number" class="form-control form-control-sm visa-rate" name="visa[0][rate_per_person]" data-row="0" value="0" onchange="calculateVisaTotal(0)"></td>
-                                    <td><input type="number" class="form-control form-control-sm" name="visa[0][roe]" value="1" step="0.01"></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="visa[0][roe]" value="1" step="0.01" onchange="calculateVisaTotal(0)"></td>
                                     <td><input type="text" class="form-control form-control-sm visa-total" name="visa[0][total]" data-row="0" readonly></td>
                                 </tr>
                             <?php endif; ?>
@@ -2132,7 +2140,8 @@ select option {
     function calculateVisaTotal(row) {
         const passengers = parseFloat(document.querySelector(`.visa-passengers[data-row="${row}"]`).value) || 0;
         const rate = parseFloat(document.querySelector(`.visa-rate[data-row="${row}"]`).value) || 0;
-        const total = passengers * rate;
+        const roe = parseFloat(document.querySelector(`input[name="visa[${row}][roe]"]`).value) || 1;
+        const total = passengers * rate * roe;
         document.querySelector(`.visa-total[data-row="${row}"]`).value = total.toFixed(2);
         calculateVisaGrandTotal();
     }
@@ -2436,12 +2445,18 @@ select option {
         const newRow = document.createElement('tr');
         newRow.innerHTML = `
             <td>${visaRowCount + 1}</td>
-            <td><input type="text" class="form-control form-control-sm" name="visa[${visaRowCount}][sector]" placeholder="Sector"></td>
+            <td>
+                <select class="form-control form-control-sm" name="visa[${visaRowCount}][sector]">
+                    <option value="">Select</option>
+                    <option value="visa">Visa</option>
+                    <option value="flight">Flight</option>
+                </select>
+            </td>
             <td><input type="text" class="form-control form-control-sm" name="visa[${visaRowCount}][supplier]" placeholder="Supplier"></td>
             <td><input type="date" class="form-control form-control-sm" name="visa[${visaRowCount}][travel_date]"></td>
             <td><input type="number" class="form-control form-control-sm visa-passengers" name="visa[${visaRowCount}][passengers]" data-row="${visaRowCount}" value="0" onchange="calculateVisaTotal(${visaRowCount})"></td>
             <td><input type="number" class="form-control form-control-sm visa-rate" name="visa[${visaRowCount}][rate_per_person]" data-row="${visaRowCount}" value="0" onchange="calculateVisaTotal(${visaRowCount})"></td>
-            <td><input type="number" class="form-control form-control-sm" name="visa[${visaRowCount}][roe]" value="1" step="0.01"></td>
+            <td><input type="number" class="form-control form-control-sm" name="visa[${visaRowCount}][roe]" value="1" step="0.01" onchange="calculateVisaTotal(${visaRowCount})"></td>
             <td><input type="text" class="form-control form-control-sm visa-total" name="visa[${visaRowCount}][total]" data-row="${visaRowCount}" readonly></td>
         `;
         tbody.appendChild(newRow);

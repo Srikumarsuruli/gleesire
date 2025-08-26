@@ -41,21 +41,21 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['enquiry_id']) && isset(
             
             // Check if status is "Closed – Booked" and redirect to cost file
             if($status_name === 'Closed – Booked') {
-                header("location: new_cost_file.php?id=$enquiry_id");
+                echo json_encode(['success' => true, 'redirect' => "new_cost_file.php?id=$enquiry_id"]);
                 exit;
             }
             
-            header("location: view_leads.php?status_updated=1");
+            echo json_encode(['success' => true, 'message' => 'Lead status updated successfully']);
             exit;
         } else {
             mysqli_stmt_close($stmt);
             mysqli_stmt_close($check_stmt);
-            header("location: view_leads.php?error=1");
+            echo json_encode(['success' => false, 'message' => 'Error updating lead status']);
             exit;
         }
     }
 }
 
-header("location: view_leads.php?error=2");
+echo json_encode(['success' => false, 'message' => 'Invalid request']);
 exit;
 ?>

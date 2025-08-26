@@ -3,7 +3,7 @@
 require_once "includes/header.php";
 
 // Check if user has privilege to access this page
-if(!hasPrivilege('view_leads')) {
+if(!hasPrivilege('view_leads') && $_SESSION["role_id"] != 11 && $_SESSION["role_id"] != 12) {
     header("location: index.php");
     exit;
 }
@@ -34,23 +34,18 @@ if(isset($_GET["quick_filter"])) {
     
     switch($quick_filter) {
         case "fresh":
-            // Fresh - no comments updated
             $lead_status = "";
             break;
         case "attended":
-            // Attended - Attended Status
             $lead_status = "Prospect - Attended";
             break;
         case "progress1":
-            // Progress 1 - Quote Given
             $lead_status = "Prospect - Quote given";
             break;
         case "progress2":
-            // Progress 2 - In Discussion
             $lead_status = "Neutral Prospect - In Discussion";
             break;
         case "followup":
-            // Followup - Call back Scheduled
             $lead_status = "Call Back - Call Back Scheduled";
             break;
     }
@@ -66,30 +61,9 @@ $create_table_sql = "CREATE TABLE IF NOT EXISTS lead_status_map (
 )";
 mysqli_query($conn, $create_table_sql);
 
-// Check for converted enquiries that are not in leads and add them
-$check_sql = "SELECT e.* FROM enquiries e 
-        LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id 
-        WHERE (e.status_id = 3 OR e.status_id = 'Converted') AND cl.enquiry_id IS NULL";
+// Build the base SQL query with filters - only show leads assigned to current user
+$current_user_id = $_SESSION['id'] ?? $_SESSION['user_id'] ?? null;
 
-$check_result = mysqli_query($conn, $check_sql);
-
-if(mysqli_num_rows($check_result) > 0) {
-    while($enquiry = mysqli_fetch_assoc($check_result)) {
-        // Generate enquiry number
-        $enquiry_number = 'GH ' . sprintf('%04d', rand(1, 9999));
-        
-        // Insert into converted_leads table
-        $insert_sql = "INSERT INTO converted_leads (enquiry_id, enquiry_number, travel_start_date, travel_end_date, booking_confirmed) 
-                      VALUES (?, ?, NULL, NULL, 0)";
-        $insert_stmt = mysqli_prepare($conn, $insert_sql);
-        mysqli_stmt_bind_param($insert_stmt, "is", $enquiry['id'], $enquiry_number);
-        mysqli_stmt_execute($insert_stmt);
-    }
-}
-
-
-
-// Build the base SQL query with filters
 $base_sql = "SELECT DISTINCT e.*, u.full_name as attended_by_name, d.name as department_name, 
         s.name as source_name, ac.name as campaign_name, ls.name as status_name,
         cl.enquiry_number, cl.travel_start_date, cl.travel_end_date, cl.travel_month, cl.night_day, cl.booking_confirmed,
@@ -114,27 +88,24 @@ $base_sql = "SELECT DISTINCT e.*, u.full_name as attended_by_name, d.name as dep
         LEFT JOIN users au ON cl.assigned_to = au.id
         WHERE e.status_id = 3 AND cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL)";
 
-// Simple count query to get total number of leads
+// Simple count query to get total number of leads for current user
 $count_sql = "SELECT COUNT(DISTINCT e.id) 
         FROM enquiries e 
         LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id
         WHERE e.status_id = 3 AND cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL)";
 
 // Copy the base SQL to the main query
-$sql = $base_sql; // Only converted leads that are not yet confirmed
+$sql = $base_sql;
 
-// Filter by logged-in user only for sales manager and sales team - show only their assigned leads
-if($_SESSION["role_id"] == 11 || $_SESSION["role_id"] == 12) {
-    $current_user_id = $_SESSION['id'] ?? $_SESSION['user_id'] ?? null;
-    if($current_user_id) {
-        $sql .= " AND cl.file_manager_id = " . $current_user_id;
-        $count_sql .= " AND cl.file_manager_id = " . $current_user_id;
-    }
+// Filter by current user - show only leads assigned to them
+if($current_user_id) {
+    $sql .= " AND cl.assigned_to = " . $current_user_id;
+    $count_sql .= " AND cl.assigned_to = " . $current_user_id;
 }
 
 // Add quick filter conditions
 if($quick_filter == "fresh") {
-    $sql .= " AND (lsm.status_name IS NULL OR lsm.status_name = '' OR lsm.status_name = 'Select Status')"; // No status or empty status
+    $sql .= " AND (lsm.status_name IS NULL OR lsm.status_name = '' OR lsm.status_name = 'Select Status')";
 }
 
 $params = array();
@@ -202,10 +173,10 @@ if(!empty($date_filter)) {
     }
 }
 
-// Add order by clause - most recent leads first (latest date at top)
+// Add order by clause
 $sql .= " ORDER BY DATE(cl.created_at) DESC, TIME(cl.created_at) DESC, e.id DESC";
 
-// Execute the count query to get total number of leads
+// Execute the count query
 $count_result = mysqli_query($conn, $count_sql);
 $count_row = mysqli_fetch_array($count_result);
 $total_records = $count_row ? $count_row[0] : 0;
@@ -229,28 +200,18 @@ if (!$result) {
     die("Query failed: " . mysqli_error($conn));
 }
 
-// Get users for attended by filter dropdown - only those with leads in view_leads
+// Get users for attended by filter dropdown
 $attended_by_sql = "SELECT DISTINCT u.* FROM users u 
                     JOIN enquiries e ON u.id = e.attended_by 
                     WHERE e.status_id = 3 AND e.id IN (
                         SELECT cl.enquiry_id FROM converted_leads cl 
                         WHERE cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL)
+                        AND cl.assigned_to = " . $current_user_id . "
                     ) 
                     ORDER BY u.full_name";
 $users = mysqli_query($conn, $attended_by_sql);
 
-// Get file managers for filter dropdown - only those with leads in view_leads
-$file_managers_sql = "SELECT DISTINCT u.* FROM users u 
-                      JOIN converted_leads cl ON u.id = cl.file_manager_id 
-                      WHERE cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL) 
-                      ORDER BY u.full_name";
-$file_managers = mysqli_query($conn, $file_managers_sql);
-
-// Get lead statuses for filter dropdown
-$statuses_sql = "SELECT * FROM lead_status ORDER BY id";
-$statuses = mysqli_query($conn, $statuses_sql);
-
-// Get lead status options for filter dropdown - only active ones
+// Get lead status options for filter dropdown
 $lead_status_sql = "SELECT * FROM enquiry_status WHERE status = 'active' ORDER BY id";
 $lead_status_result = mysqli_query($conn, $lead_status_sql);
 $lead_status_options = [];
@@ -266,14 +227,8 @@ while($user_row = mysqli_fetch_assoc($all_users_result)) {
     $all_users[] = $user_row;
 }
 
-// Get counts for quick filters with user-based filtering
-$user_filter = "";
-if($_SESSION["role_id"] == 11 || $_SESSION["role_id"] == 12) {
-    $current_user_id = $_SESSION['id'] ?? $_SESSION['user_id'] ?? null;
-    if($current_user_id) {
-        $user_filter = " AND cl.file_manager_id = " . $current_user_id;
-    }
-}
+// Get counts for quick filters for current user
+$user_filter = " AND cl.assigned_to = " . $current_user_id;
 
 $fresh_count = mysqli_fetch_array(mysqli_query($conn, "SELECT COUNT(DISTINCT e.id) FROM enquiries e LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id LEFT JOIN lead_status_map lsm ON e.id = lsm.enquiry_id WHERE e.status_id = 3 AND cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL) AND (lsm.status_name IS NULL OR lsm.status_name = '' OR lsm.status_name = 'Select Status')" . $user_filter))[0];
 $attended_count = mysqli_fetch_array(mysqli_query($conn, "SELECT COUNT(DISTINCT e.id) FROM enquiries e LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id LEFT JOIN lead_status_map lsm ON e.id = lsm.enquiry_id WHERE e.status_id = 3 AND cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL) AND lsm.status_name = 'Prospect - Attended'" . $user_filter))[0];
@@ -294,8 +249,6 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
 }
 ?>
 
-
-
 <?php if(!empty($confirmation_message)): ?>
 <div class="row">
     <div class="col-md-12">
@@ -313,7 +266,7 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
         <h4 class="text-blue h4 mb-3">Quick Filters</h4>
         <div class="quick-filter-container">
             <label class="quick-filter-item">
-                <input type="radio" name="quick_filter" value="all" <?php echo (!isset($_GET['quick_filter']) || $_GET['quick_filter'] == 'all') ? 'checked' : ''; ?> onchange="window.location.href='view_leads.php'">
+                <input type="radio" name="quick_filter" value="all" <?php echo (!isset($_GET['quick_filter']) || $_GET['quick_filter'] == 'all') ? 'checked' : ''; ?> onchange="window.location.href='my_leads.php'">
                 <span class="quick-filter-label">All (<?php echo $total_records; ?>)</span>
             </label>
             <label class="quick-filter-item">
@@ -409,17 +362,6 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>File Manager</label>
-                    <select class="custom-select" id="file-manager-filter" name="file_manager">
-                        <option value="">All</option>
-                        <?php mysqli_data_seek($file_managers, 0); while($manager = mysqli_fetch_assoc($file_managers)): ?>
-                            <option value="<?php echo $manager['id']; ?>" <?php echo ($file_manager == $manager['id']) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($manager['full_name']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label>Lead Type</label>
                     <select class="custom-select" id="lead-type-filter" name="lead_type">
                         <option value="">All</option>
@@ -478,12 +420,7 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
 <div class="card-box mb-30">
     <div class="pd-20">
         <div class="d-flex justify-content-between align-items-center">
-            <h4 class="text-blue h4">Leads</h4>
-            <?php if(isAdmin()): ?>
-                <a href="export_leads.php" class="btn btn-success">
-                    <i class="dw dw-download"></i> Export to CSV
-                </a>
-            <?php endif; ?>
+            <h4 class="text-blue h4">My Leads</h4>
         </div>
     </div>
     <div class="pb-20" style="overflow-x: auto;">
@@ -493,20 +430,15 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                     <tr>
                         <th style="min-width: 100px;">Lead Date</th>
                         <th style="min-width: 120px;">Lead #</th>
-                       
                         <th style="min-width: 120px;">Enquiry #</th>
                         <th style="min-width: 150px;">Customer Name</th>
                         <th style="min-width: 120px;">Mobile</th>
-                        <?php if(isAdmin()): ?>
-                        <th style="min-width: 100px;">Source</th>
-                        <?php endif; ?>
                         <th style="min-width: 120px;">Campaign</th>
                         <th style="min-width: 300px;">Lead Status</th>
                         <th style="min-width: 150px;">Received Date</th>
                         <th style="min-width: 150px;">Last Updated</th>
                         <th style="min-width: 120px;">Attended By</th>
-                        <th style="min-width: 120px;">File Manager</th>
-                        <th style="min-width: 150px;">Assign</th>
+                        <th style="min-width: 150px;">Re-assign</th>
                         <th style="min-width: 100px;">Department</th>
                         <th style="min-width: 120px;">Enquiries Status</th>
                         <th class="datatable-nosort" style="min-width: 100px;">Actions</th>
@@ -520,9 +452,6 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                     <td><?php echo htmlspecialchars($row['lead_number']); ?></td>
                     <td><?php echo htmlspecialchars($row['customer_name']); ?></td>
                     <td><?php echo htmlspecialchars($row['mobile_number']); ?></td>
-                    <?php if(isAdmin()): ?>
-                    <td><?php echo htmlspecialchars($row['source_name']); ?></td>
-                    <?php endif; ?>
                     <td><?php echo htmlspecialchars($row['campaign_name'] ?? 'N/A'); ?></td>
                     <td>
                         <div>
@@ -601,10 +530,9 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                     <td><?php echo date('d-m-Y H:i', strtotime($row['received_datetime'])); ?></td>
                     <td><?php echo ($row['last_updated_date'] && $row['last_updated_date'] != '1970-01-01 00:00:00') ? date('d-m-Y H:i', strtotime($row['last_updated_date'])) : 'Not Updated'; ?></td>
                     <td><?php echo htmlspecialchars($row['attended_by_name']); ?></td>
-                    <td><?php echo htmlspecialchars($row['file_manager_name'] ?? 'Not Assigned'); ?></td>
                     <td>
                         <div class="d-flex align-items-center">
-                            <select class="custom-select assign-user-select" style="min-width: 120px;" data-id="<?php echo $row['id']; ?>">
+                            <select class="custom-select reassign-user-select" style="min-width: 120px;" data-id="<?php echo $row['id']; ?>">
                                 <option value="">Select User</option>
                                 <?php foreach($all_users as $user): ?>
                                     <option value="<?php echo $user['id']; ?>" <?php echo ($row['assigned_to'] == $user['id']) ? 'selected' : ''; ?>>
@@ -612,10 +540,10 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                                     </option>
                                 <?php endforeach; ?>
                             </select>
+                            <button type="button" onclick="reassignUser(<?php echo $row['id']; ?>, this)" style="background: none; border: none; color: green; font-size: 18px; cursor: pointer; margin-left: 8px;">✓</button>
                             <?php if($row['assigned_user_name']): ?>
-                                <div style="font-size: 0px; color: #28a745; margin-top: 2px;">Assigned to: <?php echo htmlspecialchars($row['assigned_user_name']); ?></div>
+                                <div style="font-size: 12px; color: #28a745; margin-top: 2px;">Assigned to: <?php echo htmlspecialchars($row['assigned_user_name']); ?></div>
                             <?php endif; ?>
-                            <button type="button" onclick="assignUser(<?php echo $row['id']; ?>, this)" style="background: none; border: none; color: green; font-size: 18px; cursor: pointer; margin-left: 8px;">✓</button>
                         </div>
                     </td>
                     <td><?php echo htmlspecialchars($row['department_name']); ?></td>
@@ -627,9 +555,7 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                             </a>
                             <div class="dropdown-menu dropdown-menu-right dropdown-menu-icon-list">
                                 <a class="dropdown-item" href="#" data-toggle="modal" data-target="#viewModal<?php echo $row['id']; ?>"><i class="dw dw-eye"></i> View</a>
-                                <?php if(isAdmin() || $_SESSION["role_id"] == 11 || ($_SESSION["role_id"] == 12 && isset($row['file_manager_id']) && $row['file_manager_id'] == ($_SESSION['id'] ?? $_SESSION['user_id']))): ?>
                                 <a class="dropdown-item" href="edit_enquiry.php?id=<?php echo $row['id']; ?>"><i class="dw dw-edit2"></i> Edit</a>
-                                <?php endif; ?>
                                 <a class="dropdown-item" href="<?php echo $row['has_cost_sheet'] == '1' ? 'view_cost_sheets.php?enquiry_id=' . $row['id'] : 'new_cost_file.php?id=' . $row['id']; ?>"><i class="dw dw-file"></i> <?php echo $row['has_cost_sheet'] == '1' ? 'View Cost Sheet' : 'Create Cost Sheet'; ?></a>
                                 <a class="dropdown-item" href="comments.php?id=<?php echo $row['id']; ?>&type=lead"><i class="dw dw-chat"></i> Comments</a>
                             </div>
@@ -708,53 +634,24 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
     </div>
 </div>
 
-<!-- Assign Lead Modal -->
-<div class="modal fade" id="assign-lead-modal" tabindex="-1" role="dialog" aria-labelledby="assign-lead-modal-title" aria-hidden="true">
+<!-- Reassign Lead Modal -->
+<div class="modal fade" id="reassign-lead-modal" tabindex="-1" role="dialog" aria-labelledby="reassign-lead-modal-title" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="assign-lead-modal-title">Assign Lead</h5>
+                <h5 class="modal-title" id="reassign-lead-modal-title">Re-assign Lead</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to assign this lead to <strong id="selected-user-name"></strong>?</p>
-                <input type="hidden" id="modal-lead-id">
-                <input type="hidden" id="modal-user-id">
+                <p>Are you sure you want to re-assign this lead to <strong id="reassign-user-name"></strong>?</p>
+                <input type="hidden" id="reassign-lead-id">
+                <input type="hidden" id="reassign-user-id">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="confirmAssignment()">Assign</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Comment Modal -->
-<div class="modal fade" id="add-comment-modal" tabindex="-1" role="dialog" aria-labelledby="add-comment-modal-title" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="add-comment-modal-title">Comments</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div id="comments-container">
-                    <!-- Comments will be loaded here -->
-                </div>
-                <hr>
-                <form id="comment-form">
-                    <input type="hidden" name="enquiry_id" id="enquiry-id">
-                    <input type="hidden" name="table_id" id="table-id">
-                    <div class="form-group">
-                        <label for="comment">Add Comment</label>
-                        <textarea class="form-control" id="comment" name="comment" rows="4" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Save Comment</button>
-                </form>
+                <button type="button" class="btn btn-primary" onclick="confirmReassignment()">Re-assign</button>
             </div>
         </div>
     </div>
@@ -808,7 +705,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     orderable: true,
                     type: 'date'
                 }, {
-                    targets: <?php echo isAdmin() ? '10' : '9'; ?>,  // Last Updated column (adjust index based on admin view)
+                    targets: 8,  // Last Updated column
                     orderable: true,
                     type: 'date'
                 }],
@@ -825,57 +722,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
-function saveStatus(link, id) {
-    var status = $('.lead-status-select[data-id="' + id + '"]').val();
-    if (!status) {
-        alert('Please select a status first');
-        return false;
-    }
-    link.href = 'direct_save_status.php?id=' + id + '&status=' + encodeURIComponent(status);
-    return true;
-}
-
-
-
-// Function to save lead status with redirect logic
-function saveLeadStatus(enquiryId) {
-    var status = $('.lead-status-select[data-id="' + enquiryId + '"]').val();
-    if (!status) {
-        alert('Please select a status first');
-        return;
-    }
-    
-    if (status === 'Closed – Booked') {
-        window.location.href = 'new_cost_file.php?id=' + enquiryId;
-        return;
-    }
-    
-    $.post('save_status.php', {
-        enquiry_id: enquiryId,
-        status: status
-    }, function(response) {
-        if (response.indexOf('success') !== -1) {
-            alert('Status saved successfully');
-        } else {
-            alert('Error saving status');
-        }
-    });
-}
-
-function saveLastReasonDirect(enquiryId, lastReason) {
-    fetch('test_save.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'enquiry_id=' + enquiryId + '&last_reason=' + encodeURIComponent(lastReason)
-    }).then(response => response.text()).then(data => {
-        if(data.includes('saved')) {
-            alert('Saved: ' + lastReason);
-        } else {
-            alert('Error: ' + data);
-        }
-    });
-}
 
 function updateLeadStatus(id, button) {
     console.log('updateLeadStatus called with ID:', id);
@@ -966,9 +812,9 @@ function updateLastReason(id, button) {
     }
 }
 
-function assignUser(id, button) {
+function reassignUser(id, button) {
     var row = button.closest('tr');
-    var userSelect = row.querySelector('.assign-user-select');
+    var userSelect = row.querySelector('.reassign-user-select');
     
     if (!userSelect) {
         alert('User select not found');
@@ -980,20 +826,20 @@ function assignUser(id, button) {
     
     if(selectedUserId && selectedUserId !== '') {
         // Set modal data
-        document.getElementById('modal-lead-id').value = id;
-        document.getElementById('modal-user-id').value = selectedUserId;
-        document.getElementById('selected-user-name').textContent = selectedUserName;
+        document.getElementById('reassign-lead-id').value = id;
+        document.getElementById('reassign-user-id').value = selectedUserId;
+        document.getElementById('reassign-user-name').textContent = selectedUserName;
         
         // Show modal
-        $('#assign-lead-modal').modal('show');
+        $('#reassign-lead-modal').modal('show');
     } else {
         alert('Please select a valid user');
     }
 }
 
-function confirmAssignment() {
-    var leadId = document.getElementById('modal-lead-id').value;
-    var userId = document.getElementById('modal-user-id').value;
+function confirmReassignment() {
+    var leadId = document.getElementById('reassign-lead-id').value;
+    var userId = document.getElementById('reassign-user-id').value;
     
     fetch('assign_lead.php', {
         method: 'POST',
@@ -1004,7 +850,7 @@ function confirmAssignment() {
     })
     .then(response => response.json())
     .then(data => {
-        $('#assign-lead-modal').modal('hide');
+        $('#reassign-lead-modal').modal('hide');
         if (data.success) {
             alert(data.message);
             location.reload();
@@ -1013,7 +859,7 @@ function confirmAssignment() {
         }
     })
     .catch(error => {
-        $('#assign-lead-modal').modal('hide');
+        $('#reassign-lead-modal').modal('hide');
         alert('Error: Network problem');
     });
 }
@@ -1028,144 +874,7 @@ function confirmAssignment() {
             customDateRange.style.display = 'none';
         }
     });
-    
-    // Function to move lead to confirmed
-    function moveToConfirmed(id) {
-        if (confirm('Are you sure you want to move this lead to Booking Confirmed?')) {
-            // Create form data
-            var formData = new FormData();
-            formData.append('enquiry_id', id);
-            
-            // Send AJAX request
-            fetch('move_to_confirmed.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                alert('Lead successfully moved to Booking Confirmed');
-                // Reload the page to refresh the table
-                window.location.href = 'view_leads.php?confirmed=1';
-            })
-            .catch(error => {
-                alert('Error: ' + error);
-            });
-        }
-    }
-    
-    // Set enquiry ID in comment modal and load comments
-    $(document).ready(function() {
-        
-        $('.comment-link').on('click', function(e) {
-            var enquiryId = $(this).data('id');
-            var customerName = $(this).data('customer');
-            console.log("Comment link clicked for enquiry ID:", enquiryId, "Customer:", customerName);
-            
-            // Set the modal title with customer name
-            $('#add-comment-modal-title').text('Comments for ' + customerName);
-            
-            // Set form values
-            $('#enquiry-id').val(enquiryId);
-            $('#table-id').val('enquiries');
-            
-            // Load existing comments
-            loadComments(enquiryId);
-        });
-        
-        $('#add-comment-modal').on('show.bs.modal', function (event) {
-            // Modal is being shown - nothing additional needed here
-            // The click handler above will have already set everything up
-        });
-        
-        // Function to load comments
-        function loadComments(enquiryId) {
-            console.log("Loading comments for enquiry ID:", enquiryId);
-            $('#comments-container').html('<p>Loading comments...</p>');
-            
-            $.ajax({
-                url: 'get_comments.php',
-                type: 'GET',
-                data: {
-                    enquiry_id: enquiryId
-                },
-                success: function(response) {
-                    console.log("Response received:", response);
-                    try {
-                        var data = JSON.parse(response);
-                        console.log("Parsed data:", data);
-                        if (data.success) {
-                            var commentsHtml = '';
-                            if (data.comments && data.comments.length > 0) {
-                                data.comments.forEach(function(comment) {
-                                    commentsHtml += '<div class="comment-box">' +
-                                        '<div class="comment-header">' +
-                                        '<span class="comment-user">' + comment.user_name + '</span>' +
-                                        '<span class="comment-date">' + comment.created_at + '</span>' +
-                                        '</div>' +
-                                        '<div class="comment-body">' + comment.comment.replace(/\n/g, '<br>') + '</div>' +
-                                        '</div>';
-                                });
-                            } else {
-                                commentsHtml = '<p class="text-muted">No comments yet.</p>';
-                            }
-                            $('#comments-container').html(commentsHtml);
-                        } else {
-                            $('#comments-container').html('<p class="text-danger">Error loading comments: ' + data.message + '</p>');
-                        }
-                    } catch (e) {
-                        console.error("Error parsing JSON:", e, response);
-                        $('#comments-container').html('<p class="text-danger">Error processing response</p>');
-                    }
-                },
-                error: function() {
-                    $('#comments-container').html('<p class="text-danger">Error loading comments</p>');
-                }
-            });
-        }
-        
-        // Initialize dropdown functionality
-        // $('.dropdown-toggle').dropdown();
-        
-        // Handle form submission via AJAX
-        $('#comment-form').on('submit', function(e) {
-            e.preventDefault();
-            var enquiryId = $('#enquiry-id').val();
-            var comment = $('#comment').val();
-            
-            $.ajax({
-                url: 'add_comment.php',
-                type: 'POST',
-                data: {
-                    enquiry_id: enquiryId,
-                    comment: comment,
-                    table_id: $('#table-id').val()
-                },
-                success: function(response) {
-                    try {
-                        var data = JSON.parse(response);
-                        if (data.success) {
-                            // Clear the textarea
-                            $('#comment').val('');
-                            
-                            // Reload comments
-                            loadComments(enquiryId);
-                        } else {
-                            alert('Error: ' + data.message);
-                        }
-                    } catch (e) {
-                        alert('Error processing response');
-                    }
-                },
-                error: function() {
-                    alert('Error submitting comment');
-                }
-            });
-        });
-    });
 </script>
-
-
-
-<script src="view_leads_update.js"></script>
 
 <?php
 // Include footer
