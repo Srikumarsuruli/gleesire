@@ -34,3 +34,7 @@ CREATE TABLE customers (
     time DATETIME NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 27-08-2025---
+ALTER TABLE `lead_management`.`tour_costings` 
+ADD COLUMN `booking_number` VARCHAR(100) NULL AFTER `confirmed`;

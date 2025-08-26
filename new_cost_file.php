@@ -924,7 +924,7 @@ select option {
                         <tbody>
                             <tr>
                                 <td>ARRIVAL</td>
-                                <td><input type="date" class="form-control form-control-sm" name="arrival_date" value="<?php echo $enquiry['travel_start_date'] ?? ''; ?>"></td>
+                                <td><input type="datetime-local" class="form-control form-control-sm" name="arrival_date" value="<?php echo $enquiry['travel_start_date'] ?? ''; ?>"></td>
                                 <td><input type="text" class="form-control form-control-sm" name="arrival_city" placeholder="City"></td>
                                 <td><input type="text" class="form-control form-control-sm" name="arrival_flight" placeholder="Flight No"></td>
                                 <td>
@@ -945,7 +945,7 @@ select option {
                             </tr>
                             <tr id="arrival-connecting" style="display: none;">
                                 <td>ARRIVAL (Connecting)</td>
-                                <td><input type="date" class="form-control form-control-sm" name="arrival_connecting_date"></td>
+                                <td><input type="datetime-local" class="form-control form-control-sm" name="arrival_connecting_date"></td>
                                 <td><input type="text" class="form-control form-control-sm" name="arrival_connecting_city" placeholder="City"></td>
                                 <td><input type="text" class="form-control form-control-sm" name="arrival_connecting_flight" placeholder="Flight No"></td>
                                 <td>
@@ -966,7 +966,7 @@ select option {
                             </tr>
                             <tr>
                                 <td>DEPARTURE</td>
-                                <td><input type="date" class="form-control form-control-sm" name="departure_date" value="<?php echo $enquiry['travel_end_date'] ?? ''; ?>"></td>
+                                <td><input type="datetime-local" class="form-control form-control-sm" name="departure_date" value="<?php echo $enquiry['travel_end_date'] ?? ''; ?>"></td>
                                 <td><input type="text" class="form-control form-control-sm" name="departure_city" placeholder="City"></td>
                                 <td><input type="text" class="form-control form-control-sm" name="departure_flight" placeholder="Flight No"></td>
                                 <td>
@@ -987,7 +987,7 @@ select option {
                             </tr>
                             <tr id="departure-connecting" style="display: none;">
                                 <td>DEPARTURE (Connecting)</td>
-                                <td><input type="date" class="form-control form-control-sm" name="departure_connecting_date"></td>
+                                <td><input type="datetime-local" class="form-control form-control-sm" name="departure_connecting_date"></td>
                                 <td><input type="text" class="form-control form-control-sm" name="departure_connecting_city" placeholder="City"></td>
                                 <td><input type="text" class="form-control form-control-sm" name="departure_connecting_flight" placeholder="Flight No"></td>
                                 <td>
@@ -1185,7 +1185,7 @@ select option {
                             <tr>
                                 <td>1</td>
                                 <td>
-                                    <select class="form-control form-control-sm" name="transportation[<?php echo $index; ?>][supplier]" onchange="updateTransportVehicles(this, 0)">
+                                    <select class="form-control form-control-sm" name="transportation[0][supplier]" onchange="updateTransportVehicles(this, 0)">
                                         <option value="">Select Supplier</option>
                                         <?php
                                             $uniqueValues = [];
@@ -1199,6 +1199,8 @@ select option {
                                             <option value="<?php echo htmlspecialchars($transport['company_name']); ?>" ><?php echo htmlspecialchars($transport['company_name']); ?></option>
                                         <?php endwhile; ?>
                                     </select>
+                                    <input type="hidden" name="transportation[0][idx]" value="0">
+                                    <input type="hidden" name="transportation[0][phone]" value="">
                                 </td>
                                 <td>
                                     <select class="form-control form-control-sm" name="transportation[0][car_type]" onchange="updateTransportRates(this, 0)" disabled>
@@ -2103,10 +2105,11 @@ select option {
                         <?php endwhile; ?>
                     </select>
                     <input type="hidden" name="transportation[${transportationRowCount}][idx]" value="${transportationRowCount}">
+                    <input type="hidden" name="transportation[${transportationRowCount}][phone]" value="">
                 </td>
 
                 <td>
-                    <select class="form-control form-control-sm" name="transportation[${transportationRowCount}][car_type]">
+                    <select class="form-control form-control-sm" name="transportation[${transportationRowCount}][car_type]" onchange="updateTransportRates(this, ${transportationRowCount})" disabled>
                         <option value="">Select Car Type</option>
                         <option value="Sedan">Sedan</option>
                         <option value="SUV">SUV</option>
@@ -2509,7 +2512,8 @@ select option {
     // Transportation cascading dropdowns
     function updateTransportVehicles(supplierSelect, rowIndex, selectedVehicle) {
         const vehicleSelect = supplierSelect.closest('tr').querySelector('select[name^="transportation"][name$="[car_type]"]');
-
+        const supplierPhoneSelect = supplierSelect.closest('tr').querySelector('input[name^="transportation"][name$="[phone]"]');
+        
         vehicleSelect.disabled = !supplierSelect.value;
 
         if(supplierSelect.value) {
@@ -2520,7 +2524,12 @@ select option {
                     let rows = []
                     let key_name = "vehicle"
                     
-                    res.data.forEach(row=>{
+                    res.data.forEach(row, idx)=>{
+
+                        if(idx == 0) {
+                             supplierPhoneSelect.value = res.data[0].mobile
+                        }
+
                         if(row[key_name] && !rows.includes(row[key_name])){
                             rows.push(row[key_name])
                         }
@@ -2534,14 +2543,24 @@ select option {
     }
 
     function updateTransportRates(vehicleSelect, rowIndex) {
-        const selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
+        const supplierSelect = vehicleSelect.closest('tr').querySelector('select[name^="transportation"][name$="[supplier]"]');
         const dailyRentInput = vehicleSelect.closest('tr').querySelector('input[name^="transportation"][name$="[daily_rent]"]');
         const pricePerKmInput = vehicleSelect.closest('tr').querySelector('input[name^="transportation"][name$="[price_per_km]"]');
 
-        if(selectedOption && selectedOption.dataset.dailyRent) {
-            dailyRentInput.value = selectedOption.dataset.dailyRent;
-            pricePerKmInput.value = selectedOption.dataset.ratePerKm;
-            calculateTransportationTotal(rowIndex);
+        if(supplierSelect.value && vehicleSelect.value) {
+            // AJAX call to get rates for selected supplier and vehicle
+            fetch(`get_data_model.php?data_model=transportation&company_name=${supplierSelect.value}&vehicle=${vehicleSelect.value}`)
+                .then(response => response.json())
+                .then(res => {
+                    if(res.data && res.data.length > 0) {
+                        const transport = res.data[0];
+                        dailyRentInput.value = transport.daily_rent || 0;
+                        pricePerKmInput.value = transport.rate_per_km || 0;
+
+                        // Recalculate total
+                        calculateTransportationTotal(rowIndex);
+                    }
+                });
         }
     }
 

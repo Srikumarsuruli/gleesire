@@ -27,11 +27,49 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["filter"])) {
 }
 
 // Build the SQL query with filters
-$sql = "SELECT e.*,  u.full_name as attended_by_name, d.name as department_name,
-        s.name as source_name, ac.name as campaign_name,
-        cl.enquiry_number, cl.travel_start_date, cl.travel_end_date, cl.created_at as booking_date,
-        cl.file_manager_id, fm.full_name as file_manager_name,
-        tc.id as cost_sheet_id, tc.cost_sheet_number as cost_sheet_number,
+$sql = "SELECT e.*,  
+        e.created_at as booking_date,
+        tc.booking_number as booking_number,
+        cl.created_at as lead_date,
+        cl.enquiry_number as lead_number,
+        cl.file_manager_id, 
+        fm.full_name as file_manager_name,
+        s.name as source_name, 
+        cl.travel_start_date as checkin_date, 
+        cl.travel_end_date as checkout_date, 
+        e.customer_name as customer_name, 
+        e.mobile_number as customer_contact_number, 
+        cl.adults_count, 
+        cl.children_count, 
+        cl.infants_count,
+        ds.name as destination_name, 
+        
+        tc.visa_data as visa_data,
+        tc.arrival_flight as arrival_flight_no, 
+        tc.arrival_date as arrival_flight_date, 
+        tc.arrival_city as arrival_flight_clity, 
+        
+        tc.departure_flight as departure_flight_no, 
+        tc.departure_date as departure_flight_date, 
+        tc.departure_city as departure_flight_clity, 
+
+        tc.currency as currency, 
+        tc.package_cost as package_cost, 
+        
+        SUM(ps.payment_amount) as payment_received,
+
+        tc.transportation_data as transportation_data,
+        
+        u.full_name as attended_by_name, 
+        d.name as department_name,
+        
+        ac.name as campaign_name,
+        cl.enquiry_number, 
+      
+        
+        tc.id as cost_sheet_id, 
+        tc.cost_sheet_number as cost_sheet_number,
+        
         'Closed – Booked' as lead_status
         FROM enquiries e 
         JOIN users u ON e.attended_by = u.id 
@@ -41,6 +79,8 @@ $sql = "SELECT e.*,  u.full_name as attended_by_name, d.name as department_name,
         JOIN tour_costings tc ON e.id = tc.enquiry_id
         JOIN converted_leads cl ON e.id = cl.enquiry_id
         LEFT JOIN users fm ON cl.file_manager_id = fm.id
+        LEFT JOIN destinations ds ON cl.destination_id = ds.id
+        LEFT JOIN payments ps ON tc.id = ps.cost_file_id
         WHERE tc.confirmed = '1'";
 
 $params = array();
@@ -107,7 +147,19 @@ $count_row = mysqli_fetch_array($count_result);
 $total_records = $count_row ? $count_row[0] : 0;
 
 // Add order by clause
+$sql .= "GROUP BY 
+        e.id, e.created_at, tc.booking_number,
+        cl.created_at, cl.enquiry_number, cl.file_manager_id,
+        fm.full_name, s.name, cl.travel_start_date, cl.travel_end_date,
+        e.customer_name, e.mobile_number, cl.adults_count, cl.children_count, cl.infants_count,
+        ds.name, tc.visa_data, tc.arrival_flight, tc.arrival_date, tc.arrival_city,
+        tc.departure_flight, tc.departure_date, tc.departure_city,
+        tc.currency, tc.package_cost,
+        u.full_name, d.name, ac.name,
+        tc.id, tc.cost_sheet_number";
+
 $sql .= " ORDER BY cl.created_at DESC";
+
 
 // Prepare and execute the query
 $stmt = mysqli_prepare($conn, $sql);
@@ -260,19 +312,26 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                     <table class="data-table table stripe hover nowrap" style="min-width: 1200px;">
                     <thead>
                         <tr>
-                            <th style="min-width: 100px;">Booking<br>Date</th>
-                            <th style="min-width: 80px;">Enquiry<br>#</th>
-                            <th style="min-width: 80px;">Lead<br>#</th>
-                            <th style="min-width: 80px;">Cost Sheet<br>#</th>
-                            <th style="min-width: 120px;">Customer<br>Name</th>
-                            <th style="min-width: 100px;">Mobile<br>Number</th>
+                            <th style="min-width: 100px;">Booking Date</th>
+                            <th style="min-width: 100px;">Booking Number</th>
+                            <th style="min-width: 80px;">Lead Date</th>
+                            <th style="min-width: 80px;">Lead Number</th>
+                            <th style="min-width: 100px;">File Manager</th>
                             <th style="min-width: 80px;">Source</th>
-                            <th style="min-width: 100px;">Campaign</th>
-                            <th style="min-width: 100px;">Trip Start<br>Date</th>
-                            <th style="min-width: 100px;">Trip End<br>Date</th>
-                            <th style="min-width: 100px;">Attended<br>By</th>
-                            <th style="min-width: 100px;">File<br>Manager</th>
-                            <th style="min-width: 100px;">Department</th>
+                            <th style="min-width: 80px;">Check In</th>
+                            <th style="min-width: 120px;">Check Out</th>
+                            <th style="min-width: 100px;">Guest Name</th>
+                            <th style="min-width: 100px;">No. of PAX</th>
+                            <th style="min-width: 100px;">Destinations</th>
+                            <th style="min-width: 100px;">Suppliers</th>
+                            <th style="min-width: 100px;">Arr FLT Details</th>
+                            <th style="min-width: 100px;">Dep FLT Details</th>
+                            <th style="min-width: 100px;">Contact No.</th>
+                            <th style="min-width: 100px;">Total Amount</th>
+                            <th style="min-width: 100px;">Payment Received</th>
+                            <th style="min-width: 100px;">Payment Status</th>
+                            <th style="min-width: 100px;">Vechicle Details</th>
+
                             <th class="datatable-nosort" style="min-width: 80px;">Actions</th>
                         </tr>
                     </thead>
@@ -281,19 +340,74 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                             <?php while($row = mysqli_fetch_assoc($result)): ?>
                                 <tr data-id="<?php echo $row['id']; ?>" class="<?php echo (isset($_GET['highlight']) && $_GET['highlight'] == $row['id']) ? 'highlight-row' : ''; ?>">
                                     <td><?php echo date('d-m-Y', strtotime($row['booking_date'])); ?></td>
+                                    <td><?php echo htmlspecialchars($row['booking_number']); ?></td>
+                                    <td><?php echo date('d-m-Y', strtotime($row['lead_date'])); ?></td>
                                     <td><?php echo htmlspecialchars($row['lead_number']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['enquiry_number']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['cost_sheet_number']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['customer_name']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['mobile_number']); ?></td>
-                                    <!-- <td><?php echo htmlspecialchars($row['email']); ?></td> -->
-                                    <td><?php echo htmlspecialchars($row['source_name']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['campaign_name'] ?? 'N/A'); ?></td>
-                                    <td><?php echo $row['travel_start_date'] ? date('d-m-Y', strtotime($row['travel_start_date'])) : '-'; ?></td>
-                                    <td><?php echo $row['travel_end_date'] ? date('d-m-Y', strtotime($row['travel_end_date'])) : '-'; ?></td>
-                                    <td><?php echo htmlspecialchars($row['attended_by_name']); ?></td>
                                     <td><?php echo htmlspecialchars($row['file_manager_name'] ?? 'Not Assigned'); ?></td>
-                                    <td><?php echo htmlspecialchars($row['department_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['source_name']); ?></td>
+                                    <td><?php echo $row['checkin_date'] ? date('d-m-Y', strtotime($row['checkin_date'])) : '-'; ?></td>
+                                    <td><?php echo $row['checkout_date'] ? date('d-m-Y', strtotime($row['checkout_date'])) : '-'; ?></td>
+                                    <td><?php echo htmlspecialchars($row['customer_name']); ?></td>
+                                    <td><?php echo intval($row['adults_count'] ?? 0) + intval($row['children_count'] ?? 0) + intval($row['infants_count'] ?? 0) ; ?></td>
+                                    <td><?php echo htmlspecialchars($row['destination_name']); ?></td>
+                                    <td>
+                                        <?php
+                                            $visa_data = json_decode($row['visa_data'], true);
+                                            $suppliers = array();
+                                
+                                            if(is_array($visa_data)) {
+                                                foreach($visa_data as $item) {
+                                                    if(isset($item['sector']) && $item['sector'] == 'flight' && isset($item['supplier'])) {
+                                                        $suppliers[] = $item['supplier'];
+                                                    }
+                                                }
+                                            }
+                                        
+                                            echo implode(', ', array_unique($suppliers));
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php echo htmlspecialchars($row['arrival_flight_no']); ?>
+                                        &nbsp;|&nbsp;
+                                        <?php echo date('d-m-Y H:i', strtotime($row['arrival_flight_date'])); ?>
+                                        <br />
+                                        <?php echo htmlspecialchars($row['arrival_flight_clity']); ?>
+                                    </td>
+                                    <td>
+                                        <?php echo htmlspecialchars($row['departure_flight_no']); ?>
+                                        &nbsp;|&nbsp;
+                                        <?php echo date('d-m-Y H:i', strtotime($row['departure_flight_date'])); ?>
+                                        <br />
+                                        <?php echo htmlspecialchars($row['departure_flight_clity']); ?>
+                                    </td>
+                                    <td><?php echo htmlspecialchars($row['customer_contact_number'] ?? 'N/A'); ?></td>
+                                    
+                                    <td><?php echo htmlspecialchars($row['currency']) . ' ' . number_format($row['package_cost'], 2); ?></td>
+                                    <td><?php echo htmlspecialchars($row['currency']) . ' ' . number_format($row['payment_received'], 2); ?></td>
+                                    <td>
+                                        <?php if($row['payment_received'] >= $row['package_cost']): ?>
+                                            <span class="badge badge-success">Paid</span>
+                                        <?php else: ?>
+                                            <span class="badge badge-danger">Pending</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    
+                                    <td>
+                                        <?php
+                                            $visa_data = json_decode($row['transportation_data'], true);
+                                            $suppliers = array();
+                                
+                                            if(is_array($visa_data)) {
+                                                foreach($visa_data as $item) {
+                                                    
+                                                    $suppliers[] = 'Supplier: ' . $item['supplier'] . ' <br> Phone: ' . (isset($item['phone']) ? $item['phone'] : '-');                                                }
+                                            }
+                                        
+                                            echo implode(', ', array_unique($suppliers));
+                                        ?>
+                                    </td>
+                                    
+                                    
                                     <td>
                                         <div class="dropdown">
                                             <a class="btn btn-link font-24 p-0 line-height-1 no-arrow dropdown-toggle" href="#" role="button" data-toggle="dropdown">
@@ -309,9 +423,9 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
                                                 <!-- <a class="dropdown-item" href="edit_enquiry.php?id=<?php echo $row['id']; ?>">
                                                     <i class="dw dw-edit2"></i> Edit
                                                 </a> -->
-                                                <a class="dropdown-item" href="download_booking.php?id=<?php echo $row['id']; ?>">
+                                                <!-- <a class="dropdown-item" href="download_booking.php?id=<?php echo $row['id']; ?>">
                                                     <i class="dw dw-download"></i> Download PDF
-                                                </a>
+                                                </a> -->
                                                 <a class="dropdown-item" href="comments.php?id=<?php echo $row['id']; ?>&type=booking">
                                                     <i class="dw dw-chat"></i> Comments
                                                 </a>
@@ -433,91 +547,91 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
 </div>
 
 <script>
-// Initialize DataTable with custom options
-document.addEventListener('DOMContentLoaded', function() {
-    window.addEventListener('load', function() {
-        if (typeof $.fn.DataTable !== 'undefined') {
-            // Destroy any existing DataTable instance
-            if ($.fn.DataTable.isDataTable('.data-table')) {
-                $('.data-table').DataTable().destroy();
-            }
-            
-            // Initialize with custom options
-            $('.data-table').DataTable({
-                scrollCollapse: true,
-                autoWidth: false,
-                responsive: true,
-                searching: false,  // Disable built-in search as we have custom filter
-                ordering: true,
-                paging: true,
-                info: true,
-                columnDefs: [{
-                    targets: "datatable-nosort",
-                    orderable: false,
-                }],
-                "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-                "language": {
-                    "info": "_START_-_END_ of _TOTAL_ entries",
-                    searchPlaceholder: "Search",
-                    paginate: {
-                        next: '<i class="ion-chevron-right"></i>',
-                        previous: '<i class="ion-chevron-left"></i>'
-                    }
+    // Initialize DataTable with custom options
+    document.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('load', function() {
+            if (typeof $.fn.DataTable !== 'undefined') {
+                // Destroy any existing DataTable instance
+                if ($.fn.DataTable.isDataTable('.data-table')) {
+                    $('.data-table').DataTable().destroy();
                 }
-            });
+                
+                // Initialize with custom options
+                $('.data-table').DataTable({
+                    scrollCollapse: true,
+                    autoWidth: false,
+                    responsive: true,
+                    searching: false,  // Disable built-in search as we have custom filter
+                    ordering: true,
+                    paging: true,
+                    info: true,
+                    columnDefs: [{
+                        targets: "datatable-nosort",
+                        orderable: false,
+                    }],
+                    "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                    "language": {
+                        "info": "_START_-_END_ of _TOTAL_ entries",
+                        searchPlaceholder: "Search",
+                        paginate: {
+                            next: '<i class="ion-chevron-right"></i>',
+                            previous: '<i class="ion-chevron-left"></i>'
+                        }
+                    }
+                });
+            }
+        });
+    });
+    
+    // Show/hide custom date range based on date filter selection
+    document.getElementById('date-filter').addEventListener('change', function() {
+        var customDateRange = document.getElementById('custom-date-range');
+        if (this.value === 'custom') {
+            customDateRange.style.display = 'flex';
+        } else {
+            customDateRange.style.display = 'none';
         }
     });
-});
-
-// Show/hide custom date range based on date filter selection
-document.getElementById('date-filter').addEventListener('change', function() {
-    var customDateRange = document.getElementById('custom-date-range');
-    if (this.value === 'custom') {
-        customDateRange.style.display = 'flex';
-    } else {
-        customDateRange.style.display = 'none';
-    }
-});
-
-// Initialize modals and dropdowns
-$(document).ready(function() {
-    // Fix dropdown toggle functionality
-    // $('.dropdown-toggle').dropdown();
     
-    // Make sure modals work properly
-    $('.view-booking').on('click', function(e) {
+    // Initialize modals and dropdowns
+    $(document).ready(function() {
+        // Fix dropdown toggle functionality
+        // $('.dropdown-toggle').dropdown();
+        
+        // Make sure modals work properly
+        $('.view-booking').on('click', function(e) {
         e.preventDefault();
         var targetModal = $(this).data('target');
         $(targetModal).modal('show');
-    });
-    
-    // Set enquiry ID in comment modal and load comments
-    $('.comment-link').on('click', function(e) {
-        var enquiryId = $(this).data('id');
-        var customerName = $(this).data('customer');
+        });
         
-        // Set the modal title with customer name
-        $('#add-comment-modal-title').text('Comments for ' + customerName);
+        // Set enquiry ID in comment modal and load comments
+        $('.comment-link').on('click', function(e) {
+            var enquiryId = $(this).data('id');
+            var customerName = $(this).data('customer');
+            
+            // Set the modal title with customer name
+            $('#add-comment-modal-title').text('Comments for ' + customerName);
+            
+            // Set form values
+            $('#enquiry-id').val(enquiryId);
+            $('#table-id').val('enquiries');
+            
+            // Load existing comments
+            loadComments(enquiryId);
+        });
         
-        // Set form values
-        $('#enquiry-id').val(enquiryId);
-        $('#table-id').val('enquiries');
-        
-        // Load existing comments
-        loadComments(enquiryId);
-    });
-    
-    // Function to load comments
-    function loadComments(enquiryId) {
-        $('#comments-container').html('<p>Loading comments...</p>');
-        
-        $.ajax({
-            url: 'get_comments.php',
-            type: 'GET',
-            data: {
+        // Function to load comments
+        function loadComments(enquiryId) {
+            $('#comments-container').html('<p>Loading comments...</p>');
+            
+            $.ajax({
+                url: 'get_comments.php',
+                type: 'GET',
+                data: {
                 enquiry_id: enquiryId
-            },
-            success: function(response) {
+                },
+                success: function(response) {
                 try {
                     var data = JSON.parse(response);
                     if (data.success) {
@@ -542,15 +656,15 @@ $(document).ready(function() {
                 } catch (e) {
                     $('#comments-container').html('<p class="text-danger">Error processing response</p>');
                 }
-            },
-            error: function() {
+                },
+                error: function() {
                 $('#comments-container').html('<p class="text-danger">Error loading comments</p>');
-            }
-        });
-    }
-    
-    // Handle form submission via AJAX
-    $('#comment-form').on('submit', function(e) {
+                }
+            });
+        }
+        
+        // Handle form submission via AJAX
+        $('#comment-form').on('submit', function(e) {
         e.preventDefault();
         var enquiryId = $('#enquiry-id').val();
         var comment = $('#comment').val();
@@ -583,8 +697,8 @@ $(document).ready(function() {
                 alert('Error submitting comment');
             }
         });
+        });
     });
-});
 </script>
 
 <!-- Add Comment Modal -->

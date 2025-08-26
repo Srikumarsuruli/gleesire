@@ -95,7 +95,7 @@ $base_sql = "SELECT DISTINCT e.*, u.full_name as attended_by_name, d.name as dep
         cl.enquiry_number, cl.travel_start_date, cl.travel_end_date, cl.travel_month, cl.night_day, cl.booking_confirmed,
         cl.adults_count, cl.children_count, cl.infants_count, cl.children_age_details, cl.lead_type,
         cl.created_at as lead_date, lsm.status_name as lead_status, fm.full_name as file_manager_name, cl.file_manager_id,
-        au.full_name as assigned_user_name, cl.assigned_to,
+        au.full_name as assigned_user_name, cl.file_manager_id as assigned_to,
         dest.name as destination_name,
         lsm.created_at as last_updated_date,
         CASE WHEN tc.enquiry_id IS NOT NULL THEN 1 ELSE 0 END as has_cost_sheet
@@ -111,7 +111,7 @@ $base_sql = "SELECT DISTINCT e.*, u.full_name as attended_by_name, d.name as dep
         LEFT JOIN lead_status_map lsm ON e.id = lsm.enquiry_id
         LEFT JOIN comments c ON e.id = c.enquiry_id
         LEFT JOIN users fm ON cl.file_manager_id = fm.id
-        LEFT JOIN users au ON cl.assigned_to = au.id
+        LEFT JOIN users au ON cl.file_manager_id = au.id
         WHERE e.status_id = 3 AND cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL)";
 
 // Simple count query to get total number of leads

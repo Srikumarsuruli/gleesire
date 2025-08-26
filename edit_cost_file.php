@@ -1,7 +1,7 @@
 <?php
 // Include header
 require_once "includes/header.php";
-
+require_once "includes/number_generator.php";
 // Check if user has privilege to access this page
 if(!hasPrivilege('view_leads')) {
     header("location: index.php");
@@ -114,7 +114,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         $tour_package = $_POST['tour_package'] ?? '';
         $currency = $_POST['currency'] ?? 'USD';
         $nationality = $_POST['nationality'] ?? '';
+        
         $confirmed = intval($_POST['confirmed'] ?? 0);
+
         $adults_count = intval($_POST['adults_count'] ?? 0);
         $children_count = intval($_POST['children_count'] ?? 0);
         $infants_count = intval($_POST['infants_count'] ?? 0);
@@ -198,8 +200,15 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                 $next_version = intval($matches[1]) + 1;
             }
         }
+
         $new_cost_sheet_number = $base_number . '-S' . $next_version;
-        
+        $booking_number = '';
+
+        if($confirmed == 1){
+            $booking_number = generateNumber('booking', $conn);
+        }
+
+
         // Insert new version instead of updating
         $insert_sql = "INSERT INTO tour_costings (
             enquiry_id, cost_sheet_number, guest_name, guest_address, whatsapp_number,
@@ -212,11 +221,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             
             accommodation_data, transportation_data, cruise_data, extras_data, agent_package_data,
             medical_tourism_data, payment_data, total_expense, markup_percentage, markup_amount,
-            tax_percentage, tax_amount, package_cost, currency_rate, converted_amount, confirmed
+            tax_percentage, tax_amount, package_cost, currency_rate, converted_amount, confirmed, booking_number
         ) VALUES (
             ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
             ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )";
         
         $insert_stmt = mysqli_prepare($conn, $insert_sql);
@@ -239,7 +248,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             $accommodation_data, $transportation_data, $cruise_data, $extras_data, 
             $agent_package_data, $medical_tourism_data, $payment_data, $total_expense, 
             $markup_percentage, $markup_amount, $tax_percentage, $tax_amount, 
-            $package_cost, $currency_rate, $converted_amount, $confirmed
+            $package_cost, $currency_rate, $converted_amount, $confirmed, $booking_number
         ];
         // Build type string to match exact parameter count
         // Build type string to match exact parameter count
@@ -720,7 +729,7 @@ select option {
                             <tbody>
                                 <tr>
                                     <td><strong>ARRIVAL</strong></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="arrival_date" value="<?php echo $cost_data['arrival_date'] ?? ''; ?>"></td>
+                                    <td><input type="datetime-local" class="form-control form-control-sm" name="arrival_date" value="<?php echo $cost_data['arrival_date'] ?? ''; ?>"></td>
                                     <td><input type="text" class="form-control form-control-sm" name="arrival_city" placeholder="City" value="<?php echo $cost_data['arrival_city'] ?? ''; ?>"></td>
                                     <td><input type="text" class="form-control form-control-sm" name="arrival_flight" placeholder="Flight No" value="<?php echo $cost_data['arrival_flight'] ?? ''; ?>"></td>
                                     <td>
@@ -741,7 +750,7 @@ select option {
                                 </tr>
                                 <tr id="arrival-connecting" style="display: <?php echo isset($cost_data['arrival_connecting_date']) ? 'table-row' : 'none'; ?>">
                                     <td><strong>ARRIVAL (Connecting)</strong></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="arrival_connecting_date" value="<?php echo $cost_data['arrival_connecting_date'] ?? ''; ?>"></td>
+                                    <td><input type="datetime-local" class="form-control form-control-sm" name="arrival_connecting_date" value="<?php echo $cost_data['arrival_connecting_date'] ?? ''; ?>"></td>
                                     <td><input type="text" class="form-control form-control-sm" name="arrival_connecting_city" placeholder="City" value="<?php echo $cost_data['arrival_connecting_city'] ?? ''; ?>"></td>
                                     <td><input type="text" class="form-control form-control-sm" name="arrival_connecting_flight" placeholder="Flight No" value="<?php echo $cost_data['arrival_connecting_flight'] ?? ''; ?>"></td>
                                     <td>
@@ -762,7 +771,7 @@ select option {
                                 </tr>
                                 <tr>
                                     <td><strong>DEPARTURE</strong></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="departure_date" value="<?php echo $cost_data['departure_date'] ?? ''; ?>"></td>
+                                    <td><input type="datetime-local" class="form-control form-control-sm" name="departure_date" value="<?php echo $cost_data['departure_date'] ?? ''; ?>"></td>
                                     <td><input type="text" class="form-control form-control-sm" name="departure_city" placeholder="City" value="<?php echo $cost_data['departure_city'] ?? ''; ?>"></td>
                                     <td><input type="text" class="form-control form-control-sm" name="departure_flight" placeholder="Flight No" value="<?php echo $cost_data['departure_flight'] ?? ''; ?>"></td>
                                     <td>
@@ -783,7 +792,7 @@ select option {
                                 </tr>
                                 <tr id="departure-connecting" style="display: <?php echo !empty($cost_data['departure_connecting_date']) ? 'table-row' : 'none'; ?>">
                                     <td><strong>DEPARTURE (Connecting)</strong></td>
-                                    <td><input type="date" class="form-control form-control-sm" name="departure_connecting_date" value="<?php echo $cost_data['departure_connecting_date'] ?? ''; ?>"></td>
+                                    <td><input type="datetime-local" class="form-control form-control-sm" name="departure_connecting_date" value="<?php echo $cost_data['departure_connecting_date'] ?? ''; ?>"></td>
                                     <td><input type="text" class="form-control form-control-sm" name="departure_connecting_city" placeholder="City" value="<?php echo $cost_data['departure_connecting_city'] ?? ''; ?>"></td>
                                     <td><input type="text" class="form-control form-control-sm" name="departure_connecting_flight" placeholder="Flight No" value="<?php echo $cost_data['departure_connecting_flight'] ?? ''; ?>"></td>
                                     <td>
@@ -1036,11 +1045,13 @@ select option {
                                             <?php endwhile; ?>
                                         </select>
                                         <input type="hidden" name="transportation[<?php echo $index; ?>][idx]" value="<?php echo $index; ?>">
+                                        <input type="hidden" name="transportation[<?php echo $index; ?>][phone]" value="<?php echo $trans['phone'] ?? ''; ?>">
                                     </td>
                                     <td>
                                         <select class="form-control form-control-sm" name="transportation[<?php echo $index; ?>][car_type]" onchange="updateTransportRates(this, <?php echo $index; ?>)" data-selected="<?php echo htmlspecialchars($trans['car_type'] ?? ''); ?>">
                                             <option value="">Select Car Type</option>
                                         </select>
+                                       
                                     </td>
                                     <td><input type="number" class="form-control form-control-sm trans-daily-rent" name="transportation[<?php echo $index; ?>][daily_rent]" data-row="<?php echo $index; ?>" value="<?php echo $trans['daily_rent'] ?? '0'; ?>" onchange="calculateTransportationTotal(<?php echo $index; ?>)" placeholder="0" readonly></td>
                                     <td><input type="number" class="form-control form-control-sm trans-days" name="transportation[<?php echo $index; ?>][days]" data-row="<?php echo $index; ?>" value="<?php echo $trans['days'] ?? '2'; ?>" onchange="calculateTransportationTotal(<?php echo $index; ?>)" placeholder="2"></td>
@@ -1070,6 +1081,7 @@ select option {
                                             <?php endwhile; ?>
                                         </select>
                                         <input type="hidden" name="transportation[0][idx]" value="0">
+                                        <input type="hidden" name="transportation[0][phone]" value="">
                                     </td>
                                     <td>
                                         <select class="form-control form-control-sm" name="transportation[0][car_type]" onchange="updateTransportRates(this, 0)" disabled>
@@ -1503,7 +1515,7 @@ select option {
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="9" class="text-right"><strong>TOTAL AGENT PACKAGE COST:</strong></td>
+                                <td colspan="9" class="text-right"><strong>TOTAL MEDICAL TOURISM COST:</strong></td>
                                 <td><input type="text" class="form-control form-control-sm" id="medical-tourism-grand-total" readonly style="background: #e8f5e8; font-weight: bold;"></td>
                             </tr>
                         </tfoot>
@@ -1901,6 +1913,7 @@ select option {
                     <?php endwhile; ?>
                 </select>
                 <input type="hidden" name="transportation[${transportationRowCount}][idx]" value="${transportationRowCount}">
+                <input type="hidden" name="transportation[${transportationRowCount}][phone]" value="">
             </td>
             <td>
                 <select class="form-control form-control-sm" name="transportation[${transportationRowCount}][car_type]" onchange="updateTransportRates(this, ${transportationRowCount})" disabled>
@@ -1924,6 +1937,8 @@ select option {
         const dailyRentInput = supplierSelect.closest('tr').querySelector('input[name^="transportation"][name$="[daily_rent]"]');
         const pricePerKmInput = supplierSelect.closest('tr').querySelector('input[name^="transportation"][name$="[price_per_km]"]');
 
+        const supplierPhoneSelect = supplierSelect.closest('tr').querySelector('input[name^="transportation"][name$="[phone]"]');
+
         vehicleSelect.disabled = !supplierSelect.value;
 
         if(supplierSelect.value) {
@@ -1936,7 +1951,12 @@ select option {
                     let rows = []
                     let key_name = "vehicle"
                     
-                    res.data.forEach(row=>{
+                    res.data.forEach((row, idx)=>{
+
+                        if(idx == 0) {
+                             supplierPhoneSelect.value = res.data[0].mobile
+                        }
+
                         if(row[key_name] && !rows.includes(row[key_name])){
                             rows.push(row[key_name])
                         }

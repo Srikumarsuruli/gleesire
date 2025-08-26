@@ -8,7 +8,8 @@ function generateNumber($type, $conn, $preview = false) {
         'enquiry' => 'GHE',
         'lead' => 'GHL', 
         'file' => 'GHF',
-        'cost_sheet' => 'GHL'
+        'cost_sheet' => 'GHL',
+        'booking' => 'GHB'
     ];
     
     $prefix = $prefixes[$type];

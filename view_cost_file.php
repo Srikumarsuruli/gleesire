@@ -171,6 +171,50 @@ $extras_data = json_decode($cost_data['extras_data'] ?? '[]', true);
 $agent_package_data = json_decode($cost_data['agent_package_data'] ?? '[]', true);
 $medical_tourism_data = json_decode($cost_data['medical_tourism_data'] ?? '[]', true);
 
+
+$accommodation_grand_total = 0;
+$transportation_grand_total = 0;
+$cruise_grand_total = 0;
+$extras_grand_total = 0;
+$agent_package_grand_total = 0;
+$medical_tourism_grand_total = 0;
+
+if (!empty($accommodation_data) && is_array($accommodation_data)) {
+    foreach ($accommodation_data as $accom) {
+        $accommodation_grand_total += floatval($accom['total'] ?? 0);
+    }
+}
+
+if (!empty($transportation_data) && is_array($transportation_data)) {
+    foreach ($transportation_data as $trans) {
+        $transportation_grand_total += floatval($trans['total'] ?? 0); 
+    }
+}
+
+if (!empty($cruise_data) && is_array($cruise_data)) {
+    foreach ($cruise_data as $cruise) {
+        $cruise_grand_total += floatval($cruise['total'] ?? 0);
+    }
+}
+
+if (!empty($extras_data) && is_array($extras_data)) {
+    foreach ($extras_data as $extra) {
+        $extras_grand_total += floatval($extra['total'] ?? 0);
+    }
+}
+
+if (!empty($agent_package_data) && is_array($agent_package_data)) {
+    foreach ($agent_package_data as $package) {
+        $agent_package_grand_total += floatval($package['total'] ?? 0);
+    }
+}
+
+if (!empty($medical_tourism_data) && is_array($medical_tourism_data)) {
+    foreach ($medical_tourism_data as $medical) {
+        $medical_tourism_grand_total += floatval($medical['total'] ?? 0);
+    }
+}
+
 // Get children age details from converted_leads table
 $children_age_details = '';
 if (isset($cost_data['enquiry_id'])) {
@@ -408,48 +452,342 @@ if (isset($cost_data['enquiry_id'])) {
                             </tfoot>
                         </table>
                     </div>
+
+                    <h6 style="margin-top: 1rem"><i class="fas fa-calendar-alt"></i> Travel Details</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Travel Period</th>
+                                    <th>Date</th>
+                                    <th>City</th>
+                                    <th>Flight</th>
+                                    <th>Nights/Days</th>
+                                    <th>Flight Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>ARRIVAL</strong></td>
+                                    <td> <?php echo $cost_data['arrival_date'] ? date('d-m-Y H:i', strtotime($cost_data['arrival_date'])) : 'N/A'; ?></td>
+                                    <td><?php echo $cost_data['arrival_flight'] ?? ''; ?></td>
+                                    <td><?php echo $cost_data['arrival_nights_days'] ?? ''; ?></td>
+                                    <td><?php echo $cost_data['arrival_connection'] ?? ''; ?></td>
+                                </tr>
+                                <tr id="arrival-connecting" style="display: <?php echo isset($cost_data['arrival_connecting_date']) ? 'table-row' : 'none'; ?>">
+                                    <td><strong>ARRIVAL (Connecting)</strong></td>
+                                    <td> <?php echo $cost_data['arrival_connecting_date'] ? date('d-m-Y H:i', strtotime($cost_data['arrival_connecting_date'])) : 'N/A'; ?></td>
+                                    <td><?php echo $cost_data['arrival_connecting_city'] ?? ''; ?></td>
+                                    <td><?php echo $cost_data['arrival_connecting_flight'] ?? ''; ?></td>
+                                    <td><?php echo $cost_data['arrival_connecting_nights_days'] ?? ''; ?></td>
+                                    <td><?php echo $cost_data['arrival_connecting_type'] ?? ''; ?></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>DEPARTURE</strong></td>
+                                    <td> <?php echo $cost_data['departure_date'] ? date('d-m-Y H:i', strtotime($cost_data['departure_date'])) : 'N/A'; ?></td>
+                                    <td><?php echo $cost_data['departure_city'] ?? ''; ?></td>
+                                    <td><?php echo $cost_data['departure_flight'] ?? ''; ?></td>
+                                    <td><?php echo $cost_data['departure_nights_days'] ?? ''; ?></td>
+                                    <td><?php echo $cost_data['departure_connection'] ?? ''; ?></td>
+                                </tr>
+                                <tr id="departure-connecting" style="display: <?php echo !empty($cost_data['departure_connecting_date']) ? 'table-row' : 'none'; ?>">
+                                    <td><strong>DEPARTURE (Connecting)</strong></td>
+                                    <td> <?php echo $cost_data['departure_connecting_date'] ? date('d-m-Y H:i', strtotime($cost_data['departure_connecting_date'])) : 'N/A'; ?></td>
+                                    <td><?php echo $cost_data['departure_connecting_city'] ?? ''; ?></td>
+                                    <td><?php echo $cost_data['departure_connecting_flight'] ?? ''; ?></td>
+                                    <td><?php echo $cost_data['departure_connecting_nights_days'] ?? ''; ?></td>
+                                    <td><?php echo $cost_data['departure_connecting_type'] ?? ''; ?></td>
+                                </tr>                            
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <?php endif; ?>
 
-                <?php if(!empty($accommodation_data)): ?>
+                <?php if(!empty($accommodation_data) && is_array($accommodation_data) && !empty($accommodation_data[0]['destination'])): ?>
                 <div class="service-summary-card">
                     <h6><i class="fas fa-bed"></i> Accommodation Details</h6>
-                    <p><?php echo count($accommodation_data); ?> item(s) configured</p>
+                    <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>Destination</th>
+                                <th>Hotel</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                                <th>Room Type</th>
+                                <th>Rooms</th>
+                                <th>Meal Plan</th>
+                                <th>Rate ($)</th>
+                                <th>Extra Bed Adult</th>
+                                <th>Rate/Bed ($)</th>
+                                <th>Extra Bed Child</th>
+                                <th>Rate ($)</th>
+                                <th>Child No Bed</th>
+                                <th>Rate ($)</th>
+                                <th>Nights</th>
+                                
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accommodation-tbody">
+                            <?php foreach ($accommodation_data as $index => $accom): ?>
+                            <tr>
+                                    <td><?php echo htmlspecialchars($accom['destination'] ?? ''); ?></td>
+                                    <td><?php echo htmlspecialchars($accom['hotel'] ?? ''); ?></td>
+                                    <td><?php echo $accom['check_in'] ?? ''; ?></td>
+                                    <td><?php echo $accom['check_out'] ?? ''; ?></td>
+                                    <td><?php echo htmlspecialchars($accom['room_type'] ?? ''); ?></td>
+                                    <td><?php echo $accom['rooms_no'] ?? '0'; ?></td>
+                                    <td><?php echo strtoupper($accom['meal_plan'] ?? ''); ?></td>
+                                    <td><?php echo $accom['rooms_rate'] ?? '0'; ?></td>
+                                    <td><?php echo $accom['extra_adult_no'] ?? '0'; ?></td>
+                                    <td><?php echo $accom['extra_adult_rate'] ?? '0'; ?></td>
+                                    <td><?php echo $accom['extra_child_no'] ?? '0'; ?></td>
+                                    <td><?php echo $accom['extra_child_rate'] ?? '0'; ?></td>
+                                    <td><?php echo $accom['child_no_bed_no'] ?? '0'; ?></td>
+                                    <td><?php echo $accom['child_no_bed_rate'] ?? '0'; ?></td>
+                                    <td><?php echo $accom['nights'] ?? '0'; ?></td>
+                                    <td><?php echo $accom['total'] ?? '0.00'; ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="15" class="text-right"><strong>TOTAL ACCOMMODATION COST:</strong></td>
+                                <td><?php echo $accommodation_grand_total ?? '0.00'; ?></td>
+                            </tr>
+                        </tfoot>                    
+                    </table>
+                </div>
                 </div>
                 <?php endif; ?>
 
-                <?php if(!empty($transportation_data)): ?>
+                <?php if(!empty($transportation_data) && is_array($transportation_data) && !empty($transportation_data[0]['supplier'])): ?>
                 <div class="service-summary-card">
                     <h6><i class="fas fa-car"></i> Transportation Details</h6>
-                    <p><?php echo count($transportation_data); ?> item(s) configured</p>
+                    <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>Supplier</th>
+                                <th>Car Type</th>
+                                <th>Daily Rent</th>
+                                <th>Days</th>
+                                <th>Km</th>
+                                <th>Extra Km</th>
+                                <th>Price/Km</th>
+                                <th>Toll/Parking</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transportation-tbody">
+                            <?php foreach ($transportation_data as $index => $trans): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($trans['supplier'] ?? ''); ?></td>
+                                <td><?php echo htmlspecialchars($trans['car_type'] ?? ''); ?></td>
+                                <td><?php echo $trans['daily_rent'] ?? '0'; ?></td>
+                                <td><?php echo $trans['days'] ?? '2'; ?></td>
+                                <td><?php echo $trans['km'] ?? '0'; ?></td>
+                                <td><?php echo $trans['extra_km'] ?? '0'; ?></td>
+                                <td><?php echo $trans['price_per_km'] ?? '0'; ?></td>
+                                <td><?php echo $trans['toll'] ?? '0'; ?></td>
+                                <td><?php echo $trans['total'] ?? '0.00'; ?></td>
+                            </tr>                            
+                            <?php endforeach; ?>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="8" class="text-right"><strong>TOTAL TRANSPORTATION COST:</strong></td>
+                                <td><?php echo $transportation_grand_total ?? '0.00'; ?></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
                 </div>
                 <?php endif; ?>
 
-                <?php if(!empty($cruise_data)): ?>
+                <?php if(!empty($cruise_data) && is_array($cruise_data) && !empty($cruise_data[0]['supplier'])): ?>
                 <div class="service-summary-card">
                     <h6><i class="fas fa-ship"></i> Cruise Details</h6>
-                    <p><?php echo count($cruise_data); ?> item(s) configured</p>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr>
+                                    <th>S. No</th>
+                                    <th>Supplier</th>
+                                    <th>Type Of Boat</th>
+                                    <th>Cruise Type</th>
+                                    <th>Check-In</th>
+                                    <th>Check-Out</th>
+                                    <th>Rate</th>
+                                    <th>Extra</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cruise-tbody">
+                                <?php foreach ($cruise_data as $index => $cruise): ?>
+                                <tr>
+                                    <td><?php echo $index + 1; ?></td>
+                                    <td><?php echo htmlspecialchars($cruise['supplier'] ?? ''); ?></td>
+                                    <td><?php echo htmlspecialchars($cruise['boat_type'] ?? ''); ?></td>
+                                    <td><?php echo htmlspecialchars($cruise['cruise_type'] ?? ''); ?></td>
+                                    <td><?php echo $cruise['check_in'] ?? ''; ?></td>
+                                    <td><?php echo $cruise['check_out'] ?? ''; ?></td>
+                                    <td><?php echo $cruise['rate'] ?? '0'; ?></td>
+                                    <td><?php echo $cruise['extra'] ?? '0'; ?></td>
+                                    <td><?php echo $cruise['total'] ?? '0.00'; ?></td>
+                                </tr>                                
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="8" class="text-right"><strong>TOTAL CRUISE COST:</strong></td>
+                                    <td><?php echo $cruise_grand_total ?? '0.00'; ?></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
                 <?php endif; ?>
-
-                <?php if(!empty($extras_data)): ?>
-                <div class="service-summary-card">
-                    <h6><i class="fas fa-plus"></i> Extras/Miscellaneous</h6>
-                    <p><?php echo count($extras_data); ?> item(s) configured</p>
-                </div>
-                <?php endif; ?>
-
-                <?php if(!empty($agent_package_data)): ?>
+                
+                <?php if(!empty($agent_package_data) && is_array($agent_package_data) && !empty($agent_package_data[0]['destination'])): ?>
                 <div class="service-summary-card">
                     <h6><i class="fas fa-briefcase"></i> Agent Package Service</h6>
-                    <p><?php echo count($agent_package_data); ?> item(s) configured</p>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Destination</th>
+                                    <th>Agent/Supplier</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Adults</th>
+                                    <th>Price/Adult</th>
+                                    <th>Children</th>
+                                    <th>Price/Child</th>
+                                    <th>Infants</th>
+                                    <th>Price/Infant</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="agent-package-tbody">
+                               
+                                <?php foreach ($agent_package_data as $index => $package): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($package['destination'] ?? ''); ?></td>
+                                        <td><?php echo htmlspecialchars($package['agent_supplier'] ?? ''); ?></td>
+                                        <td><?php echo $package['start_date'] ?? ''; ?></td>
+                                        <td><?php echo $package['end_date'] ?? ''; ?></td>
+                                        <td><?php echo $package['adult_count'] ?? $cost_data['adults_count'] ?? 0; ?></td>
+                                        <td><?php echo $package['adult_price'] ?? 0; ?></td>
+                                        <td><?php echo $package['child_count'] ?? $cost_data['children_count'] ?? 0; ?></td>
+                                        <td><?php echo $package['child_price'] ?? 0; ?></td>
+                                        <td><?php echo $package['infant_count'] ?? $cost_data['infants_count'] ?? 0; ?></td>
+                                        <td><?php echo $package['infant_price'] ?? 0; ?></td>
+                                        <td><?php echo $package['total'] ?? '0.00'; ?></td>
+                                    </tr>                                    
+                                <?php endforeach; ?>
+                               
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="10" class="text-right"><strong>TOTAL AGENT PACKAGE COST:</strong></td>
+                                    <td><?php echo $agent_package_grand_total ?? '0.00'; ?></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <?php endif; ?>
+                
+
+                <?php if(!empty($medical_tourism_data) && is_array($medical_tourism_data) && !empty($medical_tourism_data[0]['place'])): ?>
+                <div class="service-summary-card">
+                    <h6><i class="fas fa-hospital-o"></i> Medical Tourism</h6>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Place</th>
+                                    <th>Treatment Date</th>
+                                    <th>Hospital Name</th>
+                                    <th>Treatment Type</th>
+                                    <th>Op/Ip</th>
+                                    <th>Net</th>
+                                    <th>Tds</th>
+                                    <th>Other Expenses</th>
+                                    <th>Gst</th>                                
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="medical-tourism-tbody">
+                                
+                                <?php foreach ($medical_tourism_data as $index => $package): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($package['place'] ?? ''); ?></td>
+                                    <td><?php echo $package['treatment_date'] ?? ''; ?></td>
+                                    <td><?php echo htmlspecialchars($package['hospital'] ?? ''); ?></td>
+                                    <td><?php echo htmlspecialchars($package['treatment_type'] ?? ''); ?></td>
+                                    <td><?php echo htmlspecialchars($package['op_ip'] ?? ''); ?></td>
+                                    <td><?php echo $package['net'] ?? 0; ?></td>
+                                    <td><?php echo $package['tds'] ?? 0; ?></td>
+                                    <td><?php echo $package['other_expenses'] ?? 0; ?></td>
+                                    <td>18%</td>
+                                    <td><?php echo $package['total'] ?? '0.00'; ?></td>
+                                </tr>                                
+                                <?php endforeach; ?>
+                               
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="9" class="text-right"><strong>TOTAL MEDICAL TOURISM COST:</strong></td>
+                                    <td><?php echo $medical_tourism_grand_total ?? '0.00'; ?></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
                 <?php endif; ?>
 
-                <?php if(!empty($medical_tourism_data)): ?>
+                
+                <?php if(!empty($extras_data) && is_array($extras_data) && !empty($extras_data[0]['supplier'])): ?>
                 <div class="service-summary-card">
-                    <h6><i class="fas fa-hospital-o"></i> Medical Tourism</h6>
-                    <p><?php echo count($medical_tourism_data); ?> item(s) configured</p>
+                    <h6><i class="fas fa-plus"></i> Extras/Miscellaneous</h6>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Supplier</th>
+                                    <th>Type Of Service</th>
+                                    <th>Amount</th>
+                                    <th>Extras</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="extras-tbody">
+                                <?php foreach ($extras_data as $index => $extra): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($extra['supplier'] ?? ''); ?></td>
+                                    <td><?php echo htmlspecialchars($extra['service_type'] ?? ''); ?></td>
+                                    <td><?php echo $extra['amount'] ?? '0'; ?></td>
+                                    <td><?php echo $extra['extras'] ?? '0'; ?></td>
+                                    <td><?php echo $extra['total'] ?? '0.00'; ?></td>
+                                </tr>                                
+                                <?php endforeach; ?>
+                                
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-right"><strong>TOTAL EXTRAS COST:</strong></td>
+                                    <td><?php echo $extras_grand_total ?? '0.00'; ?></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
                 </div>
                 <?php endif; ?>
             </div>
@@ -598,6 +936,23 @@ if (isset($cost_data['enquiry_id'])) {
                         <?php endif; ?>
                     </div>
                 </div>
+            </div>
+
+            <div class="action-buttons">
+                        
+                
+
+
+                <?php 
+                if(isAdmin() || getRoleAccess("Accounts Manager") || getRoleAccess("Accounts Team")): ?>
+                <a 
+                    href="view_cost_sheets.php?action=export_pdf&id=<?php echo $cost_file_id; ?>" 
+                    class="btn-modern"
+                    target="_blank"
+                >
+                    <i class="fa fa-file-pdf-o"></i> Download as PDF
+                </a>
+                <?php endif; ?>
             </div>
         </div>
     </div>
