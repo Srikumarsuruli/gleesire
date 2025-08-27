@@ -2524,7 +2524,9 @@ select option {
                     let rows = []
                     let key_name = "vehicle"
                     
-                    res.data.forEach(row, idx)=>{
+                    console.log(res.data);
+                    
+                    res.data.forEach((row, idx)=>{
 
                         if(idx == 0) {
                              supplierPhoneSelect.value = res.data[0].mobile
