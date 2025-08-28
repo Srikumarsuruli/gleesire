@@ -38,3 +38,11 @@ CREATE TABLE customers (
 -- 27-08-2025---
 ALTER TABLE `lead_management`.`tour_costings` 
 ADD COLUMN `booking_number` VARCHAR(100) NULL AFTER `confirmed`;
+
+-- 29-08-2025---
+ALTER TABLE `lead_management`.`customers` 
+ADD COLUMN `channel` VARCHAR(45) NULL AFTER `created_at`,
+ADD COLUMN `social_media_link` VARCHAR(100) NULL AFTER `channel`,
+ADD COLUMN `email` VARCHAR(45) NULL AFTER `social_media_link`,
+ADD COLUMN `converted` INT NULL COMMENT '0-No, 1-Yes' AFTER `email`,
+ADD COLUMN `enquiry_id` INT NULL AFTER `converted`;
