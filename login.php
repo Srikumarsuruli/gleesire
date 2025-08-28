@@ -40,8 +40,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     
     // Validate credentials
     if(empty($username_err) && empty($password_err)){
-        // Prepare a select statement
-        $sql = "SELECT id, username, password, role_id FROM users WHERE username = ?";
+        // Prepare a select statement - include status check
+        $sql = "SELECT id, username, password, role_id, status FROM users WHERE username = ?";
         
         if($stmt = mysqli_prepare($conn, $sql)){
             // Bind variables to the prepared statement as parameters
@@ -58,9 +58,12 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 // Check if username exists, if yes then verify password
                 if(mysqli_stmt_num_rows($stmt) == 1){                    
                     // Bind result variables
-                    mysqli_stmt_bind_result($stmt, $id, $username, $hashed_password, $role_id);
+                    mysqli_stmt_bind_result($stmt, $id, $username, $hashed_password, $role_id, $status);
                     if(mysqli_stmt_fetch($stmt)){
-                        if(password_verify($password, $hashed_password)){
+                        // Check if user is active
+                        if($status == 'inactive') {
+                            $login_err = "Your account has been deactivated. Please contact administrator.";
+                        } elseif(password_verify($password, $hashed_password)){
                             // Handle Remember Me functionality
                             if(isset($_POST['remember_me'])) {
                                 setcookie('remember_username', $username, time() + (30 * 24 * 60 * 60), '/'); // 30 days

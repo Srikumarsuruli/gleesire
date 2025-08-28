@@ -71,6 +71,15 @@ while($row = mysqli_fetch_assoc($result)) {
         $report_data[$date][$source_id] = $count;
     }
 }
+
+// Calculate totals for each source
+$source_totals = [];
+foreach($sources as $source) {
+    $source_totals[$source['id']] = 0;
+    foreach($report_data as $date => $source_counts) {
+        $source_totals[$source['id']] += $source_counts[$source['id']];
+    }
+}
 ?>
 
 
@@ -123,6 +132,12 @@ while($row = mysqli_fetch_assoc($result)) {
                     </tr>
                 </thead>
                 <tbody>
+                    <tr class="bg-light font-weight-bold">
+                        <td><strong>Total</strong></td>
+                        <?php foreach($sources as $source): ?>
+                        <td><strong><?php echo $source_totals[$source['id']]; ?></strong></td>
+                        <?php endforeach; ?>
+                    </tr>
                     <?php foreach($report_data as $date => $source_counts): ?>
                     <tr>
                         <td><?php echo $date_range[$date]; ?></td>

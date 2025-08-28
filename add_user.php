@@ -106,12 +106,15 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
     // Check input errors before inserting in database
     if(empty($username_err) && empty($password_err) && empty($confirm_password_err) && empty($full_name_err) && empty($email_err) && empty($role_id_err)) {
         
+        // Get status
+        $status = isset($_POST["status"]) ? $_POST["status"] : 'active';
+        
         // Prepare an insert statement
-        $sql = "INSERT INTO users (username, password, full_name, email, role_id) VALUES (?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO users (username, password, full_name, email, role_id, status) VALUES (?, ?, ?, ?, ?, ?)";
          
         if($stmt = mysqli_prepare($conn, $sql)) {
             // Bind variables to the prepared statement as parameters
-            mysqli_stmt_bind_param($stmt, "ssssi", $param_username, $param_password, $param_full_name, $param_email, $param_role_id);
+            mysqli_stmt_bind_param($stmt, "ssssiss", $param_username, $param_password, $param_full_name, $param_email, $param_role_id, $param_status);
             
             // Set parameters
             $param_username = $username;
@@ -119,6 +122,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             $param_full_name = $full_name;
             $param_email = $email;
             $param_role_id = $role_id;
+            $param_status = $status;
             
             // Attempt to execute the prepared statement
             if(mysqli_stmt_execute($stmt)) {
@@ -134,6 +138,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             mysqli_stmt_close($stmt);
         }
     }
+}
+
+// Add status column if it doesn't exist
+$check_column_sql = "SHOW COLUMNS FROM users LIKE 'status'";
+$column_result = mysqli_query($conn, $check_column_sql);
+if (mysqli_num_rows($column_result) == 0) {
+    $alter_table_sql = "ALTER TABLE users ADD COLUMN status ENUM('active', 'inactive') DEFAULT 'active'";
+    mysqli_query($conn, $alter_table_sql);
 }
 
 // Get all users
@@ -214,6 +226,17 @@ $users = mysqli_query($conn, $sql);
                                 </div>
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <label class="col-sm-12 col-form-label required">Status</label>
+                                <div class="col-sm-12">
+                                    <select class="custom-select col-12" id="status" name="status">
+                                        <option value="active" selected>Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="row">
@@ -240,6 +263,7 @@ $users = mysqli_query($conn, $sql);
                                 <th>Full Name</th>
                                 <th>Email</th>
                                 <th>Role</th>
+                                <th>Status</th>
                                 <th>Created At</th>
                                 <th>Actions</th>
                             </tr>
@@ -253,6 +277,7 @@ $users = mysqli_query($conn, $sql);
                                         <td><?php echo htmlspecialchars($user['full_name']); ?></td>
                                         <td><?php echo htmlspecialchars($user['email']); ?></td>
                                         <td><?php echo htmlspecialchars($user['role_name']); ?></td>
+                                        <td><span class="badge badge-<?php echo ($user['status'] == 'active') ? 'success' : 'danger'; ?>"><?php echo ucfirst($user['status']); ?></span></td>
                                         <td><?php echo date('d-m-Y H:i', strtotime($user['created_at'])); ?></td>
                                         <td>
                                             <a href="edit_user.php?id=<?php echo $user['id']; ?>" class="btn btn-sm btn-primary">Edit</a>
@@ -261,7 +286,7 @@ $users = mysqli_query($conn, $sql);
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="7" class="text-center">No users found</td>
+                                    <td colspan="8" class="text-center">No users found</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
