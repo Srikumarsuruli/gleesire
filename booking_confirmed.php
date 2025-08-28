@@ -72,12 +72,12 @@ $sql = "SELECT e.*,
         
         'Closed – Booked' as lead_status
         FROM enquiries e 
-        JOIN users u ON e.attended_by = u.id 
-        JOIN departments d ON e.department_id = d.id
-        JOIN sources s ON e.source_id = s.id
-        LEFT JOIN ad_campaigns ac ON e.ad_campaign_id = ac.id
         JOIN tour_costings tc ON e.id = tc.enquiry_id
         JOIN converted_leads cl ON e.id = cl.enquiry_id
+        LEFT JOIN users u ON e.attended_by = u.id 
+        LEFT JOIN departments d ON e.department_id = d.id
+        LEFT JOIN sources s ON e.source_id = s.id
+        LEFT JOIN ad_campaigns ac ON e.ad_campaign_id = ac.id
         LEFT JOIN users fm ON cl.file_manager_id = fm.id
         LEFT JOIN destinations ds ON cl.destination_id = ds.id
         LEFT JOIN payments ps ON tc.id = ps.cost_file_id
