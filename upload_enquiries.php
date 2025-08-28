@@ -81,7 +81,7 @@ $sql = "SELECT * FROM destinations WHERE status = 'active' ORDER BY name";
 $destinations = mysqli_query($conn, $sql);
 
 // Get night_day options for dropdown (only active ones)
-$sql = "SELECT * FROM night_day WHERE status = 'active' ORDER BY name";
+$sql = "SELECT * FROM night_day WHERE status = 'active' ORDER BY CAST(SUBSTRING_INDEX(name, 'N', 1) AS UNSIGNED)";
 $night_day_options = mysqli_query($conn, $sql);
 
 // Get enquiry types for dropdown (only active ones)
@@ -546,7 +546,7 @@ if (in_array($current_user_role, $allowed_roles)):
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="mobile-number" class="form-label required">Mobile Number</label>
-                                        <input type="text" class="form-control" id="mobile-number" name="mobile_number" value="<?php echo $mobile_number; ?>" required>
+                                        <input type="text" class="form-control" id="mobile-number" name="mobile_number" value="<?php echo !empty($mobile_number) ? $mobile_number : '+'; ?>" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -643,7 +643,7 @@ if (in_array($current_user_role, $allowed_roles)):
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label for="other-details" class="form-label">Others</label>
+                                            <label for="other-details" class="form-label">Package Type</label>
                                             <input type="text" class="form-control" id="other-details" name="other_details" value="<?php echo $other_details; ?>">
                                         </div>
                                     </div>
@@ -667,7 +667,6 @@ if (in_array($current_user_role, $allowed_roles)):
                                                 <option value="October" <?php echo ($travel_month == "October") ? 'selected' : ''; ?>>October</option>
                                                 <option value="November" <?php echo ($travel_month == "November") ? 'selected' : ''; ?>>November</option>
                                                 <option value="December" <?php echo ($travel_month == "December") ? 'selected' : ''; ?>>December</option>
-                                                <option value="Custom" <?php echo ($travel_month == "Custom") ? 'selected' : ''; ?>>Custom</option>
                                             </select>
                                         </div>
                                     </div>

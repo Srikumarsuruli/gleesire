@@ -652,7 +652,7 @@ if($converted_lead && $converted_lead['enquiry_number'] && (strpos($converted_le
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="other-details" class="form-label">Others</label>
+                                    <label for="other-details" class="form-label">Package Type</label>
                                     <input type="text" class="form-control" id="other-details" name="other_details" value="<?php echo htmlspecialchars($converted_lead['other_details'] ?? ''); ?>">
                                 </div>
                             </div>
@@ -676,7 +676,6 @@ if($converted_lead && $converted_lead['enquiry_number'] && (strpos($converted_le
                                         <option value="October" <?php echo (isset($converted_lead['travel_month']) && $converted_lead['travel_month'] == 'October') ? 'selected' : ''; ?>>October</option>
                                         <option value="November" <?php echo (isset($converted_lead['travel_month']) && $converted_lead['travel_month'] == 'November') ? 'selected' : ''; ?>>November</option>
                                         <option value="December" <?php echo (isset($converted_lead['travel_month']) && $converted_lead['travel_month'] == 'December') ? 'selected' : ''; ?>>December</option>
-                                        <option value="Custom" <?php echo (isset($converted_lead['travel_month']) && $converted_lead['travel_month'] == 'Custom') ? 'selected' : ''; ?>>Custom</option>
                                     </select>
                                 </div>
                             </div>
@@ -699,7 +698,6 @@ if($converted_lead && $converted_lead['enquiry_number'] && (strpos($converted_le
                                         <option value="12N/13D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '12N/13D') ? 'selected' : ''; ?>>12N/13D</option>
                                         <option value="13N/14D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '13N/14D') ? 'selected' : ''; ?>>13N/14D</option>
                                         <option value="14N/15D" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == '14N/15D') ? 'selected' : ''; ?>>14N/15D</option>
-                                        <option value="Custom" <?php echo (isset($converted_lead['night_day']) && $converted_lead['night_day'] == 'Custom') ? 'selected' : ''; ?>>Custom</option>
                                     </select>
                                 </div>
                             </div>

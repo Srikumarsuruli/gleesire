@@ -71,6 +71,15 @@ while($row = mysqli_fetch_assoc($result)) {
         $report_data[$date][$dept_id] = $count;
     }
 }
+
+// Calculate totals for each department
+$department_totals = [];
+foreach($departments as $dept) {
+    $department_totals[$dept['id']] = 0;
+    foreach($report_data as $date => $dept_counts) {
+        $department_totals[$dept['id']] += $dept_counts[$dept['id']];
+    }
+}
 ?>
 
 
@@ -124,6 +133,12 @@ while($row = mysqli_fetch_assoc($result)) {
                     </tr>
                 </thead>
                 <tbody>
+                    <tr class="bg-light font-weight-bold">
+                        <td><strong>Total</strong></td>
+                        <?php foreach($departments as $dept): ?>
+                        <td><strong><?php echo $department_totals[$dept['id']]; ?></strong></td>
+                        <?php endforeach; ?>
+                    </tr>
                     <?php foreach($report_data as $date => $dept_counts): ?>
                     <tr>
                         <td><?php echo $date_range[$date]; ?></td>

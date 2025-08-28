@@ -23,6 +23,14 @@ $success = "";
 $sql = "SELECT * FROM roles ORDER BY id";
 $roles = mysqli_query($conn, $sql);
 
+// Add status column if it doesn't exist
+$check_column_sql = "SHOW COLUMNS FROM users LIKE 'status'";
+$column_result = mysqli_query($conn, $check_column_sql);
+if (mysqli_num_rows($column_result) == 0) {
+    $alter_table_sql = "ALTER TABLE users ADD COLUMN status ENUM('active', 'inactive') DEFAULT 'active'";
+    mysqli_query($conn, $alter_table_sql);
+}
+
 // Fetch user data
 $sql = "SELECT * FROM users WHERE id = ?";
 if($stmt = mysqli_prepare($conn, $sql)) {
@@ -37,6 +45,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
             $full_name = $user['full_name'];
             $email = $user['email'];
             $role_id = $user['role_id'];
+            $status = $user['status'] ?? 'active';
         } else {
             header("location: add_user.php");
             exit;
@@ -96,6 +105,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         $role_id = trim($_POST["role_id"]);
     }
     
+    // Get status
+    $status = isset($_POST["status"]) ? $_POST["status"] : 'active';
+    
     // Validate password (optional for update)
     if(!empty(trim($_POST["password"]))) {
         if(strlen(trim($_POST["password"])) < 6) {
@@ -110,11 +122,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         
         if(!empty($password)) {
             // Update with password
-            $sql = "UPDATE users SET username = ?, full_name = ?, email = ?, role_id = ?, password = ? WHERE id = ?";
+            $sql = "UPDATE users SET username = ?, full_name = ?, email = ?, role_id = ?, password = ?, status = ? WHERE id = ?";
             
             if($stmt = mysqli_prepare($conn, $sql)) {
                 $param_password = password_hash($password, PASSWORD_DEFAULT);
-                mysqli_stmt_bind_param($stmt, "sssisi", $username, $full_name, $email, $role_id, $param_password, $id);
+                mysqli_stmt_bind_param($stmt, "sssissi", $username, $full_name, $email, $role_id, $param_password, $status, $id);
                 
                 if(mysqli_stmt_execute($stmt)) {
                     $success = "User updated successfully.";
@@ -123,10 +135,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         } else {
             // Update without password
-            $sql = "UPDATE users SET username = ?, full_name = ?, email = ?, role_id = ? WHERE id = ?";
+            $sql = "UPDATE users SET username = ?, full_name = ?, email = ?, role_id = ?, status = ? WHERE id = ?";
             
             if($stmt = mysqli_prepare($conn, $sql)) {
-                mysqli_stmt_bind_param($stmt, "sssii", $username, $full_name, $email, $role_id, $id);
+                mysqli_stmt_bind_param($stmt, "sssssi", $username, $full_name, $email, $role_id, $status, $id);
                 
                 if(mysqli_stmt_execute($stmt)) {
                     $success = "User updated successfully.";
@@ -203,6 +215,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <input type="password" class="form-control <?php echo (!empty($password_err)) ? 'is-invalid' : ''; ?>" id="password" name="password">
                                 <small class="text-muted">Leave blank to keep current password</small>
                                 <span class="invalid-feedback"><?php echo $password_err; ?></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group row">
+                                <label class="col-sm-12 col-form-label required">Status</label>
+                                <div class="col-sm-12">
+                                    <select class="custom-select col-12" id="status" name="status">
+                                        <option value="active" <?php echo ($status == 'active') ? 'selected' : ''; ?>>Active</option>
+                                        <option value="inactive" <?php echo ($status == 'inactive') ? 'selected' : ''; ?>>Inactive</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>

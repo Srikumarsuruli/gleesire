@@ -209,7 +209,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                             <?php if(hasPrivilege('pipeline') || $_SESSION["role_id"] == 1): ?><li><a href="pipeline.php">Pipe Line Leads</a></li><?php endif; ?>
 
                                 <?php if(hasPrivilege('medical_tourism_leads') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Medical Tourism Leads">Medical Tourism Leads</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('lost_to_competitors') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Lost to Competitors">Lost to Competitors</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('lost_to_competitors') || $_SESSION["role_id"] == 1): ?><li><a href="view_lost_competitors.php">Lost to Competitors</a></li><?php endif; ?>
                             <?php if(hasPrivilege('no_response_leads') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=No Response/Rejected Leads">No Response/Rejected Leads</a></li><?php endif; ?>
                             <?php if(hasPrivilege('follow_up_leads') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=No Follow up Leads">Follow up Leads</a></li><?php endif; ?>
                             <?php if(hasPrivilege('junk_duplicate_leads') || $_SESSION["role_id"] == 1): ?><li><a href="junk_duplicate_leads.php">Junk and Duplicate Leads</a></li><?php endif; ?>
@@ -302,7 +302,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                         <ul class="submenu">
                             <?php if(hasPrivilege('summary_report') || $_SESSION["role_id"] == 1): ?><li><a href="summary_report.php">Summary</a></li><?php endif; ?>
                             <?php if(hasPrivilege('daily_movement_register') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Daily Movement Register">Daily Movement Register</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('user_activity_report') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=User Activity Report">User Activity Report</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('user_activity_report') || $_SESSION["role_id"] == 1): ?><li><a href="user_activity_report.php">User Activity Report</a></li><?php endif; ?>
                             <?php if(hasPrivilege('department_report') || $_SESSION["role_id"] == 1): ?><li><a href="department_report.php">Department Wise Report</a></li><?php endif; ?>
                             <?php if(hasPrivilege('source_report') || $_SESSION["role_id"] == 1): ?><li><a href="source_report.php">Source Wise Report</a></li><?php endif; ?>
                             <?php if(hasPrivilege('user_performance_report') || $_SESSION["role_id"] == 1): ?><li><a href="user_performance_report.php">User Performance Report</a></li><?php endif; ?>
