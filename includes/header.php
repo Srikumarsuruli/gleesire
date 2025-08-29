@@ -301,7 +301,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                         </a>
                         <ul class="submenu">
                             <?php if(hasPrivilege('summary_report') || $_SESSION["role_id"] == 1): ?><li><a href="summary_report.php">Summary</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('daily_movement_register') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Daily Movement Register">Daily Movement Register</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('daily_movement_register') || $_SESSION["role_id"] == 1): ?><li><a href="daily_movement_register.php">Daily Movement Register</a></li><?php endif; ?>
                             <?php if(hasPrivilege('user_activity_report') || $_SESSION["role_id"] == 1): ?><li><a href="user_activity_report.php">User Activity Report</a></li><?php endif; ?>
                             <?php if(hasPrivilege('department_report') || $_SESSION["role_id"] == 1): ?><li><a href="department_report.php">Department Wise Report</a></li><?php endif; ?>
                             <?php if(hasPrivilege('source_report') || $_SESSION["role_id"] == 1): ?><li><a href="source_report.php">Source Wise Report</a></li><?php endif; ?>
@@ -319,6 +319,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                             <li><a href="under_construction.php?page=Tele Sales User wise Reports">Tele Sales User wise Reports</a></li>
                             <li><a href="under_construction.php?page=Reservation Team Reports">Reservation Team Reports</a></li>
                             <?php if(hasPrivilege('user_logs') || $_SESSION["role_id"] == 1): ?><li><a href="user_logs.php">User Logs (User Session Report)</a></li><?php endif; ?>
+                            <li><a href="chatbot_full_data.php">Chatbot Full Data</a></li>
                             <li><a href="under_construction.php?page=All Users Activity Reports">All Users Activity Reports</a></li>
                         </ul>
                     </li>
