@@ -293,17 +293,6 @@ $url_string = !empty($url_params) ? "&" . implode("&", $url_params) : "";
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Enquiries Status</label>
-                    <select class="custom-select" id="status-filter" name="status_id">
-                        <option value="">All</option>
-                        <?php mysqli_data_seek($statuses, 0); while($status = mysqli_fetch_assoc($statuses)): ?>
-                            <option value="<?php echo $status['id']; ?>" <?php echo ($status_id == $status['id']) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($status['name']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label>Enquiry Type</label>
                     <select class="custom-select" id="enquiry-type-filter" name="enquiry_type">
                         <option value="">All</option>
@@ -314,6 +303,18 @@ $url_string = !empty($url_params) ? "&" . implode("&", $url_params) : "";
                         <?php endwhile; ?>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>Enquiries Status</label>
+                    <select class="custom-select" id="status-filter" name="status_id">
+                        <option value="">All</option>
+                        <?php mysqli_data_seek($statuses, 0); while($status = mysqli_fetch_assoc($statuses)): ?>
+                            <option value="<?php echo $status['id']; ?>" <?php echo ($status_id == $status['id']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($status['name']); ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                
                 <div class="form-group">
                     <label for="search-filter">Search</label>
                     <input type="text" class="form-control" id="search-filter" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Enquiry #, Name, Mobile, Email, Enquiry Type, Channel">

@@ -9,7 +9,7 @@ if(!hasPrivilege('no_response_enquiries')) {
 }
 
 // Define the status types to include in the follow-up view
-$follow_up_statuses = [ 'Discussion on going', 'No incoming call', 'Package shared', 'Postponed', 'Rescheduled request'];
+$follow_up_statuses = [ 'Discussion Ongoing', 'No Incoming Calls', 'Package Shared', 'Postponed', 'Reschedule Request'];
 
 // Define variables for filtering and pagination
 $attended_by = $search = $date_filter = "";

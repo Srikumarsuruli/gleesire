@@ -349,6 +349,10 @@ $agent_details = mysqli_query($conn, $agent_sql);
 $hospital_sql = "SELECT * FROM hospital_details WHERE status = 'Active' ORDER BY destination";
 $hospital_details = mysqli_query($conn, $hospital_sql);
 
+// Get packages for dropdown
+$packages_sql = "SELECT * FROM packages WHERE status = 'Active' ORDER BY package_name";
+$packages_result = mysqli_query($conn, $packages_sql);
+
 
 // Decode JSON data for form population
 $selected_services = json_decode($cost_data['selected_services'] ?? '[]', true);
@@ -477,10 +481,11 @@ select option {
                         <span class="info-label">Tour Package:</span>
                         <select class="form-control form-control-sm" name="tour_package">
                             <option value="">Select Package</option>
-                            <option value="Honeymoon Package" <?php echo ($cost_data['tour_package'] == 'Honeymoon Package') ? 'selected' : ''; ?>>Honeymoon Package</option>
-                            <option value="Family Package" <?php echo ($cost_data['tour_package'] == 'Family Package') ? 'selected' : ''; ?>>Family Package</option>
-                            <option value="Adventure Package" <?php echo ($cost_data['tour_package'] == 'Adventure Package') ? 'selected' : ''; ?>>Adventure Package</option>
-                            <option value="Business Package" <?php echo ($cost_data['tour_package'] == 'Business Package') ? 'selected' : ''; ?>>Business Package</option>
+                            <?php while($package = mysqli_fetch_assoc($packages_result)): ?>
+                                <option value="<?php echo htmlspecialchars($package['package_name']); ?>" <?php echo ($cost_data['tour_package'] == $package['package_name']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($package['package_name']); ?>
+                                </option>
+                            <?php endwhile; ?>
                         </select>
                     </div>
                     <div class="info-row">

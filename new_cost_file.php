@@ -88,6 +88,10 @@ $travel_agents = mysqli_query($conn, $travel_agents_sql);
 $hospital_sql = "SELECT * FROM hospital_details WHERE status = 'Active' ORDER BY destination";
 $hospital_details = mysqli_query($conn, $hospital_sql);
 
+// Get packages for dropdown
+$packages_sql = "SELECT * FROM packages WHERE status = 'Active' ORDER BY package_name";
+$packages_result = mysqli_query($conn, $packages_sql);
+
 // Check if editing existing cost file
 $existing_cost_data = null;
 $is_editing = false;
@@ -521,10 +525,11 @@ select option {
                         <span class="info-label">Tour Package:</span>
                         <select class="form-control form-control-sm" name="tour_package">
                             <option value="">Select Package</option>
-                            <option value="Honeymoon Package">Honeymoon Package</option>
-                            <option value="Family Package">Family Package</option>
-                            <option value="Adventure Package">Adventure Package</option>
-                            <option value="Business Package">Business Package</option>
+                            <?php while($package = mysqli_fetch_assoc($packages_result)): ?>
+                                <option value="<?php echo htmlspecialchars($package['package_name']); ?>">
+                                    <?php echo htmlspecialchars($package['package_name']); ?>
+                                </option>
+                            <?php endwhile; ?>
                         </select>
                     </div>
                     <div class="info-row">
