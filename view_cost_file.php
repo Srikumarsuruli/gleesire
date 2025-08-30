@@ -947,10 +947,11 @@ if (isset($cost_data['enquiry_id'])) {
                 if(isAdmin() || getRoleAccess("Accounts Manager") || getRoleAccess("Accounts Team")): ?>
                 <a 
                     href="view_cost_sheets.php?action=export_pdf&id=<?php echo $cost_file_id; ?>" 
-                    class="btn-modern"
+                    class="btn btn-danger"
                     target="_blank"
+                    style="padding: 10px 20px; font-weight: bold;"
                 >
-                    <i class="fa fa-file-pdf-o"></i> Download as PDF
+                    <i class="fa fa-file-pdf-o"></i> Download Full PDF
                 </a>
                 <?php endif; ?>
             </div>

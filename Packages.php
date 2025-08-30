@@ -1,19 +1,39 @@
 <?php
 require_once "includes/header.php";
 
+// Check if user has privilege to access this page
+if(!hasPrivilege('manage_packages')) {
+    header("location: index.php");
+    exit;
+}
+
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $delete_id = $_GET['delete'];
-    $delete_sql = "DELETE FROM cruise_details WHERE id = ?";
+    $delete_sql = "DELETE FROM packages WHERE id = ?";
     if ($stmt = mysqli_prepare($conn, $delete_sql)) {
         mysqli_stmt_bind_param($stmt, "i", $delete_id);
         if (mysqli_stmt_execute($stmt)) {
-            echo "<script>alert('Cruise detail deleted successfully'); window.location.href='cruise_details.php';</script>";
+            echo "<script>alert('Package deleted successfully'); window.location.href='Packages.php';</script>";
         }
         mysqli_stmt_close($stmt);
     }
 }
 
-$sql = "SELECT * FROM cruise_details ORDER BY created_at DESC";
+if (isset($_GET['toggle']) && is_numeric($_GET['toggle'])) {
+    $toggle_id = $_GET['toggle'];
+    $toggle_sql = "UPDATE packages SET status = CASE WHEN status = 'Active' THEN 'Inactive' ELSE 'Active' END WHERE id = ?";
+    if ($stmt = mysqli_prepare($conn, $toggle_sql)) {
+        mysqli_stmt_bind_param($stmt, "i", $toggle_id);
+        if (mysqli_stmt_execute($stmt)) {
+            echo "<script>alert('Package status updated successfully'); window.location.href='Packages.php';</script>";
+        }
+        mysqli_stmt_close($stmt);
+    }
+}
+
+$sql = "SELECT p.*, d.name as department_name FROM packages p 
+        LEFT JOIN departments d ON p.department_id = d.id 
+        ORDER BY p.created_at DESC";
 $result = mysqli_query($conn, $sql);
 ?>
 
@@ -21,31 +41,24 @@ $result = mysqli_query($conn, $sql);
     <div class="pd-20">
         <div class="row">
             <div class="col-md-6">
-                <h4 class="text-blue h4">Cruise Details</h4>
+                <h4 class="text-blue h4">Packages</h4>
             </div>
             <div class="col-md-6 text-right">
-                <a href="add_cruise_detail.php" class="btn btn-primary">
-                    <i class="fa fa-plus"></i> Add New Cruise
+                <a href="add_package.php" class="btn btn-primary">
+                    <i class="fa fa-plus"></i> Add New Package
                 </a>
             </div>
         </div>
     </div>
     <div class="pb-20" style="overflow-x: auto;">
         <div class="table-responsive">
-            <table class="data-table table stripe hover" style="width: 100%; min-width: 1200px;">
+            <table class="data-table table stripe hover" style="width: 100%; min-width: 800px;">
                 <thead>
                     <tr>
                         <th style="min-width: 60px;">SL NO</th>
-                        <th style="min-width: 120px;">Destination</th>
-                        <th style="min-width: 200px;">Cruise Details</th>
-                        <th style="min-width: 120px;">Boat Type</th>
-                        <th style="min-width: 120px;">Cruise Type</th>
-                        <th style="min-width: 120px;">Name</th>
-                        <th style="min-width: 120px;">Contact Number</th>
-                        <th style="min-width: 100px;">Department</th>
-                        <th style="min-width: 150px;">Email ID</th>
-                        <th style="min-width: 100px;">Adult Price</th>
-                        <th style="min-width: 100px;">Kids Price</th>
+                        <th style="min-width: 200px;">Package Name</th>
+                        <th style="min-width: 120px;">Package Price</th>
+                        <th style="min-width: 150px;">Department</th>
                         <th style="min-width: 80px;">Status</th>
                         <th style="min-width: 100px;">Actions</th>
                     </tr>
@@ -58,28 +71,26 @@ $result = mysqli_query($conn, $sql);
                 ?>
                 <tr>
                     <td><?php echo $sl_no++; ?></td>
-                    <td><?php echo htmlspecialchars($row['destination']); ?></td>
-                    <td><?php echo htmlspecialchars($row['cruise_details']); ?></td>
-                    <td><?php echo htmlspecialchars($row['boat_type'] ?? 'N/A'); ?></td>
-                    <td><?php echo htmlspecialchars($row['cruise_type'] ?? 'N/A'); ?></td>
-                    <td><?php echo htmlspecialchars($row['name']); ?></td>
-                    <td><?php echo htmlspecialchars($row['contact_number']); ?></td>
-                    <td><?php echo htmlspecialchars($row['department']); ?></td>
-                    <td><?php echo htmlspecialchars($row['email']); ?></td>
-                    <td>₹<?php echo number_format($row['adult_price'], 2); ?></td>
-                    <td>₹<?php echo number_format($row['kids_price'], 2); ?></td>
+                    <td><?php echo htmlspecialchars($row['package_name']); ?></td>
+                    <td><?php echo htmlspecialchars($row['package_price']); ?></td>
+                    <td><?php echo htmlspecialchars($row['department_name'] ?? 'N/A'); ?></td>
                     <td>
                         <span class="badge <?php echo $row['status'] == 'Active' ? 'badge-success' : 'badge-danger'; ?>">
                             <?php echo $row['status']; ?>
                         </span>
                     </td>
                     <td>
-                        <a href="edit_cruise_detail.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-primary">
+                        <a href="edit_package.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-primary">
                             <i class="fa fa-edit"></i>
                         </a>
-                        <a href="cruise_details.php?delete=<?php echo $row['id']; ?>" 
+                        <a href="Packages.php?toggle=<?php echo $row['id']; ?>" 
+                           class="btn btn-sm <?php echo $row['status'] == 'Active' ? 'btn-warning' : 'btn-success'; ?>" 
+                           onclick="return confirm('Are you sure you want to <?php echo $row['status'] == 'Active' ? 'deactivate' : 'activate'; ?> this package?')">
+                            <i class="fa fa-<?php echo $row['status'] == 'Active' ? 'ban' : 'check'; ?>"></i>
+                        </a>
+                        <a href="Packages.php?delete=<?php echo $row['id']; ?>" 
                            class="btn btn-sm btn-danger" 
-                           onclick="return confirm('Are you sure you want to delete this cruise detail?')">
+                           onclick="return confirm('Are you sure you want to delete this package?')">
                             <i class="fa fa-trash"></i>
                         </a>
                     </td>
@@ -89,7 +100,7 @@ $result = mysqli_query($conn, $sql);
                 else:
                 ?>
                 <tr>
-                    <td colspan="13" class="text-center">No cruise details found</td>
+                    <td colspan="6" class="text-center">No packages found</td>
                 </tr>
                 <?php endif; ?>
             </tbody>
@@ -98,9 +109,6 @@ $result = mysqli_query($conn, $sql);
     </div>
 </div>
 
-<script src="assets/deskapp/vendors/scripts/core.js"></script>
-<script src="assets/deskapp/vendors/scripts/script.min.js"></script>
-<script src="assets/js/data-module-fix.js"></script>
 <script src="assets/deskapp/src/plugins/datatables/js/jquery.dataTables.min.js"></script>
 <script src="assets/deskapp/src/plugins/datatables/js/dataTables.bootstrap4.min.js"></script>
 <script>

@@ -96,11 +96,15 @@ if(isset($_GET['action']) && ($_GET['action'] == 'export_pdf' || $_GET['action']
                         include "pdf_data_helper.php";
                     }
                     
-                    // Check if the file exists before including
-                    if (file_exists("pdf_template.php")) {
+                    // Check if the enhanced template exists, fallback to improved, then original
+                    if (file_exists("enhanced_pdf_template.php")) {
+                        include "enhanced_pdf_template.php";
+                    } elseif (file_exists("improved_pdf_template.php")) {
+                        include "improved_pdf_template.php";
+                    } elseif (file_exists("pdf_template.php")) {
                         include "pdf_template.php";
                     } else {
-                        throw new Exception("pdf_template.php file not found");
+                        throw new Exception("PDF template file not found");
                     }
                 } catch (Exception $e) {
                     echo "<h1>Error rendering PDF</h1>";

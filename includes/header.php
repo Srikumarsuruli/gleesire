@@ -231,7 +231,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                         </ul>
                     </li>
                     <?php endif; ?>
-                    <?php if(hasPrivilege('view_cost_sheets') || $_SESSION["role_id"] == 1): ?>
+                    <?php if($_SESSION["role_id"] == 1): ?>
                     <li>
                         <a href="view_cost_sheets.php" class="dropdown-toggle no-arrow">
                             <span class="micon bi bi-file-earmark-text"></span><span class="mtext">View Cost Sheets</span>
@@ -337,7 +337,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                             <?php if(hasPrivilege('hospital_details') || $_SESSION["role_id"] == 1): ?><li><a href="HospitalDetails.php">Hospital Details</a></li><?php endif; ?>
                             <?php if(hasPrivilege('extras_miscellaneous_details') || $_SESSION["role_id"] == 1): ?><li><a href="extras_details.php">Extras/Miscellaneous Details</a></li><?php endif; ?>
                             <li><a href="under_construction.php?page=Freelance Travel Consultant">Freelance Travel Consultant</a></li>
-                            <li><a href="under_construction.php?page=Packages">Packages</a></li>
+                            <li><a href="Packages.php">Packages</a></li>
                         </ul>
                     </li>
                     <?php endif; ?>
