@@ -198,6 +198,54 @@ try {
             }
 
         }
+        elseif($data_model == "cruise_hire"){
+
+            // Filters
+            $supplier = isset($_GET['supplier']) ? $_GET['supplier'] : '';
+            $cruise_type = isset($_GET['cruise_type']) ? $_GET['cruise_type'] : '';
+            $boat_type = isset($_GET['boat_type']) ? $_GET['boat_type'] : '';
+
+            $sql = "SELECT distinct * FROM cruise_details WHERE status = 'Active'";
+            $values = array();
+
+            if(!empty($supplier)) {
+                $sql .= " AND name = ?";
+                $values[] = $supplier;
+            }
+
+            if(!empty($cruise_type)) {
+                $sql .= " AND cruise_type = ?";
+                $values[] = $cruise_type;
+            }
+
+            if(!empty($boat_type)) {
+                $sql .= " AND boat_type = ?";
+                $values[] = $boat_type;
+            }
+
+            if($sql_stmt = mysqli_prepare($conn, $sql)) {
+                if(count($values) > 0) {
+                    mysqli_stmt_bind_param($sql_stmt, str_repeat('s', count($values)), ...$values);
+                }
+                mysqli_stmt_execute($sql_stmt);
+                $result = mysqli_stmt_get_result($sql_stmt);
+                
+                // Convert result to array
+                $data = array();
+                while($row = mysqli_fetch_assoc($result)) {
+                    $data[] = $row;
+                }
+
+                $response = array(
+                    'success' => true,
+                    'data' => $data
+                );
+
+                echo json_encode($response);
+                mysqli_stmt_close($sql_stmt);
+            }
+
+        }
         else {
             $response = array(
                 'success' => true,

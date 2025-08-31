@@ -88,6 +88,9 @@ $travel_agents = mysqli_query($conn, $travel_agents_sql);
 $hospital_sql = "SELECT * FROM hospital_details WHERE status = 'Active' ORDER BY destination";
 $hospital_details = mysqli_query($conn, $hospital_sql);
 
+$cruise_sql = "SELECT * FROM cruise_details ORDER BY destination";
+$cruise_details = mysqli_query($conn, $cruise_sql);
+
 // Get packages for dropdown
 $packages_sql = "SELECT * FROM packages WHERE status = 'Active' ORDER BY package_name";
 $packages_result = mysqli_query($conn, $packages_sql);
@@ -1019,7 +1022,7 @@ select option {
                 <div class="info-card">
                     <h5>
                         VISA / FLIGHT DETAILS
-                        <button type="button" class="btn btn-sm btn-primary" onclick="addVisaRow()"><i class="fa fa-plus"></i> Add Row</button>
+                        
                     </h5>
                     <table class="table table-bordered table-sm">
                         <thead>
@@ -1059,6 +1062,7 @@ select option {
                                 <td><input type="text" class="form-control form-control-sm" id="visa-grand-total" readonly></td>
                             </tr>
                         </tfoot>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="addVisaRow()"><i class="fa fa-plus"></i> Add Row</button>
                     </table>
                     
                 </div>
@@ -1068,7 +1072,7 @@ select option {
             <div id="accommodation-section" class="services-section" style="display: none;">
                 <h5>
                     <i class="icon-copy fa fa-bed"></i>ACCOMMODATION
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addAccommodationRow()"><i class="fa fa-plus"></i> Add Hotel</button>
+                    
                 </h5>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
@@ -1161,6 +1165,7 @@ select option {
                             </tr>
                         </tfoot>
                     </table>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addAccommodationRow()"><i class="fa fa-plus"></i> Add Hotel</button>
                 </div>
             </div>
 
@@ -1168,7 +1173,7 @@ select option {
             <div id="transportation-section" class="services-section" style="display: none;">
                 <h5>
                     <i class="icon-copy fa fa-car"></i> INTERNAL TRANSPORTATION
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addTransportationRow()"><i class="fa fa-plus"></i> Add Vehicle</button>
+                    
                 </h5>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
@@ -1228,6 +1233,7 @@ select option {
                             </tr>
                         </tfoot>
                     </table>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addTransportationRow()"><i class="fa fa-plus"></i> Add Vehicle</button>
                     
                 </div>
             </div>
@@ -1236,7 +1242,7 @@ select option {
             <div id="cruise-hire-section" class="services-section" style="display: none;">
                 <h5>
                     <i class="icon-copy fa fa-ship"></i> CRUISE HIRE
-                   <button type="button" class="btn btn-sm btn-primary" onclick="addCruiseRow()"><i class="fa fa-plus"></i> Add Cruise</button>
+                   
                 </h5>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
@@ -1248,7 +1254,11 @@ select option {
                                 <th>Cruise Type</th>
                                 <th>Check-In</th>
                                 <th>Check-Out</th>
-                                <th>Rate</th>
+                                <th>Days</th>
+                                <th>Adult Count</th>
+                                <th>Adult Price</th>
+                                <th>Kids Count</th>
+                                <th>Kids Price</th>
                                 <th>Extra</th>
                                 <th>Total</th>
                             </tr>
@@ -1256,89 +1266,49 @@ select option {
                         <tbody id="cruise-tbody">
                             <tr>
                                 <td>1</td>
-                                <td><input type="text" class="form-control form-control-sm" name="cruise[0][supplier]" placeholder="Supplier Name"></td>
                                 <td>
-                                    <select class="form-control form-control-sm" name="cruise[0][boat_type]">
+                                    <select class="form-control form-control-sm" name="cruise[0][supplier]" data-row="0" onchange="updateCruiseBoat(this, 0)">
+                                        <option value="">Select supplier</option>
+                                        <?php mysqli_data_seek($cruise_details, 0); 
+                                        $cruise_supplier = array();
+                                        while($supplier = mysqli_fetch_assoc($cruise_details)): 
+                                            if(!in_array($supplier['name'], $cruise_supplier)):
+                                                $cruise_supplier[] = $supplier['name'];
+                                        ?>
+                                            <option value="<?php echo htmlspecialchars($supplier['name']); ?>"><?php echo htmlspecialchars($supplier['name']); ?></option>
+                                        <?php endif; endwhile; ?>
+                                    </select>
+                                    <input type="hidden" name="cruise[0][idx]" value="0">
+                                </td>
+                                <td>
+                                    <select class="form-control form-control-sm" name="cruise[0][boat_type]" disabled onchange="updateCruiseType(this, 0)">
                                         <option value="">Select Boat Type</option>
-                                        <option value="Speedboat / Powerboat">Speedboat / Powerboat</option>
-                                        <option value="Sailboat / Sailing Yacht">Sailboat / Sailing Yacht</option>
-                                        <option value="Pontoon Boat">Pontoon Boat</option>
-                                        <option value="Bowrider">Bowrider</option>
-                                        <option value="Cabin Cruiser">Cabin Cruiser</option>
-                                        <option value="Deck Boat">Deck Boat</option>
-                                        <option value="Jet Boat">Jet Boat</option>
-                                        <option value="Personal Watercraft (PWC)">Personal Watercraft (PWC)</option>
-                                        <option value="Houseboat">Houseboat</option>
-                                        <option value="Bass Boat">Bass Boat</option>
-                                        <option value="Dinghy">Dinghy</option>
-                                        <option value="Canoe">Canoe</option>
-                                        <option value="Kayak">Kayak</option>
-                                        <option value="Rowboat">Rowboat</option>
-                                        <option value="Inflatable Boat">Inflatable Boat</option>
-                                        <option value="Sloop">Sloop</option>
-                                        <option value="Cutter">Cutter</option>
-                                        <option value="Ketch">Ketch</option>
-                                        <option value="Yawl">Yawl</option>
-                                        <option value="Catamaran">Catamaran</option>
-                                        <option value="Trimaran">Trimaran</option>
-                                        <option value="Fishing Trawler">Fishing Trawler</option>
-                                        <option value="Cargo Ship / Freighter">Cargo Ship / Freighter</option>
-                                        <option value="Tugboat">Tugboat</option>
-                                        <option value="Ferry">Ferry</option>
-                                        <option value="Pilot Boat">Pilot Boat</option>
-                                        <option value="Barge">Barge</option>
-                                        <option value="Oil Tanker / Gas Carrier">Oil Tanker / Gas Carrier</option>
-                                        <option value="Dredger">Dredger</option>
-                                        <option value="Fireboat">Fireboat</option>
-                                        <option value="Research Vessel">Research Vessel</option>
-                                        <option value="Yacht">Yacht</option>
-                                        <option value="Superyacht / Megayacht">Superyacht / Megayacht</option>
-                                        <option value="Cruise Ship">Cruise Ship</option>
-                                        <option value="Expedition Yacht">Expedition Yacht</option>
                                     </select>
                                 </td>
                                 <td>
-                                    <select class="form-control form-control-sm" name="cruise[0][cruise_type]">
+                                    <select class="form-control form-control-sm" name="cruise[0][cruise_type]"  disabled onchange="updateCruisePricing(this, 0)">
                                         <option value="">Select Cruise Type</option>
-                                        <option value="Ocean Cruise">Ocean Cruise</option>
-                                        <option value="River Cruise">River Cruise</option>
-                                        <option value="Expedition Cruise">Expedition Cruise</option>
-                                        <option value="Coastal Cruise">Coastal Cruise</option>
-                                        <option value="Mini / Weekend Cruise">Mini / Weekend Cruise</option>
-                                        <option value="Short Cruise">Short Cruise</option>
-                                        <option value="Weeklong Cruise">Weeklong Cruise</option>
-                                        <option value="Extended Cruise">Extended Cruise</option>
-                                        <option value="World Cruise">World Cruise</option>
-                                        <option value="Luxury Cruise">Luxury Cruise</option>
-                                        <option value="Family Cruise">Family Cruise</option>
-                                        <option value="Adventure Cruise">Adventure Cruise</option>
-                                        <option value="Wellness Cruise">Wellness Cruise</option>
-                                        <option value="Romantic / Honeymoon Cruise">Romantic / Honeymoon Cruise</option>
-                                        <option value="Singles Cruise">Singles Cruise</option>
-                                        <option value="Themed Cruise">Themed Cruise</option>
-                                        <option value="Repositioning Cruise">Repositioning Cruise</option>
-                                        <option value="Mega Cruise">Mega Cruise</option>
-                                        <option value="Small Ship Cruise">Small Ship Cruise</option>
-                                        <option value="Yacht Cruise">Yacht Cruise</option>
-                                        <option value="Sailing Cruise">Sailing Cruise</option>
-                                        <option value="Barge Cruise">Barge Cruise</option>
                                     </select>
                                 </td>
-                                <td><input type="datetime-local" class="form-control form-control-sm" name="cruise[0][check_in]"></td>
-                                <td><input type="datetime-local" class="form-control form-control-sm" name="cruise[0][check_out]"></td>
-                                <td><input type="number" class="form-control form-control-sm cruise-rate" name="cruise[0][rate]" data-row="0" value="0" onchange="calculateCruiseTotal(0)" placeholder="0"></td>
-                                <td><input type="number" class="form-control form-control-sm cruise-extra" name="cruise[0][extra]" data-row="0" value="0" onchange="calculateCruiseTotal(0)" placeholder="0"></td>
+                                <td><input type="datetime-local" class="form-control form-control-sm cruise-start-date" name="cruise[0][check_in]" data-row="0" onchange="calculateCruiseDays(0)"></td>
+                                <td><input type="datetime-local" class="form-control form-control-sm cruise-end-date" name="cruise[0][check_out]" data-row="0" onchange="calculateCruiseDays(0)"></td>
+                                <td><input type="number" readonly class="form-control form-control-sm cruise-days" name="cruise[0][days]" data-row="0"></td>
+                                <td><input type="number" class="form-control form-control-sm cruise-adult-count" name="cruise[0][adult_count]" data-row="0" value="0" onchange="calculateCruiseTotal(0)" placeholder="0"></td>
+                                <td><input type="number" readonly class="form-control form-control-sm cruise-adult-price" name="cruise[0][adult_price]" data-row="0" value="0" onchange="calculateCruiseTotal(0)" placeholder="0"></td>
+                                <td><input type="number" class="form-control form-control-sm cruise-kids-count" name="cruise[0][kids_count]" data-row="0" value="0" onchange="calculateCruiseTotal(0)" placeholder="0"></td>
+                                <td><input type="number" readonly class="form-control form-control-sm cruise-kids-price" name="cruise[0][kids_price]" data-row="0" value="0" onchange="calculateCruiseTotal(0)" placeholder="0"></td>
+                                <td><input type="number" class="form-control form-control-sm cruise-extra-price" name="cruise[0][extra]" data-row="0" value="0" onchange="calculateCruiseTotal(0)" placeholder="0"></td>
                                 <td><input type="text" class="form-control form-control-sm cruise-total" name="cruise[0][total]" data-row="0" readonly style="background: #f0f8ff; font-weight: bold;"></td>
                             </tr>
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="8" class="text-right"><strong>TOTAL CRUISE COST:</strong></td>
+                                <td colspan="12" class="text-right"><strong>TOTAL CRUISE COST:</strong></td>
                                 <td><input type="text" class="form-control form-control-sm" id="cruise-grand-total" readonly style="background: #e8f5e8; font-weight: bold;"></td>
                             </tr>
                         </tfoot>
                     </table>
-                    
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addCruiseRow()"><i class="fa fa-plus"></i> Add Cruise</button>
                 </div>
             </div>
 
@@ -1346,7 +1316,7 @@ select option {
             <div id="agent-package-section" class="services-section" style="display: none;">
                 <h5>
                     <i class="icon-copy fa fa-briefcase"></i> AGENT PACKAGE SERVICE
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addAgentPackageRow()"><i class="fa fa-plus"></i> Add Package</button>
+                    
                 </h5>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
@@ -1403,7 +1373,7 @@ select option {
                             </tr>
                         </tfoot>
                     </table>
-                    
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addAgentPackageRow()"><i class="fa fa-plus"></i> Add Package</button>
                 </div>
             </div>
 
@@ -1411,7 +1381,7 @@ select option {
             <div id="medical-tourism-section" class="services-section" style="display: none;">
                 <h5>
                     <i class="icon-copy fa fa-hospital"></i> MEDICAL TOURISM
-                    <button type="button" class="btn btn-sm btn-primary" onclick="addMedicalTourismRow()"><i class="fa fa-plus"></i> Add Treatment</button>
+                    
                 </h5>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm">
@@ -1478,7 +1448,7 @@ select option {
                             </tr>
                         </tfoot>
                     </table>
-                    
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addMedicalTourismRow()"><i class="fa fa-plus"></i> Add Treatment</button>
                 </div>
             </div>
 
@@ -2138,109 +2108,7 @@ select option {
         transportationRowCount++;
     }
 
-    // Cruise calculations
-    function calculateCruiseTotal(row) {
-        const rate = parseFloat(document.querySelector(`.cruise-rate[data-row="${row}"]`).value) || 0;
-        const extra = parseFloat(document.querySelector(`.cruise-extra[data-row="${row}"]`).value) || 0;
-
-        const total = rate + extra;
-
-        document.querySelector(`.cruise-total[data-row="${row}"]`).value = total.toFixed(2);
-        calculateCruiseGrandTotal();
-    }
-
-    function calculateCruiseGrandTotal() {
-        let grandTotal = 0;
-        document.querySelectorAll('.cruise-total').forEach(input => {
-            grandTotal += parseFloat(input.value) || 0;
-        });
-        document.getElementById('cruise-grand-total').value = grandTotal.toFixed(2);
-    }
-
-    let cruiseRowCount = 1;
-    function addCruiseRow() {
-        const tbody = document.getElementById('cruise-tbody');
-        const newRow = document.createElement('tr');
-        newRow.innerHTML = `
-            <td>${cruiseRowCount + 1}</td>
-            <td><input type="text" class="form-control form-control-sm" name="cruise[${cruiseRowCount}][supplier]" placeholder="Supplier Name"></td>
-            <td>
-                <select class="form-control form-control-sm" name="cruise[${cruiseRowCount}][boat_type]">
-                    <option value="">Select Boat Type</option>
-                    <option value="Speedboat / Powerboat">Speedboat / Powerboat</option>
-                    <option value="Sailboat / Sailing Yacht">Sailboat / Sailing Yacht</option>
-                    <option value="Pontoon Boat">Pontoon Boat</option>
-                    <option value="Bowrider">Bowrider</option>
-                    <option value="Cabin Cruiser">Cabin Cruiser</option>
-                    <option value="Deck Boat">Deck Boat</option>
-                    <option value="Jet Boat">Jet Boat</option>
-                    <option value="Personal Watercraft (PWC)">Personal Watercraft (PWC)</option>
-                    <option value="Houseboat">Houseboat</option>
-                    <option value="Bass Boat">Bass Boat</option>
-                    <option value="Dinghy">Dinghy</option>
-                    <option value="Canoe">Canoe</option>
-                    <option value="Kayak">Kayak</option>
-                    <option value="Rowboat">Rowboat</option>
-                    <option value="Inflatable Boat">Inflatable Boat</option>
-                    <option value="Sloop">Sloop</option>
-                    <option value="Cutter">Cutter</option>
-                    <option value="Ketch">Ketch</option>
-                    <option value="Yawl">Yawl</option>
-                    <option value="Catamaran">Catamaran</option>
-                    <option value="Trimaran">Trimaran</option>
-                    <option value="Fishing Trawler">Fishing Trawler</option>
-                    <option value="Cargo Ship / Freighter">Cargo Ship / Freighter</option>
-                    <option value="Tugboat">Tugboat</option>
-                    <option value="Ferry">Ferry</option>
-                    <option value="Pilot Boat">Pilot Boat</option>
-                    <option value="Barge">Barge</option>
-                    <option value="Oil Tanker / Gas Carrier">Oil Tanker / Gas Carrier</option>
-                    <option value="Dredger">Dredger</option>
-                    <option value="Fireboat">Fireboat</option>
-                    <option value="Research Vessel">Research Vessel</option>
-                    <option value="Yacht">Yacht</option>
-                    <option value="Superyacht / Megayacht">Superyacht / Megayacht</option>
-                    <option value="Cruise Ship">Cruise Ship</option>
-                    <option value="Expedition Yacht">Expedition Yacht</option>
-                </select>
-            </td>
-            <td>
-                <select class="form-control form-control-sm" name="cruise[${cruiseRowCount}][cruise_type]">
-                    <option value="">Select Cruise Type</option>
-                    <option value="Ocean Cruise">Ocean Cruise</option>
-                    <option value="River Cruise">River Cruise</option>
-                    <option value="Expedition Cruise">Expedition Cruise</option>
-                    <option value="Coastal Cruise">Coastal Cruise</option>
-                    <option value="Mini / Weekend Cruise">Mini / Weekend Cruise</option>
-                    <option value="Short Cruise">Short Cruise</option>
-                    <option value="Weeklong Cruise">Weeklong Cruise</option>
-                    <option value="Extended Cruise">Extended Cruise</option>
-                    <option value="World Cruise">World Cruise</option>
-                    <option value="Luxury Cruise">Luxury Cruise</option>
-                    <option value="Family Cruise">Family Cruise</option>
-                    <option value="Adventure Cruise">Adventure Cruise</option>
-                    <option value="Wellness Cruise">Wellness Cruise</option>
-                    <option value="Romantic / Honeymoon Cruise">Romantic / Honeymoon Cruise</option>
-                    <option value="Singles Cruise">Singles Cruise</option>
-                    <option value="Themed Cruise">Themed Cruise</option>
-                    <option value="Repositioning Cruise">Repositioning Cruise</option>
-                    <option value="Mega Cruise">Mega Cruise</option>
-                    <option value="Small Ship Cruise">Small Ship Cruise</option>
-                    <option value="Yacht Cruise">Yacht Cruise</option>
-                    <option value="Sailing Cruise">Sailing Cruise</option>
-                    <option value="Barge Cruise">Barge Cruise</option>
-                </select>
-            </td>
-            <td><input type="datetime-local" class="form-control form-control-sm" name="cruise[${cruiseRowCount}][check_in]"></td>
-            <td><input type="datetime-local" class="form-control form-control-sm" name="cruise[${cruiseRowCount}][check_out]"></td>
-            <td><input type="number" class="form-control form-control-sm cruise-rate" name="cruise[${cruiseRowCount}][rate]" data-row="${cruiseRowCount}" value="0" onchange="calculateCruiseTotal(${cruiseRowCount})" placeholder="0"></td>
-            <td><input type="number" class="form-control form-control-sm cruise-extra" name="cruise[${cruiseRowCount}][extra]" data-row="${cruiseRowCount}" value="0" onchange="calculateCruiseTotal(${cruiseRowCount})" placeholder="0"></td>
-            <td><input type="text" class="form-control form-control-sm cruise-total" name="cruise[${cruiseRowCount}][total]" data-row="${cruiseRowCount}" readonly style="background: #f0f8ff; font-weight: bold;"></td>
-        `;
-        tbody.appendChild(newRow);
-        cruiseRowCount++;
-    }
-
+    
     // Extras calculations
     function calculateExtrasTotal(row) {
         const amount = parseFloat(document.querySelector(`.extras-amount[data-row="${row}"]`).value) || 0;
@@ -2662,6 +2530,166 @@ select option {
                     });
                 });
         }
+    }
+
+    let cruiseRowCount = 1;
+    function addCruiseRow() {
+        const tbody = document.getElementById('cruise-tbody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td>${cruiseRowCount + 1}</td>
+            <td>
+                <select class="form-control form-control-sm" name="cruise[${cruiseRowCount}][supplier]" data-row="${cruiseRowCount}" onchange="updateCruiseBoat(this, ${cruiseRowCount})">
+                    <option value="">Select supplier</option>
+                    <?php mysqli_data_seek($cruise_details, 0); 
+                    $cruise_supplier = array();
+                    while($supplier = mysqli_fetch_assoc($cruise_details)): 
+                        if(!in_array($supplier['name'], $cruise_supplier)):
+                            $cruise_supplier[] = $supplier['name'];
+                    ?>
+                        <option value="<?php echo htmlspecialchars($supplier['name']); ?>"><?php echo htmlspecialchars($supplier['name']); ?></option>
+                    <?php endif; endwhile; ?>
+                </select>
+                <input type="hidden" name="cruise[${cruiseRowCount}][idx]" value="${cruiseRowCount}">
+            </td>
+            <td>
+                <select class="form-control form-control-sm" name="cruise[${cruiseRowCount}][boat_type]" data-row="${cruiseRowCount}" disabled onchange="updateCruiseType(this, ${cruiseRowCount})">
+                    <option value="">Select Boat Type</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control form-control-sm" name="cruise[${cruiseRowCount}][cruise_type]" data-row="${cruiseRowCount}" disabled onchange="updateCruisePricing(this, ${cruiseRowCount})">
+                    <option value="">Select Cruise Type</option>
+                </select>
+            </td>
+            <td><input type="datetime-local" class="form-control form-control-sm cruise-start-date" name="cruise[${cruiseRowCount}][check_in]" data-row="${cruiseRowCount}" onchange="calculateCruiseDays(${cruiseRowCount})"></td>
+            <td><input type="datetime-local" class="form-control form-control-sm cruise-end-date" name="cruise[${cruiseRowCount}][check_out]" data-row="${cruiseRowCount}" onchange="calculateCruiseDays(${cruiseRowCount})"></td>
+            <td><input type="number" readonly class="form-control form-control-sm cruise-days" name="cruise[${cruiseRowCount}][days]" data-row="${cruiseRowCount}"></td>
+            <td><input type="number" class="form-control form-control-sm cruise-adult-count" name="cruise[${cruiseRowCount}][adult_count]" data-row="${cruiseRowCount}" value="0" onchange="calculateCruiseTotal(${cruiseRowCount})" placeholder="0"></td>
+            <td><input type="number" readonly class="form-control form-control-sm cruise-adult-price" name="cruise[${cruiseRowCount}][adult_price]" data-row="${cruiseRowCount}" value="0" onchange="calculateCruiseTotal(${cruiseRowCount})" placeholder="0"></td>
+            <td><input type="number" class="form-control form-control-sm cruise-kids-count" name="cruise[${cruiseRowCount}][kids_count]" data-row="${cruiseRowCount}" value="0" onchange="calculateCruiseTotal(${cruiseRowCount})" placeholder="0"></td>
+            <td><input type="number" readonly class="form-control form-control-sm cruise-kids-price" name="cruise[${cruiseRowCount}][kids_price]" data-row="${cruiseRowCount}" value="0" onchange="calculateCruiseTotal(${cruiseRowCount})" placeholder="0"></td>
+            <td><input type="number" class="form-control form-control-sm cruise-extra-price" name="cruise[${cruiseRowCount}][extra]" data-row="${cruiseRowCount}" value="0" onchange="calculateCruiseTotal(${cruiseRowCount})" placeholder="0"></td>
+            <td><input type="text" class="form-control form-control-sm cruise-total" name="cruise[${cruiseRowCount}][total]" data-row="${cruiseRowCount}" readonly style="background: #f0f8ff; font-weight: bold;"></td>
+        `;
+        tbody.appendChild(newRow);
+        cruiseRowCount++;
+    }
+
+    function updateCruiseBoat(destinationSelect, rowIndex, value) {
+        
+        const boatTypeSelect = destinationSelect.closest('tr').querySelector('select[name^="cruise"][name$="[boat_type]"]');
+
+        boatTypeSelect.disabled = !destinationSelect.value;
+
+        if(destinationSelect.value) {
+            fetch(`get_data_model.php?data_model=cruise_hire&supplier=${destinationSelect.value}`)
+                .then(response => response.json())
+                .then(res => {
+                    boatTypeSelect.innerHTML = '<option value="">Select Boat Type</option>';
+                    let boatRows = []
+                    let boatKeyName = "boat_type"
+
+                    res.data.forEach(row=>{
+                        if(row[boatKeyName] && !boatRows.includes(row[boatKeyName])){
+                            boatRows.push(row[boatKeyName])
+                        }
+                       
+                    })
+
+                    boatRows.forEach(item => {
+                        boatTypeSelect.innerHTML += `<option value="${item}">${item}</option>`;
+                    });
+                 
+                });
+        }
+    }
+    function updateCruiseType(boatTypeSelect, rowIndex, value) {
+
+        const supplierSelect = boatTypeSelect.closest('tr').querySelector('select[name^="cruise"][name$="[supplier]"]');
+        const cruiseTypeSelect = boatTypeSelect.closest('tr').querySelector('select[name^="cruise"][name$="[cruise_type]"]');
+
+        cruiseTypeSelect.disabled = !boatTypeSelect.value;
+
+        if(boatTypeSelect.value) {
+            fetch(`get_data_model.php?data_model=cruise_hire&supplier=${supplierSelect.value}&boat_type=${boatTypeSelect.value}`)
+                .then(response => response.json())
+                .then(res => {
+                    cruiseTypeSelect.innerHTML = '<option value="">Select Cruise Type</option>';
+                    let cruiseRows = []
+                    let cruiseKeyName = "cruise_type"
+
+                    res.data.forEach(row=>{
+                       
+                        if(row[cruiseKeyName] && !cruiseRows.includes(row[cruiseKeyName])){
+                            cruiseRows.push(row[cruiseKeyName])
+                        }
+                    })
+
+                    cruiseRows.forEach(item => {
+                        cruiseTypeSelect.innerHTML += `<option value="${item}">${item}</option>`;
+                    });
+                });
+        }
+    }
+    function updateCruisePricing(cruiseTypeSelect, rowIndex, value) {
+
+        const supplierSelect = cruiseTypeSelect.closest('tr').querySelector('select[name^="cruise"][name$="[supplier]"]');
+        const boatTypeSelect = cruiseTypeSelect.closest('tr').querySelector('select[name^="cruise"][name$="[boat_type]"]');
+        const adultPriceInput = cruiseTypeSelect.closest('tr').querySelector('input[name^="cruise"][name$="[adult_price]"]');
+        const kidsPriceInput = cruiseTypeSelect.closest('tr').querySelector('input[name^="cruise"][name$="[kids_price]"]');
+
+        if(cruiseTypeSelect.value) {
+            fetch(`get_data_model.php?data_model=cruise_hire&supplier=${supplierSelect.value}&boat_type=${boatTypeSelect.value}&cruise_type=${cruiseTypeSelect.value}`)
+                .then(response => response.json())
+                .then(res => {
+                    let cruiseRows = []
+                    let cruiseKeyName = "cruise_type"
+
+                    let pricing_data = res.data[0]
+
+                    if(pricing_data){
+                        adultPriceInput.value = pricing_data.adult_price || 0;
+                        kidsPriceInput.value = pricing_data.kids_price || 0;
+                    }
+                });
+        }
+    }
+
+    function calculateCruiseDays(row) {
+        const startDate = new Date(document.querySelector(`.cruise-start-date[data-row="${row}"]`).value);
+        const endDate = new Date(document.querySelector(`.cruise-end-date[data-row="${row}"]`).value);
+
+        if(startDate && endDate) {
+            const timeDiff = Math.abs(endDate.getTime() - startDate.getTime());
+            const days = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+            document.querySelector(`.cruise-days[data-row="${row}"]`).value = days;
+            calculateCruiseTotal(row);
+        }
+    }
+
+    // Cruise calculations
+    function calculateCruiseTotal(row) {
+        const adultCount = parseFloat(document.querySelector(`.cruise-adult-count[data-row="${row}"]`).value) || 0;
+        const adultPrice = parseFloat(document.querySelector(`.cruise-adult-price[data-row="${row}"]`).value) || 0;
+        const kidsCount = parseFloat(document.querySelector(`.cruise-kids-count[data-row="${row}"]`).value) || 0;
+        const kidsPrice = parseFloat(document.querySelector(`.cruise-kids-price[data-row="${row}"]`).value) || 0;
+        const extraPrice = parseFloat(document.querySelector(`.cruise-extra-price[data-row="${row}"]`).value) || 0;
+        const days = parseFloat(document.querySelector(`.cruise-days[data-row="${row}"]`).value) || 0;
+
+        const total = (adultCount * adultPrice * days) + (kidsCount * kidsPrice * days) + extraPrice;
+
+        document.querySelector(`.cruise-total[data-row="${row}"]`).value = total.toFixed(2);
+        calculateCruiseGrandTotal();
+    }
+
+    function calculateCruiseGrandTotal() {
+        let grandTotal = 0;
+        document.querySelectorAll('.cruise-total').forEach(input => {
+            grandTotal += parseFloat(input.value) || 0;
+        });
+        document.getElementById('cruise-grand-total').value = grandTotal.toFixed(2);
     }
 
     // Medical Tourism functions

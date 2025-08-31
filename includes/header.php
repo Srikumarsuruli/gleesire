@@ -227,7 +227,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                         <ul class="submenu">
                             <?php if(hasPrivilege('booking_confirmed') || $_SESSION["role_id"] == 1): ?><li><a href="booking_confirmed.php">Booking Confirmed</a></li><?php endif; ?>
                             <?php if(hasPrivilege('booking_cancelled') || $_SESSION["role_id"] == 1): ?><li><a href="booking_cancelled.php">Booking Cancelled</a></li><?php endif; ?>
-                            <?php if(hasPrivilege('travel_completed') || $_SESSION["role_id"] == 1): ?><li><a href="under_construction.php?page=Travel Completed">Travel Completed</a></li><?php endif; ?>
+                            <?php if(hasPrivilege('travel_completed') || $_SESSION["role_id"] == 1): ?><li><a href="travel_completed.php">Travel Completed</a></li><?php endif; ?>
                         </ul>
                     </li>
                     <?php endif; ?>

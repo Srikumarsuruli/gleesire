@@ -36,8 +36,10 @@ $total_pax = ($cost_sheet['adults_count'] ?? 0) + ($cost_sheet['children_count']
             left: 20px;
             top: 50%;
             transform: translateY(-50%);
-            max-height: 50px;
             max-width: 150px;
+            max-height: 80px;
+            border-radius: 8px;
+            background: white;
         }
         .header h1 {
             margin: 0;
@@ -241,7 +243,7 @@ $total_pax = ($cost_sheet['adults_count'] ?? 0) + ($cost_sheet['children_count']
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <img src="assets/deskapp/vendors/images/deskapp-logo.svg" alt="Gleesire Logo" class="logo">
+            <img src="assets/deskapp/vendors/images/custom-logo.svg" alt="Gleesire Logo" class="logo">
             <h1>GLEESIRE TRAVEL & TOURISM</h1>
             <h2>Cost Sheet: <?php echo htmlspecialchars($cost_sheet['cost_sheet_number']); ?></h2>
         </div>
