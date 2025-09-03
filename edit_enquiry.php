@@ -115,6 +115,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
     $ad_campaign_id = !empty($_POST["ad_campaign_id"]) ? trim($_POST["ad_campaign_id"]) : NULL;
     $enquiry_type = !empty($_POST["enquiry_type"]) ? trim($_POST["enquiry_type"]) : NULL;
     
+
+    
     if(empty($error)) {
         // Update enquiry
         $sql = "UPDATE enquiries SET 
@@ -171,7 +173,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     $adults_count = !empty($_POST["adults_count"]) ? trim($_POST["adults_count"]) : 0;
                     $children_count = !empty($_POST["children_count"]) ? trim($_POST["children_count"]) : 0;
                     $infants_count = !empty($_POST["infants_count"]) ? trim($_POST["infants_count"]) : 0;
-                    $children_age_details = !empty($_POST["children_age_details"]) ? trim($_POST["children_age_details"]) : NULL;
+                    $children_age_details = !empty($_POST["children_age_details"]) ? $_POST["children_age_details"] : NULL;
                     $customer_available_timing = !empty($_POST["customer_available_timing"]) ? trim($_POST["customer_available_timing"]) : NULL;
                     $file_manager_id = !empty($_POST["file_manager_id"]) ? trim($_POST["file_manager_id"]) : NULL;
                     $night_day = !empty($_POST["night_day"]) ? trim($_POST["night_day"]) : NULL;
@@ -226,7 +228,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     $adults_count = !empty($_POST["adults_count"]) ? trim($_POST["adults_count"]) : 0;
                     $children_count = !empty($_POST["children_count"]) ? trim($_POST["children_count"]) : 0;
                     $infants_count = !empty($_POST["infants_count"]) ? trim($_POST["infants_count"]) : 0;
-                    $children_age_details = !empty($_POST["children_age_details"]) ? trim($_POST["children_age_details"]) : NULL;
+                    $children_age_details = !empty($_POST["children_age_details"]) ? $_POST["children_age_details"] : NULL;
                     $customer_available_timing = !empty($_POST["customer_available_timing"]) ? trim($_POST["customer_available_timing"]) : NULL;
                     $file_manager_id = !empty($_POST["file_manager_id"]) ? trim($_POST["file_manager_id"]) : NULL;
                     $night_day = !empty($_POST["night_day"]) ? trim($_POST["night_day"]) : NULL;
@@ -267,6 +269,26 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                         }
                         mysqli_stmt_close($stmt2);
                     }
+                }
+                
+                // Always update converted_leads if record exists
+                $check_converted_sql = "SELECT id FROM converted_leads WHERE enquiry_id = ?";
+                if($check_stmt = mysqli_prepare($conn, $check_converted_sql)) {
+                    mysqli_stmt_bind_param($check_stmt, "i", $id);
+                    mysqli_stmt_execute($check_stmt);
+                    $check_result = mysqli_stmt_get_result($check_stmt);
+                    if(mysqli_num_rows($check_result) > 0) {
+                        // Update converted_leads with form data
+                        $other_details = !empty($_POST["other_details"]) ? trim($_POST["other_details"]) : NULL;
+                        $update_converted_sql = "UPDATE converted_leads SET other_details = ? WHERE enquiry_id = ?";
+                        if($update_stmt = mysqli_prepare($conn, $update_converted_sql)) {
+                            mysqli_stmt_bind_param($update_stmt, "si", $other_details, $id);
+                            mysqli_stmt_execute($update_stmt);
+                            mysqli_stmt_close($update_stmt);
+
+                        }
+                    }
+                    mysqli_stmt_close($check_stmt);
                 }
                 
                 if(empty($error)) {
@@ -355,6 +377,18 @@ if (!empty($enquiry['attended_by'])) {
 $sql = "SELECT * FROM destinations ORDER BY name";
 $destinations = mysqli_query($conn, $sql);
 
+// Get packages for dropdown (only active ones)
+$sql = "SELECT * FROM packages WHERE status = 'Active' ORDER BY package_name";
+$packages = mysqli_query($conn, $sql);
+
+// Store packages in array for reuse
+$packages_array = [];
+if($packages) {
+    while($pkg = mysqli_fetch_assoc($packages)) {
+        $packages_array[] = $pkg;
+    }
+}
+
 // Fetch converted lead data (if exists) or create if status is Converted but no record exists
 $converted_lead = null;
 $sql = "SELECT * FROM converted_leads WHERE enquiry_id = ?";
@@ -366,8 +400,8 @@ if($stmt = mysqli_prepare($conn, $sql)) {
         
         if(mysqli_num_rows($result) >= 1) {
             $converted_lead = mysqli_fetch_assoc($result);
-        } else if($enquiry['status_id'] == 3) {
-            // Status is Converted but no converted_lead record exists, create one
+        } else {
+            // No converted_lead record exists, create one regardless of status
             require_once "includes/number_generator.php";
             $enquiry_number = generateNumber('lead', $conn);
             $insert_sql = "INSERT INTO converted_leads (enquiry_id, enquiry_number) VALUES (?, ?)";
@@ -406,6 +440,19 @@ if(!$converted_lead && ($enquiry['status_id'] == 3 || $enquiry['status_id'] == '
         }
         mysqli_stmt_close($final_stmt);
     }
+}
+
+// Debug: Log converted_lead data
+if($converted_lead) {
+    error_log('Converted lead data: ' . print_r($converted_lead, true));
+    echo "<!-- DEBUG: other_details = '" . htmlspecialchars($converted_lead['other_details'] ?? 'NULL') . "' -->";
+    echo "<!-- DEBUG: packages_array count = " . count($packages_array) . " -->";
+    foreach($packages_array as $idx => $pkg) {
+        echo "<!-- DEBUG: Package $idx: '" . htmlspecialchars($pkg['package_name']) . "' -->";
+    }
+} else {
+    error_log('No converted lead data found for enquiry ID: ' . $id);
+    echo "<!-- DEBUG: No converted_lead record found for ID $id, status_id = {$enquiry['status_id']} -->";
 }
 
 // Update old format enquiry numbers to new format for any converted lead
@@ -653,7 +700,24 @@ if($converted_lead && $converted_lead['enquiry_number'] && (strpos($converted_le
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="other-details" class="form-label">Package Type</label>
-                                    <input type="text" class="form-control" id="other-details" name="other_details" value="<?php echo htmlspecialchars($converted_lead['other_details'] ?? ''); ?>">
+                                    <?php 
+                                    $current_package = isset($converted_lead['other_details']) ? trim($converted_lead['other_details']) : '';
+                                    ?>
+
+                                    <select class="custom-select col-12" id="other-details" name="other_details">
+                                        <option value="">Select Package Type</option>
+                                        <?php 
+                                        foreach($packages_array as $index => $package): 
+                                            $package_name = trim($package['package_name']);
+                                            // Handle legacy values: '0' selects first package, otherwise match exact name
+                                            $is_selected = ($current_package === '0' && $index === 0) || 
+                                                          ($current_package !== '' && $current_package !== '0' && $current_package === $package_name);
+                                        ?>
+                                            <option value="<?php echo htmlspecialchars($package_name); ?>" <?php echo $is_selected ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($package_name); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
                                 </div>
                             </div>
                         </div>

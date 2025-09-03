@@ -88,6 +88,10 @@ $night_day_options = mysqli_query($conn, $sql);
 $sql = "SELECT * FROM enquiry_types WHERE status = 'active' ORDER BY name";
 $enquiry_types = mysqli_query($conn, $sql);
 
+// Get packages for dropdown (only active ones)
+$sql = "SELECT * FROM packages WHERE status = 'Active' ORDER BY package_name";
+$packages = mysqli_query($conn, $sql);
+
 // Debug: Check if form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST") {
     error_log("Form submitted - POST data: " . print_r($_POST, true));
@@ -644,7 +648,15 @@ if (in_array($current_user_role, $allowed_roles)):
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="other-details" class="form-label">Package Type</label>
-                                            <input type="text" class="form-control" id="other-details" name="other_details" value="<?php echo $other_details; ?>">
+                                            <select class="custom-select col-12" id="other-details" name="other_details">
+                                                <option value="">Select Package Type</option>
+                                                <?php mysqli_data_seek($packages, 0); ?>
+                                                <?php while($package = mysqli_fetch_assoc($packages)): ?>
+                                                    <option value="<?php echo htmlspecialchars($package['package_name']); ?>">
+                                                        <?php echo htmlspecialchars($package['package_name']); ?>
+                                                    </option>
+                                                <?php endwhile; ?>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>

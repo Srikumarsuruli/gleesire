@@ -337,7 +337,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                             <?php if(hasPrivilege('hospital_details') || $_SESSION["role_id"] == 1): ?><li><a href="HospitalDetails.php">Hospital Details</a></li><?php endif; ?>
                             <?php if(hasPrivilege('extras_miscellaneous_details') || $_SESSION["role_id"] == 1): ?><li><a href="extras_details.php">Extras/Miscellaneous Details</a></li><?php endif; ?>
                             <li><a href="under_construction.php?page=Freelance Travel Consultant">Freelance Travel Consultant</a></li>
-                            <li><a href="Packages.php">Packages</a></li>
+                            
                         </ul>
                     </li>
                     <?php endif; ?>
@@ -355,6 +355,7 @@ if($stmt = mysqli_prepare($conn, $sql)) {
                             <?php if(hasPrivilege('enquiry_status') || $_SESSION["role_id"] == 1): ?><li><a href="EnquiryStatus.php">Enquiry Statuses</a></li><?php endif; ?>
                             <?php if(hasPrivilege('lead_status') || $_SESSION["role_id"] == 1): ?><li><a href="LeadStatus.php">Leads Statuses</a></li><?php endif; ?>
                             <?php if(hasPrivilege('night_day') || $_SESSION["role_id"] == 1): ?><li><a href="NightDay.php">Night/Days</a></li><?php endif; ?>
+                                <?php if(hasPrivilege('night_day') || $_SESSION["role_id"] == 1): ?><li><a href="Packages.php">Packages Types</a></li><?php endif; ?>
                         </ul>
                     </li>
                     <?php endif; ?>
