@@ -93,25 +93,27 @@ if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_payment'])) {
 }
 
 // Get cost file data
-$sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number, e.referral_code, e.created_at as lead_date,
-        s.name as source_name, dest.name as destination_name, fm.full_name as file_manager_name
+$sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number as enquiry_number, cl.adults_count, cl.children_count, cl.infants_count, cl.children_age_details, cl.enquiry_number as lead_number, e.referral_code, e.created_at as enquiry_date, cl.created_at as lead_date,
+        s.name as source_name, dest.name as destination_name, fm.full_name as file_manager_name, cl.night_day as night_day, cl.travel_start_date as travel_start_date, cl.travel_end_date as travel_end_date, dp.name as department_name
         FROM tour_costings tc 
         LEFT JOIN enquiries e ON tc.enquiry_id = e.id 
         LEFT JOIN sources s ON e.source_id = s.id
         LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id
         LEFT JOIN destinations dest ON cl.destination_id = dest.id
         LEFT JOIN users fm ON cl.file_manager_id = fm.id
+        LEFT JOIN departments dp ON e.department_id = dp.id
         WHERE tc.id = ?";
 
 if ($enquiry_id != 0){
-    $sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number, e.referral_code, e.created_at as lead_date,
-        s.name as source_name, dest.name as destination_name, fm.full_name as file_manager_name
+    $sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number as enquiry_number, cl.adults_count, cl.children_count, cl.infants_count, cl.children_age_details, cl.enquiry_number as lead_number, e.referral_code, e.created_at as enquiry_date, cl.created_at as lead_date,
+        s.name as source_name, dest.name as destination_name, fm.full_name as file_manager_name, cl.night_day as night_day, cl.travel_start_date as travel_start_date, cl.travel_end_date as travel_end_date, dp.name as department_name
         FROM tour_costings tc 
         LEFT JOIN enquiries e ON tc.enquiry_id = e.id 
         LEFT JOIN sources s ON e.source_id = s.id
         LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id
         LEFT JOIN destinations dest ON cl.destination_id = dest.id
         LEFT JOIN users fm ON cl.file_manager_id = fm.id
+        LEFT JOIN departments dp ON e.department_id = dp.id
         WHERE tc.enquiry_id = ?";
 }
 
@@ -305,7 +307,7 @@ if (isset($cost_data['enquiry_id'])) {
                 <div class="info-card">
                     <h5><i class="fas fa-plane"></i> Travel Information</h5>
                     <div class="info-row">
-                        <span class="info-label">Tour Package:</span>
+                        <span class="info-label">Package Type:</span>
                         <span class="info-value"><?php echo htmlspecialchars($cost_data['tour_package'] ?? 'N/A'); ?></span>
                     </div>
                     <div class="info-row">
@@ -330,6 +332,18 @@ if (isset($cost_data['enquiry_id'])) {
                     <div class="info-row">
                         <span class="info-label">Travel Destination:</span>
                         <span class="info-value"><?php echo htmlspecialchars($cost_data['destination_name'] ?? 'N/A'); ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Lead Department:</span>
+                        <span class="info-value"><?php echo htmlspecialchars($cost_data['department_name'] ?? 'N/A'); ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Night/Day:</span>
+                        <span class="info-value"><?php echo htmlspecialchars($cost_data['night_day'] ?? 'N/A'); ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Travel Period:</span>
+                        <span class="info-value"><?php echo date('d-m-Y', strtotime($cost_data['travel_start_date'])) ?? 'N/A'; ?> To <?php echo date('d-m-Y', strtotime($cost_data['travel_end_date'])) ?? 'N/A'; ?></span>
                     </div>
                 </div>
 
@@ -452,7 +466,8 @@ if (isset($cost_data['enquiry_id'])) {
                             </tfoot>
                         </table>
                     </div>
-
+                    
+                    <?php if(!empty($cost_data['arrival_flight'])): ?>
                     <h6 style="margin-top: 1rem"><i class="fas fa-calendar-alt"></i> Travel Details</h6>
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm">
@@ -501,6 +516,7 @@ if (isset($cost_data['enquiry_id'])) {
                             </tbody>
                         </table>
                     </div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
 

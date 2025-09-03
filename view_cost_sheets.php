@@ -32,10 +32,18 @@ if(isset($_GET['action']) && ($_GET['action'] == 'export_pdf' || $_GET['action']
     $cost_file_id = intval($_GET['id']);
     
     // Get the specific cost sheet
-    $view_sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email 
-                FROM tour_costings tc 
-                LEFT JOIN enquiries e ON tc.enquiry_id = e.id 
-                WHERE tc.id = ?";
+    $view_sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number as enquiry_number, cl.adults_count, cl.children_count, cl.infants_count, cl.children_age_details, cl.enquiry_number as lead_number, e.referral_code, e.created_at as enquiry_date, cl.created_at as lead_date,
+        s.name as source_name, dest.name as destination_name, fm.full_name as file_manager_name, cl.night_day as night_day, cl.travel_start_date as travel_start_date, cl.travel_end_date as travel_end_date, dp.name as department_name
+        FROM tour_costings tc 
+        LEFT JOIN enquiries e ON tc.enquiry_id = e.id 
+        LEFT JOIN sources s ON e.source_id = s.id
+        LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id
+        LEFT JOIN destinations dest ON cl.destination_id = dest.id
+        LEFT JOIN users fm ON cl.file_manager_id = fm.id
+        LEFT JOIN departments dp ON e.department_id = dp.id
+        WHERE tc.id = ?";
+
+
     $view_stmt = mysqli_prepare($conn, $view_sql);
     mysqli_stmt_bind_param($view_stmt, "i", $cost_file_id);
     mysqli_stmt_execute($view_stmt);
@@ -251,7 +259,7 @@ if(isset($_GET['action']) && ($_GET['action'] == 'export_pdf' || $_GET['action']
                 <div class="section">
                     <div class="section-title">Travel Information</div>
                     <div class="info-row">
-                        <div class="info-label">Tour Package:</div>
+                        <div class="info-label">Package Type:</div>
                         <div><?php echo htmlspecialchars($cost_sheet['tour_package'] ?? 'N/A'); ?></div>
                     </div>
                     <div class="info-row">
@@ -261,6 +269,30 @@ if(isset($_GET['action']) && ($_GET['action'] == 'export_pdf' || $_GET['action']
                     <div class="info-row">
                         <div class="info-label">Nationality:</div>
                         <div><?php echo htmlspecialchars($cost_sheet['nationality'] ?? 'N/A'); ?></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Ref Code:</div>
+                        <div><?php echo htmlspecialchars($cost_sheet['referral_code'] ?? 'N/A'); ?></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Source / Agent:</div>
+                        <div><?php echo htmlspecialchars($cost_sheet['source_name'] ?? 'N/A'); ?></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Travel Destination:</div>
+                        <div><?php echo htmlspecialchars($cost_sheet['destination_name'] ?? 'N/A'); ?></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Lead Department:</div>
+                        <div><?php echo htmlspecialchars($cost_sheet['department_name'] ?? 'N/A'); ?></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Night/Day:</div>
+                        <div><?php echo htmlspecialchars($cost_sheet['night_day'] ?? 'N/A'); ?></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Travel Period:</div>
+                        <div><?php echo date('d-m-Y', strtotime($cost_sheet['travel_start_date'])) ?? 'N/A'; ?> To <?php echo date('d-m-Y', strtotime($cost_data['travel_end_date'])) ?? 'N/A'; ?></div>
                     </div>
                 </div>
                 
@@ -621,7 +653,7 @@ if(isset($_GET['action']) && ($_GET['action'] == 'export_pdf' || $_GET['action']
             
             // Travel Information
             fputcsv($output, ['Travel Information']);
-            fputcsv($output, ['Tour Package:', $cost_sheet['tour_package'] ?? 'N/A']);
+            fputcsv($output, ['Package Type:', $cost_sheet['tour_package'] ?? 'N/A']);
             fputcsv($output, ['Currency:', $cost_sheet['currency'] ?? 'USD']);
             fputcsv($output, ['Nationality:', $cost_sheet['nationality'] ?? 'N/A']);
             fputcsv($output, []); // Empty row for spacing
@@ -1121,7 +1153,7 @@ while($row = mysqli_fetch_assoc($result)) {
                     <div class="cost-sheet-section">
                         <h6><i class="fa fa-plane"></i> Travel Information</h6>
                         <div class="info-row">
-                            <div class="info-label">Tour Package:</div>
+                            <div class="info-label">Package Type:</div>
                             <div class="info-value"><?php echo htmlspecialchars($view_cost_sheet['tour_package'] ?? 'N/A'); ?></div>
                         </div>
                         <div class="info-row">

@@ -525,7 +525,7 @@ select option {
                         <span class="info-value"><?php echo htmlspecialchars($enquiry['destination_name'] ?? 'N/A'); ?></span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Tour Package:</span>
+                        <span class="info-label">Package Type:</span>
                         <select class="form-control form-control-sm" name="tour_package">
                             <option value="">Select Package</option>
                             <?php while($package = mysqli_fetch_assoc($packages_result)): ?>
@@ -556,212 +556,221 @@ select option {
                     </div>
                     <div class="info-row">
                         <span class="info-label">Nationality:</span>
+                        <?php
+                            $countries = [
+                                ['value' => '', 'label' => 'Select Country'],
+                                ['value' => 'IN', 'label' => 'India'], 
+                                ['value' => 'US', 'label' => 'United States'],
+                                ['value' => 'GB', 'label' => 'United Kingdom'],
+                                ['value' => 'AE', 'label' => 'United Arab Emirates'], 
+                                ['value' => 'SA', 'label' => 'Saudi Arabia'],
+                                ['value' => 'AF', 'label' => 'Afghanistan'],
+                                ['value' => 'AL', 'label' => 'Albania'],
+                                ['value' => 'DZ', 'label' => 'Algeria'],
+                                ['value' => 'AS', 'label' => 'American Samoa'],
+                                ['value' => 'AD', 'label' => 'Andorra'],
+                                ['value' => 'AO', 'label' => 'Angola'],
+                                ['value' => 'AI', 'label' => 'Anguilla'],
+                                ['value' => 'AQ', 'label' => 'Antarctica'],
+                                ['value' => 'AG', 'label' => 'Antigua and Barbuda'],
+                                ['value' => 'AR', 'label' => 'Argentina'],
+                                ['value' => 'AM', 'label' => 'Armenia'],
+                                ['value' => 'AW', 'label' => 'Aruba'],
+                                ['value' => 'AU', 'label' => 'Australia'],
+                                ['value' => 'AT', 'label' => 'Austria'],
+                                ['value' => 'AZ', 'label' => 'Azerbaijan'],
+                                ['value' => 'BS', 'label' => 'Bahamas'],
+                                ['value' => 'BH', 'label' => 'Bahrain'],
+                                ['value' => 'BD', 'label' => 'Bangladesh'],
+                                ['value' => 'BB', 'label' => 'Barbados'],
+                                ['value' => 'BY', 'label' => 'Belarus'],
+                                ['value' => 'BE', 'label' => 'Belgium'],
+                                ['value' => 'BZ', 'label' => 'Belize'],
+                                ['value' => 'BJ', 'label' => 'Benin'],
+                                ['value' => 'BM', 'label' => 'Bermuda'],
+                                ['value' => 'BT', 'label' => 'Bhutan'],
+                                ['value' => 'BO', 'label' => 'Bolivia'],
+                                ['value' => 'BA', 'label' => 'Bosnia and Herzegovina'],
+                                ['value' => 'BW', 'label' => 'Botswana'],
+                                ['value' => 'BR', 'label' => 'Brazil'],
+                                ['value' => 'BN', 'label' => 'Brunei'],
+                                ['value' => 'BG', 'label' => 'Bulgaria'],
+                                ['value' => 'BF', 'label' => 'Burkina Faso'],
+                                ['value' => 'BI', 'label' => 'Burundi'],
+                                ['value' => 'KH', 'label' => 'Cambodia'],
+                                ['value' => 'CM', 'label' => 'Cameroon'],
+                                ['value' => 'CA', 'label' => 'Canada'],
+                                ['value' => 'CV', 'label' => 'Cape Verde'],
+                                ['value' => 'KY', 'label' => 'Cayman Islands'],
+                                ['value' => 'CF', 'label' => 'Central African Republic'],
+                                ['value' => 'TD', 'label' => 'Chad'],
+                                ['value' => 'CL', 'label' => 'Chile'],
+                                ['value' => 'CN', 'label' => 'China'],
+                                ['value' => 'CO', 'label' => 'Colombia'],
+                                ['value' => 'KM', 'label' => 'Comoros'],
+                                ['value' => 'CG', 'label' => 'Congo'],
+                                ['value' => 'CD', 'label' => 'Congo (Democratic Republic)'],
+                                ['value' => 'CR', 'label' => 'Costa Rica'],
+                                ['value' => 'CI', 'label' => "Cote d'Ivoire"],
+                                ['value' => 'HR', 'label' => 'Croatia'],
+                                ['value' => 'CU', 'label' => 'Cuba'],
+                                ['value' => 'CY', 'label' => 'Cyprus'],
+                                ['value' => 'CZ', 'label' => 'Czech Republic'],
+                                ['value' => 'DK', 'label' => 'Denmark'],
+                                ['value' => 'DJ', 'label' => 'Djibouti'],
+                                ['value' => 'DM', 'label' => 'Dominica'],
+                                ['value' => 'DO', 'label' => 'Dominican Republic'],
+                                ['value' => 'EC', 'label' => 'Ecuador'],
+                                ['value' => 'EG', 'label' => 'Egypt'],
+                                ['value' => 'SV', 'label' => 'El Salvador'],
+                                ['value' => 'GQ', 'label' => 'Equatorial Guinea'],
+                                ['value' => 'ER', 'label' => 'Eritrea'],
+                                ['value' => 'EE', 'label' => 'Estonia'],
+                                ['value' => 'ET', 'label' => 'Ethiopia'],
+                                ['value' => 'FJ', 'label' => 'Fiji'],
+                                ['value' => 'FI', 'label' => 'Finland'],
+                                ['value' => 'FR', 'label' => 'France'],
+                                ['value' => 'GA', 'label' => 'Gabon'],
+                                ['value' => 'GM', 'label' => 'Gambia'],
+                                ['value' => 'GE', 'label' => 'Georgia'],
+                                ['value' => 'DE', 'label' => 'Germany'],
+                                ['value' => 'GH', 'label' => 'Ghana'],
+                                ['value' => 'GR', 'label' => 'Greece'],
+                                ['value' => 'GD', 'label' => 'Grenada'],
+                                ['value' => 'GT', 'label' => 'Guatemala'],
+                                ['value' => 'GN', 'label' => 'Guinea'],
+                                ['value' => 'GW', 'label' => 'Guinea-Bissau'],
+                                ['value' => 'GY', 'label' => 'Guyana'],
+                                ['value' => 'HT', 'label' => 'Haiti'],
+                                ['value' => 'HN', 'label' => 'Honduras'],
+                                ['value' => 'HK', 'label' => 'Hong Kong'],
+                                ['value' => 'HU', 'label' => 'Hungary'],
+                                ['value' => 'IS', 'label' => 'Iceland'],
+                                ['value' => 'ID', 'label' => 'Indonesia'],
+                                ['value' => 'IR', 'label' => 'Iran'],
+                                ['value' => 'IQ', 'label' => 'Iraq'],
+                                ['value' => 'IE', 'label' => 'Ireland'],
+                                ['value' => 'IL', 'label' => 'Israel'],
+                                ['value' => 'IT', 'label' => 'Italy'],
+                                ['value' => 'JM', 'label' => 'Jamaica'],
+                                ['value' => 'JP', 'label' => 'Japan'],
+                                ['value' => 'JO', 'label' => 'Jordan'],
+                                ['value' => 'KZ', 'label' => 'Kazakhstan'],
+                                ['value' => 'KE', 'label' => 'Kenya'],
+                                ['value' => 'KI', 'label' => 'Kiribati'],
+                                ['value' => 'KP', 'label' => 'Korea (North)'],
+                                ['value' => 'KR', 'label' => 'Korea (South)'],
+                                ['value' => 'KW', 'label' => 'Kuwait'],
+                                ['value' => 'KG', 'label' => 'Kyrgyzstan'],
+                                ['value' => 'LA', 'label' => 'Laos'],
+                                ['value' => 'LV', 'label' => 'Latvia'],
+                                ['value' => 'LB', 'label' => 'Lebanon'],
+                                ['value' => 'LS', 'label' => 'Lesotho'],
+                                ['value' => 'LR', 'label' => 'Liberia'],
+                                ['value' => 'LY', 'label' => 'Libya'],
+                                ['value' => 'LI', 'label' => 'Liechtenstein'],
+                                ['value' => 'LT', 'label' => 'Lithuania'],
+                                ['value' => 'LU', 'label' => 'Luxembourg'],
+                                ['value' => 'MO', 'label' => 'Macao'],
+                                ['value' => 'MK', 'label' => 'Macedonia'],
+                                ['value' => 'MG', 'label' => 'Madagascar'],
+                                ['value' => 'MW', 'label' => 'Malawi'],
+                                ['value' => 'MY', 'label' => 'Malaysia'],
+                                ['value' => 'MV', 'label' => 'Maldives'],
+                                ['value' => 'ML', 'label' => 'Mali'],
+                                ['value' => 'MT', 'label' => 'Malta'],
+                                ['value' => 'MH', 'label' => 'Marshall Islands'],
+                                ['value' => 'MR', 'label' => 'Mauritania'],
+                                ['value' => 'MU', 'label' => 'Mauritius'],
+                                ['value' => 'MX', 'label' => 'Mexico'],
+                                ['value' => 'FM', 'label' => 'Micronesia'],
+                                ['value' => 'MD', 'label' => 'Moldova'],
+                                ['value' => 'MC', 'label' => 'Monaco'],
+                                ['value' => 'MN', 'label' => 'Mongolia'],
+                                ['value' => 'ME', 'label' => 'Montenegro'],
+                                ['value' => 'MA', 'label' => 'Morocco'],
+                                ['value' => 'MZ', 'label' => 'Mozambique'],
+                                ['value' => 'MM', 'label' => 'Myanmar'],
+                                ['value' => 'NA', 'label' => 'Namibia'],
+                                ['value' => 'NR', 'label' => 'Nauru'],
+                                ['value' => 'NP', 'label' => 'Nepal'],
+                                ['value' => 'NL', 'label' => 'Netherlands'],
+                                ['value' => 'NZ', 'label' => 'New Zealand'],
+                                ['value' => 'NI', 'label' => 'Nicaragua'],
+                                ['value' => 'NE', 'label' => 'Niger'],
+                                ['value' => 'NG', 'label' => 'Nigeria'],
+                                ['value' => 'NO', 'label' => 'Norway'],
+                                ['value' => 'OM', 'label' => 'Oman'],
+                                ['value' => 'PK', 'label' => 'Pakistan'],
+                                ['value' => 'PW', 'label' => 'Palau'],
+                                ['value' => 'PS', 'label' => 'Palestine'],
+                                ['value' => 'PA', 'label' => 'Panama'],
+                                ['value' => 'PG', 'label' => 'Papua New Guinea'],
+                                ['value' => 'PY', 'label' => 'Paraguay'],
+                                ['value' => 'PE', 'label' => 'Peru'],
+                                ['value' => 'PH', 'label' => 'Philippines'],
+                                ['value' => 'PL', 'label' => 'Poland'],
+                                ['value' => 'PT', 'label' => 'Portugal'],
+                                ['value' => 'QA', 'label' => 'Qatar'],
+                                ['value' => 'RO', 'label' => 'Romania'],
+                                ['value' => 'RU', 'label' => 'Russia'],
+                                ['value' => 'RW', 'label' => 'Rwanda'],
+                                ['value' => 'KN', 'label' => 'Saint Kitts and Nevis'],
+                                ['value' => 'LC', 'label' => 'Saint Lucia'],
+                                ['value' => 'VC', 'label' => 'Saint Vincent and the Grenadines'],
+                                ['value' => 'WS', 'label' => 'Samoa'],
+                                ['value' => 'SM', 'label' => 'San Marino'],
+                                ['value' => 'ST', 'label' => 'Sao Tome and Principe'],
+                                ['value' => 'SN', 'label' => 'Senegal'],
+                                ['value' => 'RS', 'label' => 'Serbia'],
+                                ['value' => 'SC', 'label' => 'Seychelles'],
+                                ['value' => 'SL', 'label' => 'Sierra Leone'],
+                                ['value' => 'SG', 'label' => 'Singapore'],
+                                ['value' => 'SK', 'label' => 'Slovakia'],
+                                ['value' => 'SI', 'label' => 'Slovenia'],
+                                ['value' => 'SB', 'label' => 'Solomon Islands'],
+                                ['value' => 'SO', 'label' => 'Somalia'],
+                                ['value' => 'ZA', 'label' => 'South Africa'],
+                                ['value' => 'SS', 'label' => 'South Sudan'],
+                                ['value' => 'ES', 'label' => 'Spain'],
+                                ['value' => 'LK', 'label' => 'Sri Lanka'],
+                                ['value' => 'SD', 'label' => 'Sudan'],
+                                ['value' => 'SR', 'label' => 'Suriname'],
+                                ['value' => 'SZ', 'label' => 'Swaziland'],
+                                ['value' => 'SE', 'label' => 'Sweden'],
+                                ['value' => 'CH', 'label' => 'Switzerland'],
+                                ['value' => 'SY', 'label' => 'Syria'],
+                                ['value' => 'TW', 'label' => 'Taiwan'],
+                                ['value' => 'TJ', 'label' => 'Tajikistan'],
+                                ['value' => 'TZ', 'label' => 'Tanzania'],
+                                ['value' => 'TH', 'label' => 'Thailand'],
+                                ['value' => 'TL', 'label' => 'Timor-Leste'],
+                                ['value' => 'TG', 'label' => 'Togo'],
+                                ['value' => 'TO', 'label' => 'Tonga'],
+                                ['value' => 'TT', 'label' => 'Trinidad and Tobago'],
+                                ['value' => 'TN', 'label' => 'Tunisia'],
+                                ['value' => 'TR', 'label' => 'Turkey'],
+                                ['value' => 'TM', 'label' => 'Turkmenistan'],
+                                ['value' => 'TV', 'label' => 'Tuvalu'],
+                                ['value' => 'UG', 'label' => 'Uganda'],
+                                ['value' => 'UA', 'label' => 'Ukraine'],
+                                ['value' => 'UY', 'label' => 'Uruguay'],
+                                ['value' => 'UZ', 'label' => 'Uzbekistan'],
+                                ['value' => 'VU', 'label' => 'Vanuatu'],
+                                ['value' => 'VA', 'label' => 'Vatican City'],
+                                ['value' => 'VE', 'label' => 'Venezuela'],
+                                ['value' => 'VN', 'label' => 'Vietnam'],
+                                ['value' => 'YE', 'label' => 'Yemen'],
+                                ['value' => 'ZM', 'label' => 'Zambia'],
+                                ['value' => 'ZW', 'label' => 'Zimbabwe']
+                            ];
+                        ?>
                         <select class="form-control form-control-sm" name="nationality">
-                            <option value="">Select Country</option>
-                            <option value="AF">Afghanistan</option>
-                            <option value="AL">Albania</option>
-                            <option value="DZ">Algeria</option>
-                            <option value="AS">American Samoa</option>
-                            <option value="AD">Andorra</option>
-                            <option value="AO">Angola</option>
-                            <option value="AI">Anguilla</option>
-                            <option value="AQ">Antarctica</option>
-                            <option value="AG">Antigua and Barbuda</option>
-                            <option value="AR">Argentina</option>
-                            <option value="AM">Armenia</option>
-                            <option value="AW">Aruba</option>
-                            <option value="AU">Australia</option>
-                            <option value="AT">Austria</option>
-                            <option value="AZ">Azerbaijan</option>
-                            <option value="BS">Bahamas</option>
-                            <option value="BH">Bahrain</option>
-                            <option value="BD">Bangladesh</option>
-                            <option value="BB">Barbados</option>
-                            <option value="BY">Belarus</option>
-                            <option value="BE">Belgium</option>
-                            <option value="BZ">Belize</option>
-                            <option value="BJ">Benin</option>
-                            <option value="BM">Bermuda</option>
-                            <option value="BT">Bhutan</option>
-                            <option value="BO">Bolivia</option>
-                            <option value="BA">Bosnia and Herzegovina</option>
-                            <option value="BW">Botswana</option>
-                            <option value="BR">Brazil</option>
-                            <option value="BN">Brunei</option>
-                            <option value="BG">Bulgaria</option>
-                            <option value="BF">Burkina Faso</option>
-                            <option value="BI">Burundi</option>
-                            <option value="KH">Cambodia</option>
-                            <option value="CM">Cameroon</option>
-                            <option value="CA">Canada</option>
-                            <option value="CV">Cape Verde</option>
-                            <option value="KY">Cayman Islands</option>
-                            <option value="CF">Central African Republic</option>
-                            <option value="TD">Chad</option>
-                            <option value="CL">Chile</option>
-                            <option value="CN">China</option>
-                            <option value="CO">Colombia</option>
-                            <option value="KM">Comoros</option>
-                            <option value="CG">Congo</option>
-                            <option value="CD">Congo (Democratic Republic)</option>
-                            <option value="CR">Costa Rica</option>
-                            <option value="CI">Cote d'Ivoire</option>
-                            <option value="HR">Croatia</option>
-                            <option value="CU">Cuba</option>
-                            <option value="CY">Cyprus</option>
-                            <option value="CZ">Czech Republic</option>
-                            <option value="DK">Denmark</option>
-                            <option value="DJ">Djibouti</option>
-                            <option value="DM">Dominica</option>
-                            <option value="DO">Dominican Republic</option>
-                            <option value="EC">Ecuador</option>
-                            <option value="EG">Egypt</option>
-                            <option value="SV">El Salvador</option>
-                            <option value="GQ">Equatorial Guinea</option>
-                            <option value="ER">Eritrea</option>
-                            <option value="EE">Estonia</option>
-                            <option value="ET">Ethiopia</option>
-                            <option value="FJ">Fiji</option>
-                            <option value="FI">Finland</option>
-                            <option value="FR">France</option>
-                            <option value="GA">Gabon</option>
-                            <option value="GM">Gambia</option>
-                            <option value="GE">Georgia</option>
-                            <option value="DE">Germany</option>
-                            <option value="GH">Ghana</option>
-                            <option value="GR">Greece</option>
-                            <option value="GD">Grenada</option>
-                            <option value="GT">Guatemala</option>
-                            <option value="GN">Guinea</option>
-                            <option value="GW">Guinea-Bissau</option>
-                            <option value="GY">Guyana</option>
-                            <option value="HT">Haiti</option>
-                            <option value="HN">Honduras</option>
-                            <option value="HK">Hong Kong</option>
-                            <option value="HU">Hungary</option>
-                            <option value="IS">Iceland</option>
-                            <option value="IN">India</option>
-                            <option value="ID">Indonesia</option>
-                            <option value="IR">Iran</option>
-                            <option value="IQ">Iraq</option>
-                            <option value="IE">Ireland</option>
-                            <option value="IL">Israel</option>
-                            <option value="IT">Italy</option>
-                            <option value="JM">Jamaica</option>
-                            <option value="JP">Japan</option>
-                            <option value="JO">Jordan</option>
-                            <option value="KZ">Kazakhstan</option>
-                            <option value="KE">Kenya</option>
-                            <option value="KI">Kiribati</option>
-                            <option value="KP">Korea (North)</option>
-                            <option value="KR">Korea (South)</option>
-                            <option value="KW">Kuwait</option>
-                            <option value="KG">Kyrgyzstan</option>
-                            <option value="LA">Laos</option>
-                            <option value="LV">Latvia</option>
-                            <option value="LB">Lebanon</option>
-                            <option value="LS">Lesotho</option>
-                            <option value="LR">Liberia</option>
-                            <option value="LY">Libya</option>
-                            <option value="LI">Liechtenstein</option>
-                            <option value="LT">Lithuania</option>
-                            <option value="LU">Luxembourg</option>
-                            <option value="MO">Macao</option>
-                            <option value="MK">Macedonia</option>
-                            <option value="MG">Madagascar</option>
-                            <option value="MW">Malawi</option>
-                            <option value="MY">Malaysia</option>
-                            <option value="MV">Maldives</option>
-                            <option value="ML">Mali</option>
-                            <option value="MT">Malta</option>
-                            <option value="MH">Marshall Islands</option>
-                            <option value="MR">Mauritania</option>
-                            <option value="MU">Mauritius</option>
-                            <option value="MX">Mexico</option>
-                            <option value="FM">Micronesia</option>
-                            <option value="MD">Moldova</option>
-                            <option value="MC">Monaco</option>
-                            <option value="MN">Mongolia</option>
-                            <option value="ME">Montenegro</option>
-                            <option value="MA">Morocco</option>
-                            <option value="MZ">Mozambique</option>
-                            <option value="MM">Myanmar</option>
-                            <option value="NA">Namibia</option>
-                            <option value="NR">Nauru</option>
-                            <option value="NP">Nepal</option>
-                            <option value="NL">Netherlands</option>
-                            <option value="NZ">New Zealand</option>
-                            <option value="NI">Nicaragua</option>
-                            <option value="NE">Niger</option>
-                            <option value="NG">Nigeria</option>
-                            <option value="NO">Norway</option>
-                            <option value="OM">Oman</option>
-                            <option value="PK">Pakistan</option>
-                            <option value="PW">Palau</option>
-                            <option value="PS">Palestine</option>
-                            <option value="PA">Panama</option>
-                            <option value="PG">Papua New Guinea</option>
-                            <option value="PY">Paraguay</option>
-                            <option value="PE">Peru</option>
-                            <option value="PH">Philippines</option>
-                            <option value="PL">Poland</option>
-                            <option value="PT">Portugal</option>
-                            <option value="QA">Qatar</option>
-                            <option value="RO">Romania</option>
-                            <option value="RU">Russia</option>
-                            <option value="RW">Rwanda</option>
-                            <option value="KN">Saint Kitts and Nevis</option>
-                            <option value="LC">Saint Lucia</option>
-                            <option value="VC">Saint Vincent and the Grenadines</option>
-                            <option value="WS">Samoa</option>
-                            <option value="SM">San Marino</option>
-                            <option value="ST">Sao Tome and Principe</option>
-                            <option value="SA">Saudi Arabia</option>
-                            <option value="SN">Senegal</option>
-                            <option value="RS">Serbia</option>
-                            <option value="SC">Seychelles</option>
-                            <option value="SL">Sierra Leone</option>
-                            <option value="SG">Singapore</option>
-                            <option value="SK">Slovakia</option>
-                            <option value="SI">Slovenia</option>
-                            <option value="SB">Solomon Islands</option>
-                            <option value="SO">Somalia</option>
-                            <option value="ZA">South Africa</option>
-                            <option value="SS">South Sudan</option>
-                            <option value="ES">Spain</option>
-                            <option value="LK">Sri Lanka</option>
-                            <option value="SD">Sudan</option>
-                            <option value="SR">Suriname</option>
-                            <option value="SZ">Swaziland</option>
-                            <option value="SE">Sweden</option>
-                            <option value="CH">Switzerland</option>
-                            <option value="SY">Syria</option>
-                            <option value="TW">Taiwan</option>
-                            <option value="TJ">Tajikistan</option>
-                            <option value="TZ">Tanzania</option>
-                            <option value="TH">Thailand</option>
-                            <option value="TL">Timor-Leste</option>
-                            <option value="TG">Togo</option>
-                            <option value="TO">Tonga</option>
-                            <option value="TT">Trinidad and Tobago</option>
-                            <option value="TN">Tunisia</option>
-                            <option value="TR">Turkey</option>
-                            <option value="TM">Turkmenistan</option>
-                            <option value="TV">Tuvalu</option>
-                            <option value="UG">Uganda</option>
-                            <option value="UA">Ukraine</option>
-                            <option value="AE">United Arab Emirates</option>
-                            <option value="GB">United Kingdom</option>
-                            <option value="US">United States</option>
-                            <option value="UY">Uruguay</option>
-                            <option value="UZ">Uzbekistan</option>
-                            <option value="VU">Vanuatu</option>
-                            <option value="VA">Vatican City</option>
-                            <option value="VE">Venezuela</option>
-                            <option value="VN">Vietnam</option>
-                            <option value="YE">Yemen</option>
-                            <option value="ZM">Zambia</option>
-                            <option value="ZW">Zimbabwe</option>
+                            <?php foreach($countries as $country): ?>
+                                <option value="<?php echo htmlspecialchars($country['value']); ?>">
+                                    <?php echo htmlspecialchars($country['label']); ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="info-row">

@@ -286,7 +286,7 @@ $total_pax = ($cost_sheet['adults_count'] ?? 0) + ($cost_sheet['children_count']
                 <h3>✈️ Travel Information</h3>
                 <div class="info-row">
                     <div class="info-label">Ref Code:</div>
-                    <div class="info-value"><?php echo htmlspecialchars($cost_sheet['ref_code'] ?? 'N/A'); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars($cost_sheet['referral_code'] ?? 'N/A'); ?></div>
                 </div>
                 <div class="info-row">
                     <div class="info-label">Source / Agent:</div>
@@ -307,6 +307,30 @@ $total_pax = ($cost_sheet['adults_count'] ?? 0) + ($cost_sheet['children_count']
                 <div class="info-row">
                     <div class="info-label">Nationality:</div>
                     <div class="info-value"><?php echo htmlspecialchars($cost_sheet['nationality'] ?? 'N/A'); ?></div>
+                </div>
+                <!-- <div class="info-row">
+                    <span class="info-label">Ref Code:</span>
+                    <span class="info-value"><?php echo htmlspecialchars($cost_sheet['referral_code'] ?? 'N/A'); ?></span>
+                </div> -->
+                <div class="info-row">
+                    <span class="info-label">Source / Agent:</span>
+                    <span class="info-value"><?php echo htmlspecialchars($cost_sheet['source_name'] ?? 'N/A'); ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Travel Destination:</span>
+                    <span class="info-value"><?php echo htmlspecialchars($cost_sheet['destination_name'] ?? 'N/A'); ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Lead Department:</span>
+                    <span class="info-value"><?php echo htmlspecialchars($cost_sheet['department_name'] ?? 'N/A'); ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Night/Day:</span>
+                    <span class="info-value"><?php echo htmlspecialchars($cost_sheet['night_day'] ?? 'N/A'); ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Travel Period:</span>
+                    <span class="info-value"><?php echo date('d-m-Y', strtotime($cost_sheet['travel_start_date'])) ?? 'N/A'; ?> To <?php echo date('d-m-Y', strtotime($cost_sheet['travel_end_date'])) ?? 'N/A'; ?></span>
                 </div>
             </div>
 
@@ -400,10 +424,62 @@ $total_pax = ($cost_sheet['adults_count'] ?? 0) + ($cost_sheet['children_count']
                         </tfoot>
                     </table>
                 </div>
+                 
+                <?php if(!empty($cost_sheet['arrival_flight'])): ?>
+                <div class="service-header">✈️  Travel Details</div>
+                <div class="service-content">
+                   
+                    <table class="service-table">
+                        <thead>
+                            <tr>
+                                <th>Travel Period</th>
+                                <th>Date</th>
+                                <th>City</th>
+                                <th>Flight</th>
+                                <th>Nights/Days</th>
+                                <th>Flight Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>ARRIVAL</strong></td>
+                                <td> <?php echo $cost_sheet['arrival_date'] ? date('d-m-Y H:i', strtotime($cost_sheet['arrival_date'])) : 'N/A'; ?></td>
+                                <td><?php echo $cost_sheet['arrival_flight'] ?? ''; ?></td>
+                                <td><?php echo $cost_sheet['arrival_nights_days'] ?? ''; ?></td>
+                                <td><?php echo $cost_sheet['arrival_connection'] ?? ''; ?></td>
+                            </tr>
+                            <tr id="arrival-connecting" style="display: <?php echo isset($cost_sheet['arrival_connecting_date']) ? 'table-row' : 'none'; ?>">
+                                <td><strong>ARRIVAL (Connecting)</strong></td>
+                                <td> <?php echo $cost_sheet['arrival_connecting_date'] ? date('d-m-Y H:i', strtotime($cost_sheet['arrival_connecting_date'])) : 'N/A'; ?></td>
+                                <td><?php echo $cost_sheet['arrival_connecting_city'] ?? ''; ?></td>
+                                <td><?php echo $cost_sheet['arrival_connecting_flight'] ?? ''; ?></td>
+                                <td><?php echo $cost_sheet['arrival_connecting_nights_days'] ?? ''; ?></td>
+                                <td><?php echo $cost_sheet['arrival_connecting_type'] ?? ''; ?></td>
+                            </tr>
+                            <tr>
+                                <td><strong>DEPARTURE</strong></td>
+                                <td> <?php echo $cost_sheet['departure_date'] ? date('d-m-Y H:i', strtotime($cost_sheet['departure_date'])) : 'N/A'; ?></td>
+                                <td><?php echo $cost_sheet['departure_city'] ?? ''; ?></td>
+                                <td><?php echo $cost_sheet['departure_flight'] ?? ''; ?></td>
+                                <td><?php echo $cost_sheet['departure_nights_days'] ?? ''; ?></td>
+                                <td><?php echo $cost_sheet['departure_connection'] ?? ''; ?></td>
+                            </tr>
+                            <tr id="departure-connecting" style="display: <?php echo !empty($cost_sheet['departure_connecting_date']) ? 'table-row' : 'none'; ?>">
+                                <td><strong>DEPARTURE (Connecting)</strong></td>
+                                <td> <?php echo $cost_sheet['departure_connecting_date'] ? date('d-m-Y H:i', strtotime($cost_sheet['departure_connecting_date'])) : 'N/A'; ?></td>
+                                <td><?php echo $cost_sheet['departure_connecting_city'] ?? ''; ?></td>
+                                <td><?php echo $cost_sheet['departure_connecting_flight'] ?? ''; ?></td>
+                                <td><?php echo $cost_sheet['departure_connecting_nights_days'] ?? ''; ?></td>
+                                <td><?php echo $cost_sheet['departure_connecting_type'] ?? ''; ?></td>
+                            </tr>                            
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
             </div>
             <?php endif; ?>
 
-            <?php if(!empty($accommodation_data) && is_array($accommodation_data)): ?>
+            <?php if(!empty($accommodation_data) && is_array($accommodation_data) && !empty($accommodation_data[0]['destination'])): ?>
             <div class="service-card">
                 <div class="service-header">🏨 ACCOMMODATION</div>
                 <div class="service-content">
@@ -459,7 +535,7 @@ $total_pax = ($cost_sheet['adults_count'] ?? 0) + ($cost_sheet['children_count']
             </div>
             <?php endif; ?>
 
-            <?php if(!empty($transportation_data) && is_array($transportation_data)): ?>
+            <?php if(!empty($transportation_data) && is_array($transportation_data) && !empty($transportation_data[0]['supplier'])): ?>
             <div class="service-card">
                 <div class="service-header">🚗 TRANSPORTATION</div>
                 <div class="service-content">
@@ -507,7 +583,7 @@ $total_pax = ($cost_sheet['adults_count'] ?? 0) + ($cost_sheet['children_count']
             </div>
             <?php endif; ?>
 
-            <?php if(!empty($cruise_data) && is_array($cruise_data)): ?>
+            <?php if(!empty($cruise_data) && is_array($cruise_data) && !empty($cruise_data[0]['supplier'])): ?>
             <div class="service-card">
                 <div class="service-header">🚢 CRUISE HIRE</div>
                 <div class="service-content">
@@ -553,7 +629,7 @@ $total_pax = ($cost_sheet['adults_count'] ?? 0) + ($cost_sheet['children_count']
             </div>
             <?php endif; ?>
 
-            <?php if(!empty($agent_package_data) && is_array($agent_package_data)): ?>
+            <?php if(!empty($agent_package_data) && is_array($agent_package_data) && !empty($agent_package_data[0]['destination'])): ?>
             <div class="service-card">
                 <div class="service-header">💼 AGENT PACKAGE SERVICE</div>
                 <div class="service-content">
@@ -605,7 +681,7 @@ $total_pax = ($cost_sheet['adults_count'] ?? 0) + ($cost_sheet['children_count']
             </div>
             <?php endif; ?>
 
-            <?php if(!empty($medical_tourism_data) && is_array($medical_tourism_data)): ?>
+            <?php if(!empty($medical_tourism_data) && is_array($medical_tourism_data) && !empty($medical_tourism_data[0]['place'])): ?>
             <div class="service-card">
                 <div class="service-header">🏥 MEDICAL TOURISM</div>
                 <div class="service-content">
@@ -655,7 +731,7 @@ $total_pax = ($cost_sheet['adults_count'] ?? 0) + ($cost_sheet['children_count']
             </div>
             <?php endif; ?>
 
-            <?php if(!empty($extras_data) && is_array($extras_data)): ?>
+            <?php if(!empty($extras_data) && is_array($extras_data) && !empty($extras_data[0]['supplier'])): ?>
             <div class="service-card">
                 <div class="service-header">➕ EXTRAS/MISCELLANEOUS</div>
                 <div class="service-content">

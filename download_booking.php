@@ -143,7 +143,7 @@ $travelers_text = !empty($travelers) ? implode(', ', $travelers) : '-';
         <table class="info-table">
             <tr><td>Booking Date:</td><td><?php echo date('d-m-Y', strtotime($booking['created_at'])); ?></td></tr>
             <tr><td>Lead Number:</td><td><?php echo htmlspecialchars($booking['lead_number']); ?></td></tr>
-            <tr><td>Tour Package:</td><td><?php echo htmlspecialchars($booking['tour_package'] ?? '-'); ?></td></tr>
+            <tr><td>Package Type:</td><td><?php echo htmlspecialchars($booking['tour_package'] ?? '-'); ?></td></tr>
             <tr><td>Destination:</td><td><?php echo $booking['destination_name'] ? htmlspecialchars($booking['destination_name']) : '-'; ?></td></tr>
             <tr><td>Travel Month:</td><td><?php echo $booking['travel_month'] ? date('F Y', strtotime($booking['travel_month'])) : '-'; ?></td></tr>
             <tr><td>Travel Period:</td><td><?php echo $travel_period; ?></td></tr>

@@ -59,7 +59,7 @@ fputcsv($output, []); // Empty row for spacing
 
 // Travel Information
 fputcsv($output, ['Travel Information']);
-fputcsv($output, ['Tour Package:', $cost_sheet['tour_package'] ?? 'N/A']);
+fputcsv($output, ['Package Type:', $cost_sheet['tour_package'] ?? 'N/A']);
 fputcsv($output, ['Currency:', $cost_sheet['currency'] ?? 'USD']);
 fputcsv($output, ['Nationality:', $cost_sheet['nationality'] ?? 'N/A']);
 fputcsv($output, ['Adults:', $cost_sheet['adults_count'] ?? '0']);

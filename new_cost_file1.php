@@ -1015,7 +1015,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                         <span class="info-value"><?php echo htmlspecialchars($enquiry['destination_name'] ?? 'N/A'); ?></span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Tour Package:</span>
+                        <span class="info-label">Package Type:</span>
                         <select class="form-control form-control-sm" name="tour_package">
                             <option value="">Select Package</option>
                             <option value="Honeymoon Package">Honeymoon Package</option>
