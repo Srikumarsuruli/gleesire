@@ -264,7 +264,7 @@ $destinations = mysqli_query($conn, $destinations_sql);
                 <div class="info-card">
                     <h5><i class="fa fa-plane"></i> Travel Information</h5>
                     <div class="info-row">
-                        <span class="info-label">Tour Package:</span>
+                        <span class="info-label">Package Type:</span>
                         <select class="form-control" name="tour_package">
                             <option value="">Select Package</option>
                             <option value="Honeymoon Package">Honeymoon Package</option>

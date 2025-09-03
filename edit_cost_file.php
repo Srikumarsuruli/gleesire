@@ -35,7 +35,7 @@ foreach($columns_to_add as $column => $definition) {
 }
 
 // Get cost file data
-$sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number as enquiry_number, cl.enquiry_number as lead_number, e.referral_code, e.created_at as enquiry_date, cl.created_at as lead_date,
+$sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number as enquiry_number, cl.adults_count, cl.children_count, cl.infants_count, cl.children_age_details, cl.enquiry_number as lead_number, e.referral_code, e.created_at as enquiry_date, cl.created_at as lead_date,
         s.name as source_name, dest.name as destination_name, fm.full_name as file_manager_name, cl.night_day as night_day, cl.travel_start_date as travel_start_date, cl.travel_end_date as travel_end_date, dp.name as department_name
         FROM tour_costings tc 
         LEFT JOIN enquiries e ON tc.enquiry_id = e.id 
@@ -47,7 +47,7 @@ $sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number as
         WHERE tc.id = ?";
 
 if ($enquiry_id != 0){
-    $sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number as enquiry_number, cl.enquiry_number as lead_number, e.referral_code, e.created_at as enquiry_date, cl.created_at as lead_date,
+    $sql = "SELECT tc.*, e.customer_name, e.mobile_number, e.email, e.lead_number as enquiry_number, cl.adults_count, cl.children_count, cl.infants_count, cl.children_age_details, cl.enquiry_number as lead_number, e.referral_code, e.created_at as enquiry_date, cl.created_at as lead_date,
         s.name as source_name, dest.name as destination_name, fm.full_name as file_manager_name, cl.night_day as night_day, cl.travel_start_date as travel_start_date, cl.travel_end_date as travel_end_date, dp.name as department_name
         FROM tour_costings tc 
         LEFT JOIN enquiries e ON tc.enquiry_id = e.id 
@@ -482,7 +482,7 @@ select option {
                 <div class="info-card">
                     <h5><i class="fas fa-plane"></i> Travel Information</h5>
                     <div class="info-row">
-                        <span class="info-label">Tour Package:</span>
+                        <span class="info-label">Package Type:</span>
                         <select class="form-control form-control-sm" name="tour_package">
                             <option value="">Select Package</option>
                             <?php while($package = mysqli_fetch_assoc($packages_result)): ?>
@@ -513,14 +513,223 @@ select option {
                     </div>
                     <div class="info-row">
                         <span class="info-label">Nationality:</span>
+                        <?php
+                            $countries = [
+                                ['value' => '', 'label' => 'Select Country'],
+                                ['value' => 'IN', 'label' => 'India'], 
+                                ['value' => 'US', 'label' => 'United States'],
+                                ['value' => 'GB', 'label' => 'United Kingdom'],
+                                ['value' => 'AE', 'label' => 'United Arab Emirates'], 
+                                ['value' => 'SA', 'label' => 'Saudi Arabia'],
+                                ['value' => 'AF', 'label' => 'Afghanistan'],
+                                ['value' => 'AL', 'label' => 'Albania'],
+                                ['value' => 'DZ', 'label' => 'Algeria'],
+                                ['value' => 'AS', 'label' => 'American Samoa'],
+                                ['value' => 'AD', 'label' => 'Andorra'],
+                                ['value' => 'AO', 'label' => 'Angola'],
+                                ['value' => 'AI', 'label' => 'Anguilla'],
+                                ['value' => 'AQ', 'label' => 'Antarctica'],
+                                ['value' => 'AG', 'label' => 'Antigua and Barbuda'],
+                                ['value' => 'AR', 'label' => 'Argentina'],
+                                ['value' => 'AM', 'label' => 'Armenia'],
+                                ['value' => 'AW', 'label' => 'Aruba'],
+                                ['value' => 'AU', 'label' => 'Australia'],
+                                ['value' => 'AT', 'label' => 'Austria'],
+                                ['value' => 'AZ', 'label' => 'Azerbaijan'],
+                                ['value' => 'BS', 'label' => 'Bahamas'],
+                                ['value' => 'BH', 'label' => 'Bahrain'],
+                                ['value' => 'BD', 'label' => 'Bangladesh'],
+                                ['value' => 'BB', 'label' => 'Barbados'],
+                                ['value' => 'BY', 'label' => 'Belarus'],
+                                ['value' => 'BE', 'label' => 'Belgium'],
+                                ['value' => 'BZ', 'label' => 'Belize'],
+                                ['value' => 'BJ', 'label' => 'Benin'],
+                                ['value' => 'BM', 'label' => 'Bermuda'],
+                                ['value' => 'BT', 'label' => 'Bhutan'],
+                                ['value' => 'BO', 'label' => 'Bolivia'],
+                                ['value' => 'BA', 'label' => 'Bosnia and Herzegovina'],
+                                ['value' => 'BW', 'label' => 'Botswana'],
+                                ['value' => 'BR', 'label' => 'Brazil'],
+                                ['value' => 'BN', 'label' => 'Brunei'],
+                                ['value' => 'BG', 'label' => 'Bulgaria'],
+                                ['value' => 'BF', 'label' => 'Burkina Faso'],
+                                ['value' => 'BI', 'label' => 'Burundi'],
+                                ['value' => 'KH', 'label' => 'Cambodia'],
+                                ['value' => 'CM', 'label' => 'Cameroon'],
+                                ['value' => 'CA', 'label' => 'Canada'],
+                                ['value' => 'CV', 'label' => 'Cape Verde'],
+                                ['value' => 'KY', 'label' => 'Cayman Islands'],
+                                ['value' => 'CF', 'label' => 'Central African Republic'],
+                                ['value' => 'TD', 'label' => 'Chad'],
+                                ['value' => 'CL', 'label' => 'Chile'],
+                                ['value' => 'CN', 'label' => 'China'],
+                                ['value' => 'CO', 'label' => 'Colombia'],
+                                ['value' => 'KM', 'label' => 'Comoros'],
+                                ['value' => 'CG', 'label' => 'Congo'],
+                                ['value' => 'CD', 'label' => 'Congo (Democratic Republic)'],
+                                ['value' => 'CR', 'label' => 'Costa Rica'],
+                                ['value' => 'CI', 'label' => "Cote d'Ivoire"],
+                                ['value' => 'HR', 'label' => 'Croatia'],
+                                ['value' => 'CU', 'label' => 'Cuba'],
+                                ['value' => 'CY', 'label' => 'Cyprus'],
+                                ['value' => 'CZ', 'label' => 'Czech Republic'],
+                                ['value' => 'DK', 'label' => 'Denmark'],
+                                ['value' => 'DJ', 'label' => 'Djibouti'],
+                                ['value' => 'DM', 'label' => 'Dominica'],
+                                ['value' => 'DO', 'label' => 'Dominican Republic'],
+                                ['value' => 'EC', 'label' => 'Ecuador'],
+                                ['value' => 'EG', 'label' => 'Egypt'],
+                                ['value' => 'SV', 'label' => 'El Salvador'],
+                                ['value' => 'GQ', 'label' => 'Equatorial Guinea'],
+                                ['value' => 'ER', 'label' => 'Eritrea'],
+                                ['value' => 'EE', 'label' => 'Estonia'],
+                                ['value' => 'ET', 'label' => 'Ethiopia'],
+                                ['value' => 'FJ', 'label' => 'Fiji'],
+                                ['value' => 'FI', 'label' => 'Finland'],
+                                ['value' => 'FR', 'label' => 'France'],
+                                ['value' => 'GA', 'label' => 'Gabon'],
+                                ['value' => 'GM', 'label' => 'Gambia'],
+                                ['value' => 'GE', 'label' => 'Georgia'],
+                                ['value' => 'DE', 'label' => 'Germany'],
+                                ['value' => 'GH', 'label' => 'Ghana'],
+                                ['value' => 'GR', 'label' => 'Greece'],
+                                ['value' => 'GD', 'label' => 'Grenada'],
+                                ['value' => 'GT', 'label' => 'Guatemala'],
+                                ['value' => 'GN', 'label' => 'Guinea'],
+                                ['value' => 'GW', 'label' => 'Guinea-Bissau'],
+                                ['value' => 'GY', 'label' => 'Guyana'],
+                                ['value' => 'HT', 'label' => 'Haiti'],
+                                ['value' => 'HN', 'label' => 'Honduras'],
+                                ['value' => 'HK', 'label' => 'Hong Kong'],
+                                ['value' => 'HU', 'label' => 'Hungary'],
+                                ['value' => 'IS', 'label' => 'Iceland'],
+                                ['value' => 'ID', 'label' => 'Indonesia'],
+                                ['value' => 'IR', 'label' => 'Iran'],
+                                ['value' => 'IQ', 'label' => 'Iraq'],
+                                ['value' => 'IE', 'label' => 'Ireland'],
+                                ['value' => 'IL', 'label' => 'Israel'],
+                                ['value' => 'IT', 'label' => 'Italy'],
+                                ['value' => 'JM', 'label' => 'Jamaica'],
+                                ['value' => 'JP', 'label' => 'Japan'],
+                                ['value' => 'JO', 'label' => 'Jordan'],
+                                ['value' => 'KZ', 'label' => 'Kazakhstan'],
+                                ['value' => 'KE', 'label' => 'Kenya'],
+                                ['value' => 'KI', 'label' => 'Kiribati'],
+                                ['value' => 'KP', 'label' => 'Korea (North)'],
+                                ['value' => 'KR', 'label' => 'Korea (South)'],
+                                ['value' => 'KW', 'label' => 'Kuwait'],
+                                ['value' => 'KG', 'label' => 'Kyrgyzstan'],
+                                ['value' => 'LA', 'label' => 'Laos'],
+                                ['value' => 'LV', 'label' => 'Latvia'],
+                                ['value' => 'LB', 'label' => 'Lebanon'],
+                                ['value' => 'LS', 'label' => 'Lesotho'],
+                                ['value' => 'LR', 'label' => 'Liberia'],
+                                ['value' => 'LY', 'label' => 'Libya'],
+                                ['value' => 'LI', 'label' => 'Liechtenstein'],
+                                ['value' => 'LT', 'label' => 'Lithuania'],
+                                ['value' => 'LU', 'label' => 'Luxembourg'],
+                                ['value' => 'MO', 'label' => 'Macao'],
+                                ['value' => 'MK', 'label' => 'Macedonia'],
+                                ['value' => 'MG', 'label' => 'Madagascar'],
+                                ['value' => 'MW', 'label' => 'Malawi'],
+                                ['value' => 'MY', 'label' => 'Malaysia'],
+                                ['value' => 'MV', 'label' => 'Maldives'],
+                                ['value' => 'ML', 'label' => 'Mali'],
+                                ['value' => 'MT', 'label' => 'Malta'],
+                                ['value' => 'MH', 'label' => 'Marshall Islands'],
+                                ['value' => 'MR', 'label' => 'Mauritania'],
+                                ['value' => 'MU', 'label' => 'Mauritius'],
+                                ['value' => 'MX', 'label' => 'Mexico'],
+                                ['value' => 'FM', 'label' => 'Micronesia'],
+                                ['value' => 'MD', 'label' => 'Moldova'],
+                                ['value' => 'MC', 'label' => 'Monaco'],
+                                ['value' => 'MN', 'label' => 'Mongolia'],
+                                ['value' => 'ME', 'label' => 'Montenegro'],
+                                ['value' => 'MA', 'label' => 'Morocco'],
+                                ['value' => 'MZ', 'label' => 'Mozambique'],
+                                ['value' => 'MM', 'label' => 'Myanmar'],
+                                ['value' => 'NA', 'label' => 'Namibia'],
+                                ['value' => 'NR', 'label' => 'Nauru'],
+                                ['value' => 'NP', 'label' => 'Nepal'],
+                                ['value' => 'NL', 'label' => 'Netherlands'],
+                                ['value' => 'NZ', 'label' => 'New Zealand'],
+                                ['value' => 'NI', 'label' => 'Nicaragua'],
+                                ['value' => 'NE', 'label' => 'Niger'],
+                                ['value' => 'NG', 'label' => 'Nigeria'],
+                                ['value' => 'NO', 'label' => 'Norway'],
+                                ['value' => 'OM', 'label' => 'Oman'],
+                                ['value' => 'PK', 'label' => 'Pakistan'],
+                                ['value' => 'PW', 'label' => 'Palau'],
+                                ['value' => 'PS', 'label' => 'Palestine'],
+                                ['value' => 'PA', 'label' => 'Panama'],
+                                ['value' => 'PG', 'label' => 'Papua New Guinea'],
+                                ['value' => 'PY', 'label' => 'Paraguay'],
+                                ['value' => 'PE', 'label' => 'Peru'],
+                                ['value' => 'PH', 'label' => 'Philippines'],
+                                ['value' => 'PL', 'label' => 'Poland'],
+                                ['value' => 'PT', 'label' => 'Portugal'],
+                                ['value' => 'QA', 'label' => 'Qatar'],
+                                ['value' => 'RO', 'label' => 'Romania'],
+                                ['value' => 'RU', 'label' => 'Russia'],
+                                ['value' => 'RW', 'label' => 'Rwanda'],
+                                ['value' => 'KN', 'label' => 'Saint Kitts and Nevis'],
+                                ['value' => 'LC', 'label' => 'Saint Lucia'],
+                                ['value' => 'VC', 'label' => 'Saint Vincent and the Grenadines'],
+                                ['value' => 'WS', 'label' => 'Samoa'],
+                                ['value' => 'SM', 'label' => 'San Marino'],
+                                ['value' => 'ST', 'label' => 'Sao Tome and Principe'],
+                                ['value' => 'SN', 'label' => 'Senegal'],
+                                ['value' => 'RS', 'label' => 'Serbia'],
+                                ['value' => 'SC', 'label' => 'Seychelles'],
+                                ['value' => 'SL', 'label' => 'Sierra Leone'],
+                                ['value' => 'SG', 'label' => 'Singapore'],
+                                ['value' => 'SK', 'label' => 'Slovakia'],
+                                ['value' => 'SI', 'label' => 'Slovenia'],
+                                ['value' => 'SB', 'label' => 'Solomon Islands'],
+                                ['value' => 'SO', 'label' => 'Somalia'],
+                                ['value' => 'ZA', 'label' => 'South Africa'],
+                                ['value' => 'SS', 'label' => 'South Sudan'],
+                                ['value' => 'ES', 'label' => 'Spain'],
+                                ['value' => 'LK', 'label' => 'Sri Lanka'],
+                                ['value' => 'SD', 'label' => 'Sudan'],
+                                ['value' => 'SR', 'label' => 'Suriname'],
+                                ['value' => 'SZ', 'label' => 'Swaziland'],
+                                ['value' => 'SE', 'label' => 'Sweden'],
+                                ['value' => 'CH', 'label' => 'Switzerland'],
+                                ['value' => 'SY', 'label' => 'Syria'],
+                                ['value' => 'TW', 'label' => 'Taiwan'],
+                                ['value' => 'TJ', 'label' => 'Tajikistan'],
+                                ['value' => 'TZ', 'label' => 'Tanzania'],
+                                ['value' => 'TH', 'label' => 'Thailand'],
+                                ['value' => 'TL', 'label' => 'Timor-Leste'],
+                                ['value' => 'TG', 'label' => 'Togo'],
+                                ['value' => 'TO', 'label' => 'Tonga'],
+                                ['value' => 'TT', 'label' => 'Trinidad and Tobago'],
+                                ['value' => 'TN', 'label' => 'Tunisia'],
+                                ['value' => 'TR', 'label' => 'Turkey'],
+                                ['value' => 'TM', 'label' => 'Turkmenistan'],
+                                ['value' => 'TV', 'label' => 'Tuvalu'],
+                                ['value' => 'UG', 'label' => 'Uganda'],
+                                ['value' => 'UA', 'label' => 'Ukraine'],
+                                ['value' => 'UY', 'label' => 'Uruguay'],
+                                ['value' => 'UZ', 'label' => 'Uzbekistan'],
+                                ['value' => 'VU', 'label' => 'Vanuatu'],
+                                ['value' => 'VA', 'label' => 'Vatican City'],
+                                ['value' => 'VE', 'label' => 'Venezuela'],
+                                ['value' => 'VN', 'label' => 'Vietnam'],
+                                ['value' => 'YE', 'label' => 'Yemen'],
+                                ['value' => 'ZM', 'label' => 'Zambia'],
+                                ['value' => 'ZW', 'label' => 'Zimbabwe']
+                            ];
+                        ?>
                         <select class="form-control form-control-sm" name="nationality">
-                            <option value="">Select Country</option>
-                            <option value="IN" <?php echo ($cost_data['nationality'] == 'IN') ? 'selected' : ''; ?>>India</option>
-                            <option value="US" <?php echo ($cost_data['nationality'] == 'US') ? 'selected' : ''; ?>>United States</option>
-                            <option value="GB" <?php echo ($cost_data['nationality'] == 'GB') ? 'selected' : ''; ?>>United Kingdom</option>
-                            <option value="AE" <?php echo ($cost_data['nationality'] == 'AE') ? 'selected' : ''; ?>>United Arab Emirates</option>
-                            <option value="SA" <?php echo ($cost_data['nationality'] == 'SA') ? 'selected' : ''; ?>>Saudi Arabia</option>
-                        </select>
+                            <?php foreach($countries as $country): ?>
+                                <option value="<?php echo htmlspecialchars($country['value']); ?>" 
+                                        <?php echo ($cost_data['nationality'] == $country['value']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($country['label']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>                    
                     </div>
                     <div class="info-row">
                         <span class="info-label">Ref Code:</span>
@@ -561,24 +770,7 @@ select option {
                     </div>
                     <div class="info-row">
                         <span class="info-label">Children Age Details:</span>
-                        <input type="text" class="form-control form-control-sm" name="children_age_details" placeholder="e.g. 5, 7, 10 years" value="<?php 
-                            // Get children age details from converted_leads table
-                            $children_age_details = '';
-                            if (isset($cost_data['enquiry_id'])) {
-                                $children_details_sql = "SELECT children_age_details FROM converted_leads WHERE enquiry_id = ?";
-                                $children_details_stmt = mysqli_prepare($conn, $children_details_sql);
-                                mysqli_stmt_bind_param($children_details_stmt, "i", $cost_data['enquiry_id']);
-                                mysqli_stmt_execute($children_details_stmt);
-                                $children_details_result = mysqli_stmt_get_result($children_details_stmt);
-                                
-                                if ($children_details_row = mysqli_fetch_assoc($children_details_result)) {
-                                    $children_age_details = $children_details_row['children_age_details'];
-                                }
-                                
-                                mysqli_stmt_close($children_details_stmt);
-                            }
-                            echo htmlspecialchars($children_age_details);
-                        ?>">
+                        <input type="text" class="form-control form-control-sm" name="children_age_details" placeholder="e.g. 5, 7, 10 years" value="<?php echo htmlspecialchars($cost_data['children_age_details'] ?? '0'); ?>">
                     </div>
                     <div class="info-row">
                         <span class="info-label">Infants:</span>

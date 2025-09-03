@@ -146,7 +146,7 @@ header('Content-Type: text/html; charset=utf-8');
     <div class="section">
         <div class="section-title">Travel Information</div>
         <div class="info-row">
-            <div class="info-label">Tour Package:</div>
+            <div class="info-label">Package Type:</div>
             <div><?php echo htmlspecialchars($cost_sheet['tour_package'] ?? 'N/A'); ?></div>
         </div>
         <div class="info-row">

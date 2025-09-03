@@ -264,7 +264,7 @@ if (isset($cost_data['enquiry_id'])) {
                 <div class="info-card">
                     <h5><i class="fas fa-plane"></i> Travel Information</h5>
                     <div class="info-row">
-                        <span class="info-label">Tour Package:</span>
+                        <span class="info-label">Package Type:</span>
                         <span class="info-value"><?php echo htmlspecialchars($cost_data['tour_package'] ?? 'N/A'); ?></span>
                     </div>
                     <div class="info-row">

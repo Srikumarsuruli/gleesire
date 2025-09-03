@@ -568,7 +568,7 @@ $payment_data['balance_amount'] = $package_cost - $total_received;
                 <div class="info-card">
                     <h5><i class="icon-copy fa fa-plane"></i> Travel Information</h5>
                     <div class="info-row">
-                        <span class="info-label">Tour Package:</span>
+                        <span class="info-label">Package Type:</span>
                         <select class="form-control form-control-sm" name="tour_package">
                             <option value="">Select Package</option>
                             <option value="Honeymoon Package" <?php echo ($cost_data['tour_package'] == 'Honeymoon Package') ? 'selected' : ''; ?>>Honeymoon Package</option>
