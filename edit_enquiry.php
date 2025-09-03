@@ -175,7 +175,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     $customer_available_timing = !empty($_POST["customer_available_timing"]) ? trim($_POST["customer_available_timing"]) : NULL;
                     $file_manager_id = !empty($_POST["file_manager_id"]) ? trim($_POST["file_manager_id"]) : NULL;
                     $night_day = !empty($_POST["night_day"]) ? trim($_POST["night_day"]) : NULL;
-                    
+
+                    echo $children_age_details;
+
                     // Insert into converted_leads
                     $sql = "INSERT INTO converted_leads (enquiry_id, enquiry_number, lead_type, customer_location, secondary_contact, 
                             destination_id, other_details, travel_month, travel_start_date, travel_end_date, night_day, 
@@ -231,6 +233,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     $file_manager_id = !empty($_POST["file_manager_id"]) ? trim($_POST["file_manager_id"]) : NULL;
                     $night_day = !empty($_POST["night_day"]) ? trim($_POST["night_day"]) : NULL;
                     
+                    echo $children_age_details;
                     // Update converted_leads
                     $sql = "UPDATE converted_leads SET 
                             lead_type = ?,
@@ -251,7 +254,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                             WHERE enquiry_id = ?";
                     
                     if($stmt2 = mysqli_prepare($conn, $sql)) {
-                        mysqli_stmt_bind_param($stmt2, "ssssissssiiiissi", $lead_type, $customer_location, $secondary_contact, 
+                        mysqli_stmt_bind_param($stmt2, "ssssissssiiisssi", $lead_type, $customer_location, $secondary_contact, 
                                               $destination_id, $other_details, $travel_month, $travel_start_date, 
                                               $travel_end_date, $night_day, $adults_count, $children_count, $infants_count, 
                                               $children_age_details, $customer_available_timing, $file_manager_id, $id);
@@ -296,8 +299,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                     }
                     
                     // Redirect back to the appropriate page
-                    header("location: $return_page");
-                    exit;
+                    // header("location: $return_page");
+                    // exit;
                 }
             } else {
                 $error = "Database error: " . mysqli_error($conn) . " - Statement error: " . mysqli_stmt_error($stmt);
