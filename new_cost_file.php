@@ -2803,6 +2803,12 @@ select option {
     let accommodationRowCount = 1;
     function addAccommodationRow() {
         const tbody = document.getElementById('accommodation-tbody');
+        
+        // Get check-in and check-out dates from the first row
+        const firstCheckIn = document.querySelector('input[name="accommodation[0][check_in]"]');
+        const firstCheckOut = document.querySelector('input[name="accommodation[0][check_out]"]');
+        const checkInValue = firstCheckIn ? firstCheckIn.value : '';
+        const checkOutValue = firstCheckOut ? firstCheckOut.value : '';
         const newRow = document.createElement('tr');
         newRow.innerHTML = `
             <td>
@@ -2831,8 +2837,8 @@ select option {
                     <option value="">Select Hotel</option>
                 </select>
             </td>
-            <td><input type="date" class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][check_in]" onchange="calculateNights(${accommodationRowCount})"></td>
-            <td><input type="date" class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][check_out]" onchange="calculateNights(${accommodationRowCount})"></td>
+            <td><input type="date" class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][check_in]" value="${checkInValue}" onchange="calculateNights(${accommodationRowCount})"></td>
+            <td><input type="date" class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][check_out]" value="${checkOutValue}" onchange="calculateNights(${accommodationRowCount})"></td>
             <td>
                 <select class="form-control form-control-sm" name="accommodation[${accommodationRowCount}][room_type]" onchange="updateRoomRate(this, ${accommodationRowCount})" disabled>
                     <option value="">Select Room Type</option>
@@ -2859,6 +2865,14 @@ select option {
             <td><input type="text" class="form-control form-control-sm accom-total" name="accommodation[${accommodationRowCount}][total]" data-row="${accommodationRowCount}" readonly style="background: #f0f8ff; font-weight: bold;"></td>
         `;
         tbody.appendChild(newRow);
+        
+        // Calculate nights for the new row if both dates are populated
+        if (checkInValue && checkOutValue) {
+            setTimeout(() => {
+                calculateNights(accommodationRowCount);
+            }, 100);
+        }
+        
         accommodationRowCount++;
     }
 
