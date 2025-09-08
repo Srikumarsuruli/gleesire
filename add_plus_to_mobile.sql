@@ -1,0 +1,1 @@
+UPDATE enquiries SET mobile_number = CONCAT('+', mobile_number) WHERE mobile_number NOT LIKE '+%';

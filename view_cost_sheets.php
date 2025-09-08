@@ -19,8 +19,8 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
     exit;
 }
 
-// Check if user has privilege to access this page
-if(!hasPrivilege('view_leads')) {
+// Check if user is admin - only admin can access this page
+if(!isAdmin()) {
     header("location: index.php");
     exit;
 }

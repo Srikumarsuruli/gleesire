@@ -126,6 +126,8 @@ if($quick_filter == "fresh") {
     $sql .= " AND lsm.status_name = 'Closed – Booked'";
 } elseif($quick_filter == "cancelled") {
     $sql .= " AND lsm.status_name = 'Not Interested - Cancelled'";
+} elseif($quick_filter == "pending") {
+    $sql .= " AND (lsm.status_name IS NULL OR lsm.status_name = '' OR lsm.status_name NOT IN ('Closed – Booked', 'Not Interested - Cancelled'))";
 }
 
 $params = array();
@@ -273,6 +275,7 @@ $progress2_count = mysqli_fetch_array(mysqli_query($conn, "SELECT COUNT(DISTINCT
 $followup_count = mysqli_fetch_array(mysqli_query($conn, "SELECT COUNT(DISTINCT e.id) FROM enquiries e LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id LEFT JOIN lead_status_map lsm ON e.id = lsm.enquiry_id WHERE e.status_id = 3 AND cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL) AND (lsm.status_name = 'Hot Prospect - Pipeline' OR lsm.status_name = 'Future Hot Prospect - Quote Given (with delay)' OR lsm.status_name = 'Future Prospect - Postponed' OR lsm.status_name = 'Call Back - Call Back Scheduled')" . $user_filter))[0];
 $booked_count = mysqli_fetch_array(mysqli_query($conn, "SELECT COUNT(DISTINCT e.id) FROM enquiries e LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id LEFT JOIN lead_status_map lsm ON e.id = lsm.enquiry_id WHERE e.status_id = 3 AND cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL) AND lsm.status_name = 'Closed – Booked'" . $user_filter))[0];
 $cancelled_count = mysqli_fetch_array(mysqli_query($conn, "SELECT COUNT(DISTINCT e.id) FROM enquiries e LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id LEFT JOIN lead_status_map lsm ON e.id = lsm.enquiry_id WHERE e.status_id = 3 AND cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL) AND lsm.status_name = 'Not Interested - Cancelled'" . $user_filter))[0];
+$pending_count = mysqli_fetch_array(mysqli_query($conn, "SELECT COUNT(DISTINCT e.id) FROM enquiries e LEFT JOIN converted_leads cl ON e.id = cl.enquiry_id LEFT JOIN lead_status_map lsm ON e.id = lsm.enquiry_id WHERE e.status_id = 3 AND cl.enquiry_id IS NOT NULL AND (cl.booking_confirmed = 0 OR cl.booking_confirmed IS NULL) AND (lsm.status_name IS NULL OR lsm.status_name = '' OR lsm.status_name NOT IN ('Closed – Booked', 'Not Interested - Cancelled'))" . $user_filter))[0];
 
 // Check for confirmation message
 $confirmation_message = "";
@@ -336,6 +339,10 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
             <label class="quick-filter-item">
                 <input type="radio" name="quick_filter" value="cancelled" <?php echo (isset($_GET['quick_filter']) && $_GET['quick_filter'] == 'cancelled') ? 'checked' : ''; ?> onchange="window.location.href='?quick_filter=cancelled'">
                 <span class="quick-filter-label">Cancelled (<?php echo $cancelled_count; ?>)</span>
+            </label>
+            <label class="quick-filter-item">
+                <input type="radio" name="quick_filter" value="pending" <?php echo (isset($_GET['quick_filter']) && $_GET['quick_filter'] == 'pending') ? 'checked' : ''; ?> onchange="window.location.href='?quick_filter=pending'">
+                <span class="quick-filter-label">Pending (<?php echo $pending_count; ?>)</span>
             </label>
         </div>
     </div>
