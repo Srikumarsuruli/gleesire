@@ -4,9 +4,10 @@ require_once __DIR__ . '/timezone.php';
 
 // Database configuration
 define('DB_SERVER', 'localhost');
-define('DB_USERNAME', 'root');
-define('DB_PASSWORD', 'root');
-define('DB_NAME', 'lead_management');
+define('DB_USERNAME', 'gleesire_leads_user');
+define('DB_PASSWORD', '{*7(hNG}aV&C8{lc');
+define('DB_NAME', 'gleesire_leads');
+
 
 // Attempt to connect to MySQL database
 $conn = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);
