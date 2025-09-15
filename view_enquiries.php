@@ -59,12 +59,21 @@ $types = "";
 // Filter by logged-in user if not admin
 if(!isAdmin()) {
     $current_user_id = $_SESSION['id'] ?? $_SESSION['user_id'] ?? null;
-    // Debug: Check current user ID (remove this after testing)
-    // echo '<div>Current User ID: ' . $current_user_id . '</div>';
+    $current_user_role = $_SESSION['role_id'] ?? null;
+    
     if($current_user_id) {
-        $base_sql .= " AND e.attended_by = ?";
-        $params[] = $current_user_id;
-        $types .= "i";
+        // Check if user is Lead Manager (role_id = 8) or Lead Team (role_id = 9)
+        if($current_user_role == 8 || $current_user_role == 9) {
+            // Lead Managers and Lead Team can see their own enquiries + chatbot enquiries
+            $base_sql .= " AND (e.attended_by = ? OR u.username = 'chatbot')";
+            $params[] = $current_user_id;
+            $types .= "i";
+        } else {
+            // Other users can only see their own enquiries
+            $base_sql .= " AND e.attended_by = ?";
+            $params[] = $current_user_id;
+            $types .= "i";
+        }
     }
 }
 
@@ -133,8 +142,17 @@ $count_sql = "SELECT COUNT(*) FROM enquiries e WHERE 1=1";
 // Filter by logged-in user if not admin
 if(!isAdmin()) {
     $current_user_id = $_SESSION['id'] ?? $_SESSION['user_id'] ?? null;
+    $current_user_role = $_SESSION['role_id'] ?? null;
+    
     if($current_user_id) {
-        $count_sql .= " AND e.attended_by = ?";
+        // Check if user is Lead Manager (role_id = 8) or Lead Team (role_id = 9)
+        if($current_user_role == 8 || $current_user_role == 9) {
+            // Need to join users table for chatbot check in count query
+            $count_sql = str_replace("FROM enquiries e WHERE", "FROM enquiries e JOIN users u ON e.attended_by = u.id WHERE", $count_sql);
+            $count_sql .= " AND (e.attended_by = ? OR u.username = 'chatbot')";
+        } else {
+            $count_sql .= " AND e.attended_by = ?";
+        }
     }
 }
 
@@ -153,8 +171,19 @@ if(!empty($search)) {
     // Re-add all the WHERE conditions for count query with joins
     if(!isAdmin()) {
         $current_user_id = $_SESSION['id'] ?? $_SESSION['user_id'] ?? null;
+        $current_user_role = $_SESSION['role_id'] ?? null;
+        
         if($current_user_id) {
-            $count_sql .= " AND e.attended_by = ?";
+            // Check if user is Lead Manager (role_id = 8) or Lead Team (role_id = 9)
+            if($current_user_role == 8 || $current_user_role == 9) {
+                // Add users join if not already present for chatbot check
+                if(strpos($count_sql, 'JOIN users u ON') === false) {
+                    $count_sql = str_replace("FROM enquiries e", "FROM enquiries e JOIN users u ON e.attended_by = u.id", $count_sql);
+                }
+                $count_sql .= " AND (e.attended_by = ? OR u.username = 'chatbot')";
+            } else {
+                $count_sql .= " AND e.attended_by = ?";
+            }
         }
     }
     if(!empty($attended_by)) {
