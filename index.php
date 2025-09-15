@@ -1,12 +1,24 @@
 <?php
-// Include header
-require_once "includes/header.php";
+// Initialize the session if not already started
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Check if user is logged in
 if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
     header("location: login.php");
     exit;
 }
+
+// Include database connection and functions first
+require_once "config/database.php";
+require_once "includes/functions.php";
+
+// Define that login has been checked
+define('LOGIN_CHECKED', true);
+
+// Include header after session check
+require_once "includes/header.php";
 
 // Get counts for dashboard
 $total_enquiries = $total_leads = $total_confirmed = $total_pipeline = 0;
