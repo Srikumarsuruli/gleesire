@@ -143,43 +143,22 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                             $device_name = $device_info['name'];
                             $device_type = $device_info['type'];
                             
-                            // Get location from IP with fallback
-                            $location_data = @json_decode(file_get_contents("http://ip-api.com/json/{$ip_address}"), true);
-                            if($location_data && $location_data['status'] == 'success') {
-                                $country = $location_data['country'];
-                                $city = $location_data['city'];
-                            } else {
-                                // Fallback for local/private IPs
-                                $country = 'Local Network';
-                                $city = 'Office';
-                            }
+                            // Set default location (no external API calls)
+                            $country = 'UAE';
+                            $city = 'Dubai';
                             
-                            // Check if user already has a session today
-                            $check_sql = "SELECT id FROM user_login_logs WHERE user_id = ? AND date = ? AND logout_time IS NULL";
-                            if($check_stmt = mysqli_prepare($conn, $check_sql)) {
-                                mysqli_stmt_bind_param($check_stmt, "is", $id, $login_date);
-                                mysqli_stmt_execute($check_stmt);
-                                $check_result = mysqli_stmt_get_result($check_stmt);
-                                
-                                if(mysqli_num_rows($check_result) > 0) {
-                                    // Continue existing session
-                                    $row = mysqli_fetch_assoc($check_result);
-                                    $_SESSION["current_login_id"] = $row['id'];
-                                } else {
-                                    // Add device columns if they don't exist
-                                    @mysqli_query($conn, "ALTER TABLE user_login_logs ADD COLUMN device_name VARCHAR(100) DEFAULT 'Unknown'");
-                                    @mysqli_query($conn, "ALTER TABLE user_login_logs ADD COLUMN device_type VARCHAR(50) DEFAULT 'Unknown'");
-                                    
-                                    // Create new session with location and device info
-                                    $log_sql = "INSERT INTO user_login_logs (user_id, login_time, date, ip_address, country, city, user_agent, device_name, device_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                                    if($log_stmt = mysqli_prepare($conn, $log_sql)) {
-                                        mysqli_stmt_bind_param($log_stmt, "issssssss", $id, $login_time, $login_date, $ip_address, $country, $city, $user_agent, $device_name, $device_type);
-                                        mysqli_stmt_execute($log_stmt);
-                                        $_SESSION["current_login_id"] = mysqli_insert_id($conn);
-                                        mysqli_stmt_close($log_stmt);
-                                    }
+                            // Simple login logging without complex operations
+                            try {
+                                // Try to log the login - use basic insert without complex checks
+                                $log_sql = "INSERT INTO user_login_logs (user_id, login_time, date, ip_address, country, city, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                                if($log_stmt = mysqli_prepare($conn, $log_sql)) {
+                                    mysqli_stmt_bind_param($log_stmt, "issssss", $id, $login_time, $login_date, $ip_address, $country, $city, $user_agent);
+                                    @mysqli_stmt_execute($log_stmt);
+                                    $_SESSION["current_login_id"] = mysqli_insert_id($conn);
+                                    mysqli_stmt_close($log_stmt);
                                 }
-                                mysqli_stmt_close($check_stmt);
+                            } catch (Exception $e) {
+                                // Ignore logging errors - don't break login
                             }
                             
                             $_SESSION["login_start_time"] = time();
