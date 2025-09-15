@@ -26,9 +26,14 @@ $roles = mysqli_query($conn, $sql);
 
 // Define available menus organized by categories
 $menu_categories = array(
-    'Core Functions' => array(
-        'dashboard' => 'Dashboard',
+    'Dashboard' => array(
+        'dashboard' => 'Dashboard'
+    ),
+    'Upload Enquiries' => array(
         'upload_enquiries' => 'Upload Enquiries'
+    ),
+    'My Tasks' => array(
+        'my_tasks' => 'My Tasks'
     ),
     'Enquiries' => array(
         'view_enquiries' => 'All Enquiries',
@@ -60,7 +65,7 @@ $menu_categories = array(
         'travel_completed' => 'Travel Completed'
     ),
     'Our Customers' => array(
-        'feedbacks' => 'Our Customers'
+        'our_customers' => 'Our Customers'
     ),
     'Reservation' => array(
         'accommodation_reservation' => 'Accommodation',
@@ -102,7 +107,7 @@ $menu_categories = array(
         'user_logs' => 'User Logs (User Session Report)',
         'all_users_activity_reports' => 'All Users Activity Reports'
     ),
-    'Data Module (Business Credentials)' => array(
+    'Data Module (BC)' => array(
         'accommodation_details' => 'Accommodation Details',
         'transportation_details' => 'Transportation Details',
         'cruise_details' => 'Cruise Details',
@@ -270,12 +275,12 @@ if(isset($_GET["role_id"]) && isset($_GET["select_role"])) {
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <i class="fa fa-info-circle"></i>
-                                    <strong>Quick Actions:</strong> Use the checkboxes below to manage privileges efficiently
+                                    <strong>Menu Access Control:</strong> Select which menus should be visible for this role
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="select-all" onclick="toggleAllPrivileges(this.checked)">
                                     <label class="form-check-label font-weight-bold" for="select-all">
-                                        <i class="fa fa-check-square"></i> Select All Privileges
+                                        <i class="fa fa-check-square"></i> Select All Menus
                                     </label>
                                 </div>
                             </div>
@@ -304,7 +309,7 @@ if(isset($_GET["role_id"]) && isset($_GET["select_role"])) {
                                             <thead class="thead-light">
                                                 <tr>
                                                     <th style="width: 70%;"><i class="fa fa-list mr-2"></i>Menu Item</th>
-                                                    <th class="text-center" style="width: 30%;"><i class="fa fa-check mr-1"></i>Access</th>
+                                                    <th class="text-center" style="width: 30%;"><i class="fa fa-eye mr-1"></i>Access</th>
                                                 </tr>
                                             </thead>
                                         <tbody>
@@ -318,16 +323,14 @@ if(isset($_GET["role_id"]) && isset($_GET["select_role"])) {
                                                     </td>
                                                     <td class="text-center">
                                                         <div class="custom-control custom-switch">
-                                                            <input type="checkbox" class="custom-control-input privilege-checkbox category-<?php echo $cat_id; ?>-checkbox" id="menu_<?php echo $menu_key; ?>" name="menu_<?php echo $menu_key; ?>" value="1" 
-                                                                <?php echo (isset($privileges[$menu_key]) && $privileges[$menu_key]['can_view']) ? 'checked' : ''; ?>
-                                                                onchange="handleMenuAccess('<?php echo $menu_key; ?>', this.checked)">
-                                                            <label class="custom-control-label" for="menu_<?php echo $menu_key; ?>"></label>
+                                                            <input type="checkbox" class="custom-control-input privilege-checkbox category-<?php echo $cat_id; ?>-checkbox" id="view_<?php echo $menu_key; ?>" name="view_<?php echo $menu_key; ?>" value="1" 
+                                                                <?php echo (isset($privileges[$menu_key]) && $privileges[$menu_key]['can_view']) ? 'checked' : ''; ?>>
+                                                            <label class="custom-control-label" for="view_<?php echo $menu_key; ?>"></label>
                                                         </div>
-                                                        <!-- Hidden inputs for CRUD operations -->
-                                                        <input type="hidden" name="view_<?php echo $menu_key; ?>" id="view_<?php echo $menu_key; ?>" value="<?php echo (isset($privileges[$menu_key]) && $privileges[$menu_key]['can_view']) ? '1' : '0'; ?>">
-                                                        <input type="hidden" name="add_<?php echo $menu_key; ?>" id="add_<?php echo $menu_key; ?>" value="<?php echo (isset($privileges[$menu_key]) && $privileges[$menu_key]['can_add']) ? '1' : '0'; ?>">
-                                                        <input type="hidden" name="edit_<?php echo $menu_key; ?>" id="edit_<?php echo $menu_key; ?>" value="<?php echo (isset($privileges[$menu_key]) && $privileges[$menu_key]['can_edit']) ? '1' : '0'; ?>">
-                                                        <input type="hidden" name="delete_<?php echo $menu_key; ?>" id="delete_<?php echo $menu_key; ?>" value="<?php echo (isset($privileges[$menu_key]) && $privileges[$menu_key]['can_delete']) ? '1' : '0'; ?>">
+                                                        <!-- Hidden inputs for other permissions (set to 0) -->
+                                                        <input type="hidden" name="add_<?php echo $menu_key; ?>" value="0">
+                                                        <input type="hidden" name="edit_<?php echo $menu_key; ?>" value="0">
+                                                        <input type="hidden" name="delete_<?php echo $menu_key; ?>" value="0">
                                                     </td>
                                                 </tr>
                                             <?php endforeach; ?>
@@ -424,12 +427,9 @@ if(isset($_GET["role_id"]) && isset($_GET["select_role"])) {
 </div>
 
 <style>
-.custom-switch .custom-control-input:checked ~ .custom-control-label::before {
+.custom-control-input:checked ~ .custom-control-label::before {
     background-color: #28a745;
     border-color: #28a745;
-}
-.custom-switch .custom-control-label::before {
-    border-radius: 0.75rem;
 }
 .privilege-checkbox {
     transform: scale(1.1);
@@ -437,38 +437,63 @@ if(isset($_GET["role_id"]) && isset($_GET["select_role"])) {
 .table th {
     font-weight: 600;
     background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
 }
 .category-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 10px 15px;
-    border-radius: 5px;
-    margin-bottom: 15px;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 0;
 }
 .privilege-table {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 8px;
     overflow: hidden;
+    margin-bottom: 0;
+}
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+}
+.custom-control-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+.table td {
+    vertical-align: middle;
+    padding: 12px 8px;
+}
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+.gap-2 > * {
+    margin-right: 0.5rem;
+}
+.alert-info {
+    border-left: 4px solid #17a2b8;
+}
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    padding: 12px 30px;
+    font-weight: 600;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+.btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
 }
 </style>
 
 <script>
-    // Function to handle menu access - when menu is checked, enable all CRUD operations
-    function handleMenuAccess(menuKey, checked) {
-        const value = checked ? '1' : '0';
-        document.getElementById('view_' + menuKey).value = value;
-        document.getElementById('add_' + menuKey).value = value;
-        document.getElementById('edit_' + menuKey).value = value;
-        document.getElementById('delete_' + menuKey).value = value;
-    }
-    
     // Function to toggle all privileges
     function toggleAllPrivileges(checked) {
         const checkboxes = document.querySelectorAll('.privilege-checkbox');
         checkboxes.forEach(function(checkbox) {
             checkbox.checked = checked;
-            // Trigger the change event to update hidden fields
-            checkbox.dispatchEvent(new Event('change'));
         });
         // Update category checkboxes
         const categoryCheckboxes = document.querySelectorAll('.category-select-all');
@@ -483,8 +508,6 @@ if(isset($_GET["role_id"]) && isset($_GET["select_role"])) {
         const categoryCheckboxes = document.querySelectorAll('.category-' + CSS.escape(category) + '-checkbox');
         categoryCheckboxes.forEach(function(cb) {
             cb.checked = checked;
-            // Trigger the change event to update hidden fields
-            cb.dispatchEvent(new Event('change'));
         });
     }
 </script>
