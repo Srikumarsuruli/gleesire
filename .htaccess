@@ -1,3 +1,1 @@
-DirectoryIndex redirect.php
-RewriteEngine On
-RewriteRule ^$ redirect.php [L]
+DirectoryIndex index.html
