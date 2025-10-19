@@ -1,15 +1,21 @@
 <?php
 session_start();
+ob_clean();
 require_once "config/database.php";
 
 if(!isset($_SESSION['id']) && !isset($_SESSION['user_id'])) {
-    exit('Not authorized');
+    die('Not authorized');
+}
+
+if(!$conn) {
+    die('Database connection failed');
 }
 
 $filename = "converted_leads_" . date('Y-m-d_H-i-s') . ".csv";
 
-header('Content-Type: application/csv');
+header('Content-Type: text/csv');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
+header('Cache-Control: no-cache');
 
 echo "id,enquiry_id,enquiry_number,customer_name,mobile_number,email,customer_location,secondary_contact,customer_available_timing,other_details,travel_start_date,travel_end_date,travel_month,night_day,adults_count,children_count,infants_count,children_age_details,lead_type,destination_id,file_manager_id,booking_confirmed,created_at\n";
 
@@ -30,5 +36,7 @@ if($result) {
         }
         echo '"' . implode('","', array_map('addslashes', $row)) . '"' . "\n";
     }
+} else {
+    echo "Error: " . mysqli_error($conn) . "\n";
 }
 ?>
