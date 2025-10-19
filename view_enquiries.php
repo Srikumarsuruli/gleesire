@@ -383,7 +383,12 @@ $url_string = !empty($url_params) ? "&" . implode("&", $url_params) : "";
 <!-- Enquiries Table -->
 <div class="card-box mb-30">
     <div class="pd-20">
-        <h4 class="text-blue h4">Enquiries (<?php echo $total_records; ?> total)</h4>
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 class="text-blue h4">Enquiries (<?php echo $total_records; ?> total)</h4>
+            <a href="export_enquiries.php" class="btn btn-success">
+                <i class="dw dw-download"></i> Export to CSV
+            </a>
+        </div>
     </div>
     <div class="pb-20" style="overflow-x: auto;">
         <style>
