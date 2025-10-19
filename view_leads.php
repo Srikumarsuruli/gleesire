@@ -487,11 +487,9 @@ if(isset($_GET["confirmed"]) && $_GET["confirmed"] == 1) {
     <div class="pd-20">
         <div class="d-flex justify-content-between align-items-center">
             <h4 class="text-blue h4">Leads</h4>
-            <?php if(isAdmin()): ?>
-                <a href="export_leads.php" class="btn btn-success">
-                    <i class="dw dw-download"></i> Export to CSV
-                </a>
-            <?php endif; ?>
+            <a href="export_leads.php" class="btn btn-success">
+                <i class="dw dw-download"></i> Export to CSV
+            </a>
         </div>
     </div>
     <div class="pb-20" style="overflow-x: auto;">
