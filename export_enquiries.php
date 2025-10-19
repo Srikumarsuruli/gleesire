@@ -1,6 +1,7 @@
 <?php
-// Start session
+// Start session and clean output buffer
 session_start();
+ob_clean();
 
 // Include database connection and functions
 require_once "config/database.php";
@@ -12,9 +13,16 @@ if(!isset($_SESSION['id']) && !isset($_SESSION['user_id'])) {
     exit;
 }
 
+// Check database connection
+if(!$conn) {
+    die('Database connection failed');
+}
+
 // Set headers for CSV download
-header('Content-Type: text/csv');
+header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename="enquiries_export_' . date('Y-m-d_H-i-s') . '.csv"');
+header('Cache-Control: max-age=0');
+header('Pragma: public');
 
 // Open output stream
 $output = fopen('php://output', 'w');
@@ -59,29 +67,35 @@ $sql = "SELECT e.id, e.lead_number, e.customer_name, e.mobile_number, e.email,
 
 $result = mysqli_query($conn, $sql);
 
-if($result && mysqli_num_rows($result) > 0) {
-    while($row = mysqli_fetch_assoc($result)) {
-        fputcsv($output, [
-            $row['id'],
-            $row['lead_number'],
-            $row['customer_name'],
-            $row['mobile_number'],
-            $row['email'],
-            $row['customer_location'],
-            $row['secondary_contact'],
-            $row['referral_code'],
-            $row['social_media_link'],
-            $row['enquiry_type'],
-            $row['other_details'],
-            $row['department_id'],
-            $row['source_id'],
-            $row['ad_campaign_id'],
-            $row['attended_by'],
-            $row['status_id'],
-            $row['received_datetime'],
-            $row['last_updated']
-        ]);
+if($result) {
+    if(mysqli_num_rows($result) > 0) {
+        while($row = mysqli_fetch_assoc($result)) {
+            fputcsv($output, [
+                $row['id'] ?? '',
+                $row['lead_number'] ?? '',
+                $row['customer_name'] ?? '',
+                $row['mobile_number'] ?? '',
+                $row['email'] ?? '',
+                $row['customer_location'] ?? '',
+                $row['secondary_contact'] ?? '',
+                $row['referral_code'] ?? '',
+                $row['social_media_link'] ?? '',
+                $row['enquiry_type'] ?? '',
+                $row['other_details'] ?? '',
+                $row['department_id'] ?? '',
+                $row['source_id'] ?? '',
+                $row['ad_campaign_id'] ?? '',
+                $row['attended_by'] ?? '',
+                $row['status_id'] ?? '',
+                $row['received_datetime'] ?? '',
+                $row['last_updated'] ?? ''
+            ]);
+        }
+    } else {
+        fputcsv($output, ['No data found']);
     }
+} else {
+    fputcsv($output, ['Error: ' . mysqli_error($conn)]);
 }
 
 fclose($output);
