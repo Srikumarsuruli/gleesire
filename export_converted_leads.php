@@ -20,7 +20,13 @@ $result = mysqli_query($conn, $sql);
 
 if($result) {
     while($row = mysqli_fetch_assoc($result)) {
-        echo implode(',', $row) . "\n";
+        foreach($row as $key => $value) {
+            if($value === null) {
+                $row[$key] = '';
+            }
+            $row[$key] = str_replace('"', '""', $row[$key]);
+        }
+        echo '"' . implode('","', $row) . '"' . "\n";
     }
 }
 ?>
