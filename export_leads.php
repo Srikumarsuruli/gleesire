@@ -1,10 +1,13 @@
 <?php
-// Include database connection
+// Start session
+session_start();
+
+// Include database connection and functions
 require_once "config/database.php";
 require_once "includes/functions.php";
 
-// Check if user has privilege to access this page
-if(!hasPrivilege('view_leads')) {
+// Check if user is logged in
+if(!isset($_SESSION['id']) && !isset($_SESSION['user_id'])) {
     header("location: index.php");
     exit;
 }
